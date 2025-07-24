@@ -77,16 +77,15 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
   ]);
 
   // Modal states
+  // 기본값 false, 방문(마운트) 시에만 true로 설정
   const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
   const [showFlashOffer, setShowFlashOffer] = useState(true);
   const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
 
   // Check if user should see daily check-in modal
+  // 방문(마운트) 시에만 모달이 뜨도록 useEffect 사용
   useEffect(() => {
-    const storedLastCheckIn = localStorage.getItem('lastCheckIn');
-    if (storedLastCheckIn) {
-      setLastCheckIn(storedLastCheckIn);
-    }
+    setShowDailyCheckIn(true);
   }, []);
 
   const handleDailyCheckInClaim = (day: number) => {

@@ -2,8 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# 시스템 패키지 설치
-RUN apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+# 시스템 패키지 설치 (postgresql-client 추가)
+RUN apt-get update && apt-get install -y gcc libpq-dev postgresql-client && rm -rf /var/lib/apt/lists/*
 
 # 의존성 복사 및 설치
 COPY requirements.txt ./
