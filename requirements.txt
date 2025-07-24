@@ -1,13 +1,6 @@
 
 
-@reduxjs/toolkit
-react-redux
-react-router-dom
-axios
-@mui/material
-@emotion/react
-@emotion/styled
-sqlalchemy
+
 
 
 # FastAPI 및 웹 프레임워크
@@ -64,7 +57,5 @@ aiosqlite==0.19.0
 
 # 타임존 처리
 pytz==2023.3
-langdetect
 
-
-starlette>=0.28
+starlette>=0.27.0,<0.28.0

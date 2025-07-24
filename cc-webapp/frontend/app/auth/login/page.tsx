@@ -2,7 +2,12 @@
 
 import AuthPage from '../../../components/auth/AuthPage';
 import '../../../styles/auth.css';
+import { Suspense } from 'react';
 
 export default function LoginPage() {
-  return <AuthPage />;
+  return (
+    <Suspense fallback={null}>
+      <AuthPage />
+    </Suspense>
+  );
 }

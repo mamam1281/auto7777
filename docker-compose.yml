@@ -80,7 +80,7 @@ services:
   # Backend API
   backend:
     build:
-      context: ./backend
+      context: ./cc-webapp/backend
       dockerfile: Dockerfile
     depends_on:
       postgres:
@@ -122,7 +122,7 @@ services:
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
-      - ./backend:/app
+      - ./cc-webapp/backend:/app
       - backend_logs:/app/logs
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
@@ -134,7 +134,7 @@ services:
   # Frontend (Next.js)
   frontend:
     build:
-      context: ./frontend
+      context: ./cc-webapp/frontend
       dockerfile: Dockerfile
     depends_on:
       - backend
@@ -145,14 +145,14 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     volumes:
-      - ./frontend:/app
+      - ./cc-webapp/frontend:/app
       - /app/node_modules
       - /app/.next
 
   # Celery Worker (백그라운드 작업)
   celery-worker:
     build:
-      context: ./backend
+      context: ./cc-webapp/backend
       dockerfile: Dockerfile
     depends_on:
       - postgres
@@ -167,12 +167,12 @@ services:
       REDIS_PORT: 6379
     command: celery -A app.core.celery_app worker --loglevel=info
     volumes:
-      - ./backend:/app
+      - ./cc-webapp/backend:/app
 
   # Celery Beat (스케줄러)
   celery-beat:
     build:
-      context: ./backend
+      context: ./cc-webapp/backend
       dockerfile: Dockerfile
     depends_on:
       - postgres
@@ -187,7 +187,7 @@ services:
       REDIS_PORT: 6379
     command: celery -A app.core.celery_app beat --loglevel=info
     volumes:
-      - ./backend:/app
+      - ./cc-webapp/backend:/app
 
 volumes:
   postgres_data:
