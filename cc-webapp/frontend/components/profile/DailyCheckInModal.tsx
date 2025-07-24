@@ -86,13 +86,10 @@ export function DailyCheckInModal({
     return () => clearInterval(interval);
   }, []);
 
+  // 항상 claim 가능하도록 설정
   useEffect(() => {
-    if (lastCheckIn) {
-      const lastCheckInDate = new Date(lastCheckIn).toDateString();
-      const today = new Date().toDateString();
-      setCanClaim(lastCheckInDate !== today);
-    }
-  }, [lastCheckIn]);
+    setCanClaim(true);
+  }, []);
 
   if (!isOpen) return null;
 
