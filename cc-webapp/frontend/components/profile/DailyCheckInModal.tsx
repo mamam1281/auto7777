@@ -99,8 +99,8 @@ export function DailyCheckInModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 p-4 overflow-y-auto"
-        style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '2rem', paddingBottom: '2rem' }}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+        onClick={onClose}
       >
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -388,7 +388,10 @@ export function DailyCheckInModal({
                   whileTap={{ scale: 0.98 }}
                 >
                   <Button
-                    onClick={onClose}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClose();
+                    }}
                     variant="outline"
                     className="w-full h-10 text-white border-border hover:bg-muted/20 exo-medium"
                   >

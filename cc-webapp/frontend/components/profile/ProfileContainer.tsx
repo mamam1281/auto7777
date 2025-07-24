@@ -11,6 +11,8 @@ import type { User, ProfileContainerProps, FlashOffer, Mission } from './types';
 import '../../styles/profile-mobile.css';
 
 export default function ProfileContainer({ className = '' }: ProfileContainerProps) {
+  const [showDailyCheckIn, setShowDailyCheckIn] = useState(true);
+  
   // Mock user data
   const [user] = useState<User>({
     id: 1,
