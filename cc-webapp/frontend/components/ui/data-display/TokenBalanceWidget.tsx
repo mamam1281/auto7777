@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import TokenDisplay from "./TokenDisplay";
-import { Loader2, AlertTriangle, TrendingUp } from "lucide-react";
+import { Loader2, AlertTriangle, TrendingUp, Clock } from "lucide-react";
 
 interface TokenBalanceWidgetProps {
   amount: number;
@@ -11,6 +12,10 @@ interface TokenBalanceWidgetProps {
   showTrend?: boolean;
   trendPercentage?: number;
   className?: string;
+  // 심리적 효과 props
+  delayUpdate?: boolean;
+  delayDuration?: number;
+  showPendingUpdate?: boolean;
 }
 
 // 완전히 새로운 토큰 잔액 위젯 - 현대적 대시보드 스타일
@@ -23,8 +28,29 @@ export const TokenBalanceWidget: React.FC<TokenBalanceWidgetProps> = ({
   showTrend = false,
   trendPercentage = 0,
   className,
+  delayUpdate = false,
+  delayDuration = 1500,
+  showPendingUpdate = false,
 }) => {
-  const isCritical = amount < criticalThreshold;
+  // 심리적 효과를 위한 상태
+  const [displayAmount, setDisplayAmount] = useState(amount);
+  const [isPending, setIsPending] = useState(false);
+
+  // 지연 업데이트 효과
+  useEffect(() => {
+    if (delayUpdate && amount !== displayAmount) {
+      setIsPending(true);
+      const timer = setTimeout(() => {
+        setDisplayAmount(amount);
+        setIsPending(false);
+      }, delayDuration);
+      return () => clearTimeout(timer);
+    } else {
+      setDisplayAmount(amount);
+    }
+  }, [amount, delayUpdate, delayDuration, displayAmount]);
+
+  const isCritical = displayAmount < criticalThreshold;
   const isPositiveTrend = trendPercentage > 0;
 
   // 상태별 스타일
@@ -87,7 +113,30 @@ export const TokenBalanceWidget: React.FC<TokenBalanceWidgetProps> = ({
         
         {/* 상태 표시기 */}
         <div className="flex items-center gap-2">
-          {isCritical && !loading && (
+          {/* 업데이트 대기 중 표시 */}
+          <AnimatePresence>
+            {isPending && showPendingUpdate && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center gap-1"
+              >
+                <Clock 
+                  className="w-4 h-4 animate-spin" 
+                  style={{ color: 'var(--color-primary-purple)' }}
+                />
+                <span 
+                  className="text-xs font-medium"
+                  style={{ color: 'var(--color-primary-purple)' }}
+                >
+                  업데이트 중
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {isCritical && !loading && !isPending && (
             <div className="flex items-center gap-1">
               <AlertTriangle 
                 className="w-4 h-4 animate-pulse" 
@@ -102,7 +151,7 @@ export const TokenBalanceWidget: React.FC<TokenBalanceWidgetProps> = ({
             </div>
           )}
           
-          {showTrend && !loading && (
+          {showTrend && !loading && !isPending && (
             <div className="flex items-center gap-1">
               <TrendingUp 
                 className={`w-4 h-4 ${isPositiveTrend ? 'text-green-400' : 'text-red-400 rotate-180'}`}
@@ -138,7 +187,7 @@ export const TokenBalanceWidget: React.FC<TokenBalanceWidgetProps> = ({
           </div>
         ) : (
           <TokenDisplay
-            amount={amount}
+            amount={displayAmount}
             variant={isCritical ? 'critical' : 'premium'}
             size="lg"
             icon={

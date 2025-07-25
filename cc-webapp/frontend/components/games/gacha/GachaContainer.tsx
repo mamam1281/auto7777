@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { GachaResult, SAMPLE_ITEMS, GachaItem } from './types';
 import { GachaModal } from './GachaModal';
 import { isPopupWindow } from '../../../utils/gamePopup';
@@ -218,6 +219,66 @@ export function GachaContainer() {
         result={result}
         onClose={handleCloseModal}
       />
+
+      {/* 근접 실패 효과 */}
+      <AnimatePresence>
+        {nearMiss && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute inset-0 flex items-center justify-center bg-black/60 pointer-events-none z-50"
+          >
+            <motion.div
+              animate={{ 
+                y: [0, -10, 0],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ 
+                duration: 0.8,
+                repeat: 2,
+                ease: "easeInOut"
+              }}
+              className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-4 rounded-lg font-bold text-lg shadow-xl max-w-xs text-center"
+            >
+              💫 아쉬워! 레어 아이템이 코앞이었는데! 💫
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 심리적 메시지 표시 */}
+      <AnimatePresence>
+        {showPsychMessage && psychMessage && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40"
+          >
+            <motion.div
+              animate={{ 
+                scale: [1, 1.05, 1]
+              }}
+              transition={{ 
+                duration: 1,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg"
+            >
+              {psychMessage}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 뽑기 횟수 표시 */}
+      {pullCount > 0 && (
+        <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded text-xs">
+          총 {pullCount}회 도전
+        </div>
+      )}
     </div>
   );
 }

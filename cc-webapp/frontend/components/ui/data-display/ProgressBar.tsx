@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 export interface ProgressBarProps {
@@ -10,6 +11,10 @@ export interface ProgressBarProps {
   variant?: 'default' | 'gradient' | 'animated';
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
+  // 심리적 효과 props
+  psychDistortion?: boolean;
+  inflatedDisplay?: boolean;
+  inflationFactor?: number;
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = ({
@@ -19,8 +24,27 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   variant = 'default',
   size = 'md',
   showLabel = false,
+  psychDistortion = false,
+  inflatedDisplay = false,
+  inflationFactor = 1.2,
 }) => {
-  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+  const [displayValue, setDisplayValue] = useState(value);
+  
+  // 심리적 효과: 잠시 부풀려서 보여주기
+  useEffect(() => {
+    if (inflatedDisplay && value > 0) {
+      setDisplayValue(value * inflationFactor);
+      const timer = setTimeout(() => {
+        setDisplayValue(value);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setDisplayValue(value);
+    }
+  }, [value, inflatedDisplay, inflationFactor]);
+
+  const actualPercentage = Math.min(Math.max((value / max) * 100, 0), 100);
+  const displayPercentage = Math.min(Math.max((displayValue / max) * 100, 0), 100);
 
   const sizeClasses = {
     sm: 'h-2',
@@ -38,7 +62,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
     <div className={cn('w-full', className)}>
       {showLabel && (
         <div className="flex justify-between text-sm text-slate-300 mb-1">
-          <span>{value}</span>
+          <span>{Math.round(displayValue)}</span>
           <span>{max}</span>
         </div>
       )}
@@ -46,17 +70,43 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
         'w-full bg-slate-800 rounded-full overflow-hidden border border-slate-600',
         sizeClasses[size]
       )}>
-        <div
-          className={cn(
-            'h-full transition-all duration-500 ease-out rounded-full',
-            variantClasses[variant]
-          )}
-          style={{ width: `${percentage}%` }}
-        />
+        {psychDistortion ? (
+          <motion.div
+            className={cn(
+              'h-full rounded-full',
+              variantClasses[variant]
+            )}
+            initial={{ width: 0 }}
+            animate={{ width: `${displayPercentage}%` }}
+            transition={{ 
+              duration: 0.8,
+              ease: "easeOut",
+              type: "spring",
+              stiffness: 100
+            }}
+          />
+        ) : (
+          <div
+            className={cn(
+              'h-full transition-all duration-500 ease-out rounded-full',
+              variantClasses[variant]
+            )}
+            style={{ width: `${displayPercentage}%` }}
+          />
+        )}
       </div>
       {showLabel && (
         <div className="text-xs text-slate-400 mt-1 text-right">
-          {Math.round(percentage)}%
+          {Math.round(displayPercentage)}%
+          {inflatedDisplay && displayValue !== value && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="ml-2 text-yellow-400"
+            >
+              (계산 중...)
+            </motion.span>
+          )}
         </div>
       )}
     </div>
