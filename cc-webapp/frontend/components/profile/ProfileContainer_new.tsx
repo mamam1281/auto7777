@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import ProfileHeader from './ProfileHeader';
 import ProfileStats from './ProfileStats';
-import DailyCheckInModal from './DailyCheckInModal';
 import type { User, ProfileContainerProps } from './types';
 
 export default function ProfileContainer({ className = '' }: ProfileContainerProps) {
@@ -22,25 +21,26 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
     email: 'user@example.com'
   });
 
-  // Modal states
-  const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
-  const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
+  // Modal states - DailyCheckInModal 제거됨
+  // const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
+  // const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
 
+  // DailyCheckInModal 관련 코드 제거됨
   // Check if user should see daily check-in modal
-  useEffect(() => {
-    const storedLastCheckIn = localStorage.getItem('lastCheckIn');
-    if (storedLastCheckIn) {
-      setLastCheckIn(storedLastCheckIn);
-    }
-  }, []);
+  // useEffect(() => {
+  //   const storedLastCheckIn = localStorage.getItem('lastCheckIn');
+  //   if (storedLastCheckIn) {
+  //     setLastCheckIn(storedLastCheckIn);
+  //   }
+  // }, []);
 
-  const handleDailyCheckInClaim = (day: number) => {
-    const today = new Date().toISOString();
-    localStorage.setItem('lastCheckIn', today);
-    setLastCheckIn(today);
-    setShowDailyCheckIn(false);
-    console.log(`Day ${day} claimed!`);
-  };
+  // const handleDailyCheckInClaim = (day: number) => {
+  //   const today = new Date().toISOString();
+  //   localStorage.setItem('lastCheckIn', today);
+  //   setLastCheckIn(today);
+  //   setShowDailyCheckIn(false);
+  //   console.log(`Day ${day} claimed!`);
+  // };
 
   return (
     <div className={`profile-container min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 ${className}`}>
@@ -61,7 +61,8 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
             <ProfileStats user={user} />
           </section>
 
-          {/* 데일리 체크인 버튼 */}
+          {/* 데일리 체크인 버튼 - 제거됨 */}
+          {/* 
           <section>
             <div className="profile-glass-strong rounded-xl p-6 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none" />
@@ -79,21 +80,12 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
               </div>
             </div>
           </section>
+          */}
         </main>
 
         {/* 하단 여백 */}
         <div className="h-24" />
       </div>
-
-      {/* 데일리 체크인 모달 */}
-      <DailyCheckInModal
-        isOpen={showDailyCheckIn}
-        onClose={() => setShowDailyCheckIn(false)}
-        onClaim={handleDailyCheckInClaim}
-        currentStreak={user.loginStreak || 0}
-        lastCheckIn={lastCheckIn}
-        todayReward={50}
-      />
     </div>
   );
 }

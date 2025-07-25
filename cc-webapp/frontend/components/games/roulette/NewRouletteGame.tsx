@@ -16,6 +16,17 @@ import {
 } from './SimpleRoulette';
 
 export default function NewRouletteGame() {
+  // 체크리스트 항목: 사용자 세그먼트에 따른 확률 조정을 위한 정보 저장
+  React.useEffect(() => {
+    // 신규 유저 판별을 위한 가입일 저장 (없으면 현재 시간으로 설정)
+    if (!localStorage.getItem('userJoinDate')) {
+      localStorage.setItem('userJoinDate', Date.now().toString());
+    }
+    
+    // CSS 변수 설정 (애니메이션 속도 제어용)
+    document.documentElement.style.setProperty('--wheel-transition-duration', '5s');
+  }, []);
+  
   const [gameState, setGameState] = useState<GameState>({
     balance: 1000,
     isSpinning: false,
@@ -30,10 +41,12 @@ export default function NewRouletteGame() {
     isOpen: false,
     winningNumber: null as number | null,
     winAmount: 0,
+    isNearMiss: false,
+    isDangerZone: false
   });
 
   const closeModal = () => {
-    setResultModal({ isOpen: false, winningNumber: null, winAmount: 0 });
+    setResultModal({ isOpen: false, winningNumber: null, winAmount: 0, isNearMiss: false, isDangerZone: false });
   };
 
   // 베팅 추가
@@ -66,21 +79,118 @@ export default function NewRouletteGame() {
     console.log('🎲 스핀 시작!');
     setGameState(prev => ({ ...prev, isSpinning: true, winningNumber: null }));
 
-    // 1. 결과 미리 생성
-    let result = ROULETTE_NUMBERS[Math.floor(Math.random() * ROULETTE_NUMBERS.length)];
-    console.log(`🎯 당첨 번호 생성: ${result}`);
+    // 1. 서버에서 결과를 받아오는 로직 (API 호출 또는 클라이언트 사이드 구현)
+    console.log('🔄 서버에 결과 요청 중...');
+    
+    // 현재 베팅 정보
+    const userBetNumbers = gameState.bets
+      .filter(bet => bet.type === 'number')
+      .map(bet => bet.value as number);
+      
+    const userBetColors = gameState.bets
+      .filter(bet => bet.type === 'color')
+      .map(bet => bet.value as 'red' | 'black');
+    
+    // 사용자 정보 (체크리스트에 따른 심리적 확률 조정을 위한 데이터)
+    const isNewUser = localStorage.getItem('userJoinDate') && 
+      (Date.now() - parseInt(localStorage.getItem('userJoinDate') || '0')) < 7 * 24 * 60 * 60 * 1000;
+    const userType = isNewUser ? 'NEW' : 'REGULAR'; // 또는 'VIP', 'RETURNING' 등 추가 가능
+    
+    // 시간대별 확률 조정 (체크리스트 항목)
+    const currentHour = new Date().getHours();
+    const isPeakHour = currentHour >= 19 && currentHour <= 23;
+    
+    // 1.1 체크리스트를 반영한 통합 API 호출 구현 (실제로는 아래 주석 해제)
+    // try {
+    //   const response = await fetch('/api/games/roulette/spin', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({
+    //       bets: gameState.bets,
+    //       userType,
+    //       isPeakHour,
+    //       clientTime: new Date().toISOString()
+    //     }),
+    //   });
+    //   const data = await response.json();
+    //   if (data.success) {
+    //     result = data.result;
+    //     console.log(`🎯 API 응답: 결과 번호 ${result}, 근접실패여부: ${data.isNearMiss}, 위험구역여부: ${data.isDangerZone}`);
+    //   } else {
+    //     throw new Error(data.message || '서버 오류');
+    //   }
+    // } catch (error) {
+    //   console.error('API 오류:', error);
+    //   // API 오류 시 클라이언트에서 대체 로직 실행 (아래 로직)
+    // }
+    
+    // 1.2 클라이언트 사이드 결과 생성 (API 통합 전까지 임시 사용)
+    let result: number;
+    
+    // 심리적 확률 조정 로직 (백엔드 체크리스트와 동일)
+    let winChance = 0.33; // 기본 33% 승리 확률
+    
+    if (isNewUser) {
+      winChance += 0.15; // 신규 유저 승리 확률 +15%
+      console.log('🆕 신규 유저 보너스 확률 적용: +15%');
+    }
+    
+    if (isPeakHour) {
+      winChance -= 0.08; // 피크 타임 승리 확률 -8%
+      console.log('⏰ 피크 타임 확률 조정: -8%');
+    }
+
+    // 결과 계산
+    if (userBetNumbers.length > 0 && Math.random() < winChance) {
+      // 사용자가 이기는 경우
+      result = userBetNumbers[Math.floor(Math.random() * userBetNumbers.length)];
+      console.log(`🎯 사용자 승리! 당첨 번호: ${result}`);
+    } else {
+      // 사용자가 지는 경우 - 근접 실패 확률 적용 (체크리스트 항목)
+      const nearMissChance = 0.4; // 40% 확률로 근접 실패 연출
+      
+      if (userBetNumbers.length > 0 && Math.random() < nearMissChance) {
+        // 근접 실패: 사용자가 베팅한 번호와 1-2 차이나는 결과
+        const betNumber = userBetNumbers[Math.floor(Math.random() * userBetNumbers.length)];
+        const offset = Math.random() < 0.5 ? 1 : 2;
+        const direction = Math.random() < 0.5 ? 1 : -1;
+        
+        // 결과 번호가 유효한 범위 내에 있도록 보정
+        let nearMissNumber = betNumber + (offset * direction);
+        if (nearMissNumber < 0) nearMissNumber = ROULETTE_NUMBERS.length + nearMissNumber;
+        if (nearMissNumber >= ROULETTE_NUMBERS.length) nearMissNumber = nearMissNumber % ROULETTE_NUMBERS.length;
+        
+        result = ROULETTE_NUMBERS[nearMissNumber];
+        console.log(`😱 근접 실패 연출! 베팅: ${betNumber}, 결과: ${result}`);
+      } else {
+        // 완전 실패 또는 베팅 없음
+        const availableNumbers = ROULETTE_NUMBERS.filter(num => !userBetNumbers.includes(num));
+        result = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
+        console.log(`❌ 완전 실패. 당첨 번호: ${result}`);
+      }
+    }
 
     // 2. 최종 회전 각도 계산 (수정된 로직)
     const targetAngle = calculateWheelRotation(result); // 목표 각도 (0~359)
-    const extraSpins = 360 * 5; // 최소 5바퀴 회전
+    
+    // 체크리스트 항목: 속도 조절로 긴장감 연출
+    const baseSpins = 360 * 5; // 기본 5바퀴 회전
+    // 근접 실패일 경우 더 많이 회전해서 긴장감 연출
+    const extraSpins = userBetNumbers.some(num => Math.abs(num - result) <= 2) ? 360 * 2 : 0;
     
     const currentAngle = wheelRotation % 360; // 현재 각도
     const rotationDiff = (targetAngle - currentAngle + 360) % 360; // 현재 위치에서 목표까지의 최단 회전(시계방향)
     
-    const newRotation = wheelRotation + extraSpins + rotationDiff;
+    const newRotation = wheelRotation + baseSpins + extraSpins + rotationDiff;
 
-    console.log(`🔄 휠 회전 계산: 현재 ${Math.round(currentAngle)}deg -> 목표 ${targetAngle}deg. 최종 회전: ${newRotation}deg`);
+    console.log(`🔄 휠 회전 계산: 현재 ${Math.round(currentAngle)}deg -> 목표 ${targetAngle}deg. 최종 회전: ${newRotation}deg (추가 회전: ${extraSpins/360}바퀴)`);
 
+    // 추가 회전이 있을 경우 더 빠른 속도로 회전 (체크리스트 항목)
+    const speedMultiplier = extraSpins > 0 ? 1.2 : 1;
+    document.documentElement.style.setProperty('--wheel-transition-duration', `${5/speedMultiplier}s`);
+    
     setWheelRotation(newRotation);
 
     // 3. 애니메이션 대기 (5초)
@@ -109,11 +219,26 @@ export default function NewRouletteGame() {
       bets: [] // 베팅 초기화
     }));
 
-    // 7. 결과 모달 표시
+    // 7. 결과 모달 표시 (근접 실패 및 위험구역 반영)
+    // 근접 실패(Near Miss): 사용자가 베팅한 번호와 1-2 차이나는 경우
+    const hasNearMiss = gameState.bets.some(bet => {
+      if (bet.type === 'number') {
+        const betNumber = bet.value as number;
+        const difference = Math.abs(betNumber - result);
+        return difference === 1 || difference === 2;
+      }
+      return false;
+    });
+    
+    // 위험구역: 0(녹색)이나 특정 번호들 (예: 7, 11)
+    const isDangerZone = [0, 7, 11].includes(result);
+    
     setResultModal({
       isOpen: true,
       winningNumber: result,
       winAmount: winnings,
+      isNearMiss: hasNearMiss,
+      isDangerZone: isDangerZone
     });
   }, [gameState.isSpinning, gameState.bets, gameState.balance, wheelRotation]);
 
@@ -176,30 +301,34 @@ export default function NewRouletteGame() {
               position: 'relative',
               background: `conic-gradient(
                 from 0deg,
-                #059669 0deg 30deg,
+                #059669 0deg 30deg, /* 0 = 녹색(위험구역) */
                 #dc2626 30deg 60deg,
                 #374151 60deg 90deg,
                 #dc2626 90deg 120deg,
                 #374151 120deg 150deg,
                 #dc2626 150deg 180deg,
                 #374151 180deg 210deg,
-                #dc2626 210deg 240deg,
+                #dc2626 210deg 240deg, /* 7 = 빨강(위험구역) */
                 #374151 240deg 270deg,
                 #dc2626 270deg 300deg,
-                #374151 300deg 330deg,
+                #374151 300deg 330deg, /* 11 = 검정(위험구역) */
                 #dc2626 330deg 360deg
               )`,
               boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)'
             }}
             animate={{ rotate: wheelRotation }}
             transition={{ 
-              duration: 5,  // 애니메이션 시간 5초로 증가
-              ease: [0.25, 1, 0.5, 1]  // 자연스러운 감속 효과 (Cubic Bezier)
+              duration: 5,  // 기본 애니메이션 시간
+              ease: [0.25, 1, 0.5, 1],  // 자연스러운 감속 효과 (Cubic Bezier)
+              type: 'spring',
+              stiffness: 45, // 스프링 강도 - 낮을수록 더 탄력적
+              damping: 15    // 감쇠 - 낮을수록 더 오래 흔들림
             }}
           >
             {/* 숫자들 */}
             {ROULETTE_NUMBERS.map((num, index) => {
               const angle = index * 30;
+              const isDangerZone = [0, 7, 11].includes(num); // 위험구역 표시
               return (
                 <div
                   key={num}
@@ -216,9 +345,11 @@ export default function NewRouletteGame() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: 'white',
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
+                    fontSize: isDangerZone ? '20px' : '18px', // 위험구역은 더 큰 폰트
+                    fontWeight: 'bold', // 모두 굵게, 위험구역은 더 강조됨
+                    textShadow: isDangerZone 
+                      ? '0 0 5px #ef4444, 2px 2px 4px rgba(0, 0, 0, 0.8)' // 위험구역은 빨간 테두리 + 기본 그림자
+                      : '2px 2px 4px rgba(0, 0, 0, 0.8)', // 기본 그림자
                     backgroundColor: num === 0 ? '#059669' : (num % 2 === 1 ? '#dc2626' : '#374151'),
                     borderRadius: '50%',
                     border: '2px solid white'
@@ -497,10 +628,49 @@ export default function NewRouletteGame() {
                   margin: '0 0 8px 0', // 마진 축소
                   color: resultModal.winAmount > 0 ? '#4ade80' : '#f87171' 
                 }}>
-                  {resultModal.winAmount > 0 ? '🎉 축하합니다! 🎉' : '아쉽네요... 😥'}
+                  {resultModal.winAmount > 0 ? '🎉 축하합니다! 🎉' : (resultModal.isNearMiss ? '아깝습니다! 😱' : '아쉽네요... 😥')}
                 </h2>
+                {/* 위험구역 표시 */}
+                {resultModal.isDangerZone && (
+                  <div style={{
+                    backgroundColor: '#991b1b',
+                    color: 'white',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    marginBottom: '12px',
+                    animation: 'pulse 1.5s infinite',
+                  }}>
+                    <p style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
+                      ⚠️ 위험구역! ⚠️
+                    </p>
+                    <style jsx>{`
+                      @keyframes pulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.6; }
+                      }
+                    `}</style>
+                  </div>
+                )}
+                {/* 근접 실패 표시 */}
+                {resultModal.isNearMiss && resultModal.winAmount === 0 && (
+                  <div style={{
+                    backgroundColor: '#4b5563',
+                    color: '#fbbf24',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    marginBottom: '12px',
+                  }}>
+                    <p style={{ margin: 0, fontSize: '14px' }}>
+                      정말 아깝습니다! 거의 성공했었는데요!
+                    </p>
+                  </div>
+                )}
                 <p style={{ fontSize: '16px', margin: '0 0 12px 0' }}>
-                  당첨 번호: <span style={{ fontWeight: 'bold', fontSize: '18px' }}>{resultModal.winningNumber}</span>
+                  당첨 번호: <span style={{ 
+                    fontWeight: 'bold', 
+                    fontSize: '18px',
+                    color: resultModal.isDangerZone ? '#ef4444' : 'inherit',
+                  }}>{resultModal.winningNumber}</span>
                 </p>
                 <p style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 16px 0' }}>
                   획득 금액: <span style={{ color: '#fbbf24' }}>${resultModal.winAmount}</span>

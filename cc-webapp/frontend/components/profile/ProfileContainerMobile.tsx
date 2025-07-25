@@ -3,15 +3,14 @@
 import { useState, useEffect } from 'react';
 import ProfileHeader from './ProfileHeader';
 import ProfileStats from './ProfileStats';
-import DailyCheckInModal from './DailyCheckInModal';
 import FlashOfferBanner from './FlashOfferBanner';
 import MissionCards from './MissionCards';
 import ProfileActions from './ProfileActions';
 import type { User, ProfileContainerProps, FlashOffer, Mission } from './types';
-import '../../../styles/profile-mobile.css';
+import '../../styles/profile-mobile.css';
 
 // 420×750 모바일 최적화 프로필 컨테이너
-export default function ProfileContainer(props: ProfileContainerProps) {
+export default function ProfileContainerMobile(props: ProfileContainerProps) {
   const [user, setUser] = useState<User>({
     id: 1,
     nickname: "Player123",
@@ -58,17 +57,7 @@ export default function ProfileContainer(props: ProfileContainerProps) {
     isActive: true
   });
 
-  const [showDailyModal, setShowDailyModal] = useState(false);
   const [showLevelModal, setShowLevelModal] = useState(false);
-
-  const handleDailyClaim = () => {
-    setUser(prev => ({
-      ...prev,
-      cyber_token_balance: prev.cyber_token_balance + 100,
-      loginStreak: (prev.loginStreak || 0) + 1
-    }));
-    setShowDailyModal(false);
-  };
 
   return (
     <div className="profile-mobile-layout">
@@ -97,17 +86,6 @@ export default function ProfileContainer(props: ProfileContainerProps) {
         <div className="profile-mobile-actions">
           <ProfileActions />
         </div>
-        
-        {showDailyModal && (
-          <DailyCheckInModal
-            isOpen={showDailyModal}
-            onClose={() => setShowDailyModal(false)}
-            onClaim={handleDailyClaim}
-            currentStreak={user.loginStreak || 0}
-            lastCheckIn={new Date().toISOString()}
-            todayReward={100}
-          />
-        )}
       </div>
     </div>
   );

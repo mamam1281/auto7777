@@ -30,7 +30,6 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
           <div className="flex items-center gap-5">
             <div className="relative">
               <Avatar 
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.nickname}`}
                 alt={user.nickname}
                 size="lg"
                 isActive={true}
