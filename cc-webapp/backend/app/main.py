@@ -43,6 +43,7 @@ from app.routers import (
     unlock,    # 추가
     user_segments, # 추가
     gacha,  # 추가
+    prize_roulette,  # 추가
     notification,  # 추가
     tracking,  # 추가
     personalization,  # 추가
@@ -143,6 +144,7 @@ app.include_router(rewards.router, prefix="/api")  # 추가
 app.include_router(unlock.router, prefix="/api")   # 추가
 app.include_router(user_segments.router, prefix="/api") # 추가
 app.include_router(gacha.router, prefix="/api")  # 추가
+app.include_router(prize_roulette.router, prefix="/api/games/roulette", tags=["prize_roulette"])  # 경품 룰렛 API
 app.include_router(notification.router, prefix="/api")  # 추가
 app.include_router(tracking.router, prefix="/api")  # 추가
 app.include_router(personalization.router, prefix="/api")  # 추가

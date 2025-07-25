@@ -3,6 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 컴포넌트별 스타일 시트 */
+@import './roulette.css';
+
 /* Custom variants for theming will be handled in tailwind.config.js */
 
 /*
@@ -66,7 +69,8 @@
 
   /* Accent Colors */
   --color-accent-red: #FF4516; /* 강조색 - 강렬한 빨간색 */
-  --color-accent-amber: #6b7280; /* 강조색 - 눈에 편한 회색 */
+  --color-accent-amber: #FFD700; /* 강조색 - 황금색 */
+  --color-accent-purple: #7C3AED; /* 강조색 - 보라색 */
 
   /* Neutral Colors */
   --color-neutral-light: #E0E0E0; /* 밝은 중성색 */
