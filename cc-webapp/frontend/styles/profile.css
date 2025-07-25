@@ -309,43 +309,8 @@
   transition: width var(--profile-transition-slow);
 }
 
-/* Modal Components */
-.profile-modal {
-  background: var(--profile-surface-overlay);
-  backdrop-filter: blur(var(--profile-blur-lg));
-  border: 1px solid var(--profile-border-default);
-  border-radius: var(--profile-radius-2xl);
-  max-width: 100% !important; /* 부모 컨테이너에 맞춤 */
-  width: 100% !important;
-  box-shadow: var(--profile-shadow-xl);
-  position: relative;
-  overflow: visible; /* 스크롤 문제 해결 */
-}
-
-/* 모달 스크롤 개선 */
-.profile-modal-content {
-  max-height: 80vh;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.profile-modal-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.profile-modal-content::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-.profile-modal-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 3px;
-}
-
-.profile-modal-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
+/* Modal Components - REMOVED */
+/* 모든 모달 관련 스타일이 제거되었습니다 */
 
 /* Mission Card Components */
 .profile-mission-card {
@@ -509,10 +474,6 @@
 /* Mobile Optimization */
 @media (max-width: 400px) {
   .profile-card { padding: 16px !important; } /* 24px에서 16px로 변경 */
-  .profile-modal { 
-    padding: var(--profile-space-lg); 
-    margin: var(--profile-space-md); 
-  }
   .profile-chat-bubble {
     max-width: 250px;
     right: 1rem;
@@ -522,7 +483,6 @@
 /* Tablet */
 @media (min-width: 768px) {
   .profile-card { padding: 16px !important; } /* 48px에서 16px로 변경 */
-  .profile-modal { max-width: 600px !important; } /* 태블릿에서 더 넓게 - 강제 적용 */
   .profile-container { max-width: 600px !important; } /* 프로필 컨테이너도 넓게 */
   .profile-chat-bubble {
     max-width: 350px;
@@ -532,7 +492,6 @@
 
 /* Desktop */
 @media (min-width: 1024px) {
-  .profile-modal { max-width: 700px !important; } /* 데스크톱에서 더 넓게 - 강제 적용 */
   .profile-container { max-width: 700px !important; } /* 프로필 컨테이너도 넓게 */
   .profile-chat-bubble {
     max-width: 400px;
@@ -556,8 +515,7 @@
 
 /* High Contrast */
 @media (prefers-contrast: high) {
-  .profile-card,
-  .profile-modal { 
+  .profile-card { 
     border-width: 2px;
     border-color: var(--profile-border-strong);
   }

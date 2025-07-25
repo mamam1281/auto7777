@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import ProfileHeader from './ProfileHeader';
 import ProfileStats from './ProfileStats';
-import FlashOfferBanner from './FlashOfferBanner';
 import MissionCards from './MissionCards';
 import ProfileActions from './ProfileActions';
-import type { User, ProfileContainerProps, FlashOffer, Mission } from './types';
+import type { User, ProfileContainerProps, Mission } from './types';
 import '../../styles/profile-mobile.css';
 
 // 420×750 모바일 최적화 프로필 컨테이너
@@ -46,19 +45,6 @@ export default function ProfileContainerMobile(props: ProfileContainerProps) {
     }
   ]);
 
-  const [flashOffer, setFlashOffer] = useState<FlashOffer | null>({
-    id: "1",
-    title: "스페셜 젬 패키지",
-    description: "한정 특가 상품",
-    originalPrice: 9900,
-    salePrice: 4900,
-    discount: 51,
-    endTime: new Date(Date.now() + 3600000).toISOString(),
-    isActive: true
-  });
-
-  const [showLevelModal, setShowLevelModal] = useState(false);
-
   return (
     <div className="profile-mobile-layout">
       <div className="w-full">
@@ -69,15 +55,6 @@ export default function ProfileContainerMobile(props: ProfileContainerProps) {
         <div className="profile-mobile-stats">
           <ProfileStats user={user} />
         </div>
-        
-        {flashOffer && (
-          <div className="profile-mobile-card">
-            <FlashOfferBanner 
-              offer={flashOffer} 
-              onClose={() => setFlashOffer(null)} 
-            />
-          </div>
-        )}
         
         <div className="profile-mobile-missions">
           <MissionCards missions={missions} />

@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import ProfileHeader from './ProfileHeader';
 import ProfileStats from './ProfileStats';
-import FlashOfferBanner from './FlashOfferBanner';
 import MissionCards from './MissionCards';
 import ProfileActions from './ProfileActions';
-import type { User, ProfileContainerProps, FlashOffer, Mission } from './types';
+import type { User, ProfileContainerProps, Mission } from './types';
 import '../../styles/profile-mobile.css';
 
 export default function ProfileContainer({ className = '' }: ProfileContainerProps) {
@@ -24,19 +23,6 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
     loginStreak: 8,
     completedMissions: 23,
     email: 'user@example.com'
-  });
-
-  // Mock flash offer data
-  const [flashOffer] = useState<FlashOffer>({
-    id: 'flash-001',
-    title: '💎 특별 토큰 패키지',
-    description: '500% 보너스 + 무료 스핀',
-    discount: 75,
-    originalPrice: 19.99,
-    salePrice: 4.99,
-    endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2시간 후 만료
-    isActive: true,
-    highlight: '최대 할인'
   });
 
   // Mock missions data
@@ -76,10 +62,6 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
     }
   ]);
 
-  // Modal states
-  // 실제 상용 앱처럼 작동하도록 localStorage 활용
-  const [showFlashOffer, setShowFlashOffer] = useState(true);
-
   const handleLogout = () => {
     console.log('Logging out...');
     // Handle logout logic - 제거됨
@@ -102,17 +84,6 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
                       overflow-y-auto overscroll-y-contain
                       scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
            style={{ maxWidth: '420px' }}>
-        
-        {/* Flash Offer Banner - 최우선 노출 */}
-        {showFlashOffer && (
-          <section className="mb-6">
-            <FlashOfferBanner 
-              offer={flashOffer}
-              onClose={() => setShowFlashOffer(false)}
-              onVisitSite={handleVisitSite}
-            />
-          </section>
-        )}
 
         {/* 메인 컨텐츠 - 더 넓은 간격 */}
         <main className="space-y-8">
