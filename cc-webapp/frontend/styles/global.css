@@ -4,7 +4,6 @@
 @tailwind utilities;
 
 /* 컴포넌트별 스타일 시트 */
-@import './roulette.css';
 
 /* Custom variants for theming will be handled in tailwind.config.js */
 
@@ -66,16 +65,22 @@
   /* Text Colors */
   --color-text-primary: #FFFFFF; /* 기본 텍스트 색상 */
   --color-text-secondary: #D1D5DB; /* 보조 텍스트 색상 */
+  --text-primary: #FFFFFF; /* 기본 텍스트 색상 (별칭) */
+  --text-secondary: #D1D5DB; /* 보조 텍스트 색상 (별칭) */
 
   /* Accent Colors */
   --color-accent-red: #FF4516; /* 강조색 - 강렬한 빨간색 */
   --color-accent-amber: #FFD700; /* 강조색 - 황금색 */
+  --color-accent-yellow: #FFF000; /* 강조색 - 노란색 */
   --color-accent-purple: #7C3AED; /* 강조색 - 보라색 */
+  --color-accent-blue: #3B82F6; /* 강조색 - 파란색 */
+  --color-accent-cyan: #06B6D4; /* 강조색 - 시안색 */
 
   /* Neutral Colors */
   --color-neutral-light: #E0E0E0; /* 밝은 중성색 */
   --color-neutral-medium: rgba(160, 160, 160, 0.7); /* 중간 중성색 (플레이스홀더, 비활성 아이콘 등) */
   --color-neutral-dark: #333333; /* 어두운 중성색 (경계선, 구분선 등) */
+  --border: #333333; /* 경계선 색상 (별칭) */
 
   /* Semantic Colors - 의미론적 목적에 사용 (성공, 에러, 정보) */
   --color-success: #10B981;
@@ -1122,8 +1127,9 @@ button {
   }
 
   /* === ROULETTE SPECIFIC STYLES FROM README === */
+  /* 이 섹션은 사용하지 않음 - Tailwind CSS로 교체됨 */
 
-  /* 어두운 글래스모피즘 효과 */
+  /*
 .glass-surface {
   background: rgba(30, 41, 59, 0.8);
   backdrop-filter: blur(20px);
