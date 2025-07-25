@@ -31,12 +31,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 class LoginRequest(BaseModel):
     nickname: str
-    password: str
+    phone_number: str
 
 
 class SignUpRequest(BaseModel):
     nickname: str
-    password: str
+    phone_number: str
     invite_code: str
 
 
@@ -98,10 +98,18 @@ async def verify_invite(req: VerifyInviteRequest, db: Session = Depends(get_db))
 
 @router.post("/signup", response_model=TokenResponse)
 async def signup(data: SignUpRequest, db: Session = Depends(get_db)):
-    """회원 가입 처리"""
+    """회원 가입 처리 - 닉네임과 전화번호로 가입"""
+    # 닉네임 중복 검사
     if db.query(models.User).filter(models.User.nickname == data.nickname).first():
         logger.warning("Signup failed: nickname %s already taken", data.nickname)
         raise HTTPException(status_code=400, detail="Nickname already taken")
+    
+    # 전화번호 중복 검사
+    if db.query(models.User).filter(models.User.phone_number == data.phone_number).first():
+        logger.warning("Signup failed: phone number %s already taken", data.phone_number)
+        raise HTTPException(status_code=400, detail="Phone number already taken")
+    
+    # 초대코드 검증
     invite = db.query(models.InviteCode).filter(
         models.InviteCode.code == data.invite_code,
         models.InviteCode.is_used == False
@@ -109,32 +117,45 @@ async def signup(data: SignUpRequest, db: Session = Depends(get_db)):
     if not invite:
         logger.warning("Signup failed: invalid invite code %s", data.invite_code)
         raise HTTPException(status_code=400, detail="Invalid invite code")
-    hashed_password = pwd_context.hash(data.password)
-    user = models.User(nickname=data.nickname, password_hash=hashed_password, invite_code=data.invite_code)
+    
+    # 사용자 생성 (비밀번호 없이)
+    user = models.User(
+        nickname=data.nickname, 
+        phone_number=data.phone_number,
+        invite_code=data.invite_code
+    )
     db.add(user)
     invite.is_used = True  # type: ignore
     db.commit()
     db.refresh(user)
+    
+    # 초기 토큰 지급
     token_service.add_tokens(int(user.id), INITIAL_CYBER_TOKENS)  # type: ignore[arg-type]
     access_token = create_access_token({"sub": str(user.id)})
-    logger.info("Signup success for nickname %s", data.nickname)
+    logger.info("Signup success for nickname %s, phone %s", data.nickname, data.phone_number)
     return TokenResponse(access_token=access_token)
 
 
 @router.post("/login", response_model=TokenResponse)
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
-    """로그인 처리"""
-    # Shortcut path used in tests without database setup
-    if data.nickname == "testuser" and data.password == "password":
+    """로그인 처리 - 닉네임과 전화번호로 인증"""
+    # 테스트용 계정
+    if data.nickname == "testuser" and data.phone_number == "010-1234-5678":
         logger.info("Test login for %s", data.nickname)
         return TokenResponse(access_token="fake-token")
 
-    user = db.query(models.User).filter(models.User.nickname == data.nickname).first()
-    if not user or not pwd_context.verify(data.password, str(user.password_hash)):  # type: ignore
-        logger.warning("Login failed for nickname %s", data.nickname)
+    # 닉네임과 전화번호로 사용자 찾기
+    user = db.query(models.User).filter(
+        models.User.nickname == data.nickname,
+        models.User.phone_number == data.phone_number
+    ).first()
+    
+    if not user:
+        logger.warning("Login failed for nickname %s, phone %s", data.nickname, data.phone_number)
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
     access_token = create_access_token({"sub": str(user.id)})
-    logger.info("Login success for nickname %s", data.nickname)
+    logger.info("Login success for nickname %s, phone %s", data.nickname, data.phone_number)
     return TokenResponse(access_token=access_token)
 
 

@@ -13,10 +13,9 @@ from ..repositories.game_repository import GameRepository
 router = APIRouter(prefix="/api/games", tags=["games"])
 
 # Pydantic 모델들
-class RouletteSpinRequest(BaseModel):
-    bet_type: str  # "number", "color", "odd_even"
-    bet_amount: int
-    value: Optional[str] = None  # 베팅 값 (숫자, 색깔 등)
+class PrizeRouletteSpinRequest(BaseModel):
+    """경품추첨 룰렛 요청"""
+    pass  # 단순히 돌리기만 하므로 추가 파라미터 없음
 
 class GachaPullRequest(BaseModel):
     count: int  # 뽑기 횟수
@@ -32,12 +31,25 @@ class SlotSpinResponse(BaseModel):
     streak: int
     animation: Optional[str]
 
-class RouletteSpinResponse(BaseModel):
-    winning_number: int
-    result: str
-    tokens_change: int
-    balance: int
-    animation: Optional[str]
+class PrizeRouletteSpinResponse(BaseModel):
+    """경품 룰렛 스핀 응답"""
+    success: bool
+    prize: Optional[dict]
+    message: str
+    spins_left: int
+    cooldown_expires: Optional[str]
+
+class PrizeRouletteInfoResponse(BaseModel):
+    """경품 룰렛 정보 응답"""
+    spins_left: int
+    prizes: list[dict]
+    max_daily_spins: int
+
+class PrizeRouletteInfoResponse(BaseModel):
+    """룰렛 정보 응답"""
+    spins_left: int
+    prizes: List[Dict[str, Any]]
+    max_daily_spins: int
 
 class GachaPullResponse(BaseModel):
     results: List[str]  # 실제 GachaPullResult에 맞춤
@@ -77,31 +89,54 @@ async def spin_slot(
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@router.post("/roulette/spin", response_model=RouletteSpinResponse)
-async def spin_roulette(
-    request: RouletteSpinRequest,
+@router.post("/roulette/spin", response_model=PrizeRouletteSpinResponse)
+async def spin_prize_roulette(
     current_user_id: int = Depends(require_user),
     db: Session = Depends(get_db),
     game_service: GameService = Depends(get_game_service)
 ):
-    """룰렛 스핀"""
+    """경품추첨 룰렛 스핀"""
     try:
-        result = game_service.roulette_spin(
-            current_user_id, 
-            request.bet_amount, 
-            request.bet_type, 
-            request.value, 
-            db
-        )
-        return RouletteSpinResponse(
-            winning_number=result.winning_number,
-            result=result.result,
-            tokens_change=result.tokens_change,
-            balance=result.balance,
-            animation=result.animation
+        result = game_service.spin_prize_roulette(current_user_id)
+        
+        # Prize 객체를 딕셔너리로 변환
+        prize_dict = None
+        if result.prize:
+            prize_dict = {
+                "id": result.prize.id,
+                "name": result.prize.name,
+                "value": result.prize.value,
+                "color": result.prize.color
+            }
+        
+        return PrizeRouletteSpinResponse(
+            success=result.success,
+            prize=prize_dict,
+            message=result.message,
+            spins_left=result.spins_left,
+            cooldown_expires=result.cooldown_expires.isoformat() if result.cooldown_expires else None
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.get("/roulette/info", response_model=PrizeRouletteInfoResponse)
+async def get_roulette_info(
+    current_user_id: int = Depends(require_user),
+    db: Session = Depends(get_db),
+    game_service: GameService = Depends(get_game_service)
+):
+    """룰렛 정보 조회"""
+    try:
+        spins_left = game_service.get_roulette_spins_left(current_user_id)
+        prizes = game_service.get_roulette_prizes()
+        
+        return PrizeRouletteInfoResponse(
+            spins_left=spins_left,
+            prizes=prizes,
+            max_daily_spins=3
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error")
 

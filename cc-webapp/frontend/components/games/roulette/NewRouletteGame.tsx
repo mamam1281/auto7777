@@ -8,7 +8,6 @@ import {
   checkWin,
   getPayout,
   calculateWinnings,
-  calculateWheelRotation,
   getPointerNumber,
   CHIP_VALUES,
   type Bet,
@@ -173,6 +172,10 @@ export default function NewRouletteGame() {
     }
 
     // 2. 최종 회전 각도 계산 (수정된 로직)
+    const calculateWheelRotation = (number: number) => {
+      const index = ROULETTE_NUMBERS.indexOf(number);
+      return index * 30; // 각 번호는 30도씩 간격
+    };
     const targetAngle = calculateWheelRotation(result); // 목표 각도 (0~359)
     
     // 체크리스트 항목: 속도 조절로 긴장감 연출
@@ -230,15 +233,15 @@ export default function NewRouletteGame() {
       return false;
     });
     
-    // 위험구역: 0(녹색)이나 특정 번호들 (예: 7, 11)
-    const isDangerZone = [0, 7, 11].includes(result);
+    // 위험구역 기능 제거됨
+    // const isDangerZone = [0, 7, 11].includes(result);
     
     setResultModal({
       isOpen: true,
       winningNumber: result,
       winAmount: winnings,
       isNearMiss: hasNearMiss,
-      isDangerZone: isDangerZone
+      isDangerZone: false // 위험구역 비활성화
     });
   }, [gameState.isSpinning, gameState.bets, gameState.balance, wheelRotation]);
 
@@ -328,7 +331,8 @@ export default function NewRouletteGame() {
             {/* 숫자들 */}
             {ROULETTE_NUMBERS.map((num, index) => {
               const angle = index * 30;
-              const isDangerZone = [0, 7, 11].includes(num); // 위험구역 표시
+              // 위험구역 표시 제거됨
+              // const isDangerZone = [0, 7, 11].includes(num);
               return (
                 <div
                   key={num}
@@ -345,11 +349,9 @@ export default function NewRouletteGame() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: 'white',
-                    fontSize: isDangerZone ? '20px' : '18px', // 위험구역은 더 큰 폰트
-                    fontWeight: 'bold', // 모두 굵게, 위험구역은 더 강조됨
-                    textShadow: isDangerZone 
-                      ? '0 0 5px #ef4444, 2px 2px 4px rgba(0, 0, 0, 0.8)' // 위험구역은 빨간 테두리 + 기본 그림자
-                      : '2px 2px 4px rgba(0, 0, 0, 0.8)', // 기본 그림자
+                    fontSize: '18px', // 모든 번호 동일한 폰트 크기
+                    fontWeight: 'bold',
+                    textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)', // 모든 번호 동일한 그림자
                     backgroundColor: num === 0 ? '#059669' : (num % 2 === 1 ? '#dc2626' : '#374151'),
                     borderRadius: '50%',
                     border: '2px solid white'
@@ -630,27 +632,7 @@ export default function NewRouletteGame() {
                 }}>
                   {resultModal.winAmount > 0 ? '🎉 축하합니다! 🎉' : (resultModal.isNearMiss ? '아깝습니다! 😱' : '아쉽네요... 😥')}
                 </h2>
-                {/* 위험구역 표시 */}
-                {resultModal.isDangerZone && (
-                  <div style={{
-                    backgroundColor: '#991b1b',
-                    color: 'white',
-                    padding: '8px',
-                    borderRadius: '8px',
-                    marginBottom: '12px',
-                    animation: 'pulse 1.5s infinite',
-                  }}>
-                    <p style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
-                      ⚠️ 위험구역! ⚠️
-                    </p>
-                    <style jsx>{`
-                      @keyframes pulse {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.6; }
-                      }
-                    `}</style>
-                  </div>
-                )}
+                {/* 위험구역 표시 제거됨 */}
                 {/* 근접 실패 표시 */}
                 {resultModal.isNearMiss && resultModal.winAmount === 0 && (
                   <div style={{
@@ -669,7 +651,7 @@ export default function NewRouletteGame() {
                   당첨 번호: <span style={{ 
                     fontWeight: 'bold', 
                     fontSize: '18px',
-                    color: resultModal.isDangerZone ? '#ef4444' : 'inherit',
+                    color: 'inherit', // 위험구역 색상 제거
                   }}>{resultModal.winningNumber}</span>
                 </p>
                 <p style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 16px 0' }}>

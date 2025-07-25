@@ -23,11 +23,13 @@ class GachaService:
     확률 테이블과 보상 풀은 환경 변수에서 로드되며, 런타임에 갱신할 수 있습니다.
     """
 
+    # 수익성 개선을 위한 하우스 엣지가 적용된 확률 테이블
     DEFAULT_RARITY_TABLE: list[tuple[str, float]] = [
-        ("Legendary", 0.005),
-        ("Epic", 0.045),
-        ("Rare", 0.25),
-        ("Common", 0.70),
+        ("Legendary", 0.003),   # 0.3% (0.5%에서 감소)
+        ("Epic", 0.035),        # 3.5% (4.5%에서 감소)
+        ("Rare", 0.20),         # 20% (25%에서 감소)
+        ("Common", 0.70),       # 70% (유지)
+        ("Near_Miss", 0.062),   # 6.2% (근접 실패 - 새로 추가)
     ]
 
     def __init__(self, repository: GameRepository | None = None, token_service: TokenService | None = None, db: Optional[Session] = None) -> None:
@@ -104,14 +106,25 @@ class GachaService:
             if pity and rarity not in {"Epic", "Legendary"}:
                 rarity = "Epic"
                 current_count = 0
+            
+            # 근접 실패 처리 - Common으로 변환하되 특별한 메시지 제공
+            if rarity == "Near_Miss":
+                rarity = "Common"
+                # 근접 실패 표시를 위한 특별 플래그 추가 (프론트엔드에서 활용)
+                results.append(f"{rarity}_near_miss")
+            else:
+                results.append(rarity)
+                
             if self.reward_pool:
                 available = self.reward_pool.get(rarity, 0)
                 if available <= 0:
                     rarity = "Common"
                 else:
                     self.reward_pool[rarity] = available - 1
-            results.append(rarity)
-            history.insert(0, rarity)
+            
+            # 실제 결과를 기록할 때는 정규화된 이름 사용 
+            actual_rarity = rarity.replace("_near_miss", "") if "_near_miss" in rarity else rarity
+            history.insert(0, actual_rarity)
             history = history[:10]
 
         self.repo.set_gacha_count(user_id, current_count)

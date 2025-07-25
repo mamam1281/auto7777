@@ -1,26 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { openGamePopup } from '../../../utils/gamePopup';
+import PrizeRoulette from '../../../components/games/roulette/PrizeRoulette';
 
 function RouletteMainContent() {
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-
-  const handleOpenPopup = () => {
-    const popup = openGamePopup('roulette');
-    if (popup) {
-      setIsPopupOpen(true);
-      
-      const checkPopupClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkPopupClosed);
-          setIsPopupOpen(false);
-        }
-      }, 500);
-    }
-  };
-
   return (
     <div className="w-full bg-gradient-to-br from-[var(--color-primary-dark-navy)] via-[var(--color-primary-charcoal)] 
     to-[var(--color-primary-dark-navy)] min-h-screen flex flex-col items-center">
@@ -36,28 +19,16 @@ function RouletteMainContent() {
             via-[var(--color-accent-amber)] to-[var(--color-accent-red)] bg-clip-text text-transparent text-center tracking-wide"
             whileHover={{ scale: 1.02 }}
           >
-            룰렛 게임
+            경품추첨 룰렛
           </motion.h1>
+          <p className="text-[var(--text-secondary)] text-sm text-center">
+            하루 3번까지 무료로 경품을 추첨해보세요!
+          </p>
         </div>
       </motion.header>
 
       <div className="flex-1 w-full flex flex-col items-center justify-center p-4">
-        <motion.div
-          className="glass-card p-6 max-w-md w-full text-center"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <button
-            onClick={handleOpenPopup}
-            disabled={isPopupOpen}
-            className={`btn-primary-glow w-full py-4 rounded-lg text-xl font-medium transition-all ${
-              isPopupOpen ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-            }`}
-          >
-            {isPopupOpen ? '게임 진행 중...' : '룰렛 게임 시작'}
-          </button>
-        </motion.div>
+        <PrizeRoulette />
       </div>
     </div>
   );

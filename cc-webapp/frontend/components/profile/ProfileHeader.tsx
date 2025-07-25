@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Crown, Star, TrendingUp } from 'lucide-react';
-import Avatar from '../ui/basic/Avatar';
+import ProfileAvatar from './ProfileAvatar';
 import RankBadge from './RankBadge';
 import SimpleProgressBar from '../SimpleProgressBar';
 import StatusDot from './StatusDot';
@@ -29,10 +29,10 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
           {/* 왼쪽: 아바타와 기본 정보 */}
           <div className="flex items-center gap-5">
             <div className="relative">
-              <Avatar 
-                alt={user.nickname}
+              <ProfileAvatar 
+                user={user}
                 size="lg"
-                isActive={true}
+                showOnlineStatus={false}
                 className="ring-2 ring-purple-400/50 shadow-lg"
               />
               {showOnlineStatus && (

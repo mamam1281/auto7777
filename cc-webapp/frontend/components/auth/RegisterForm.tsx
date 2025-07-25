@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { User, Mail, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
+import { User, Phone, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface RegisterFormProps {
-  onRegister?: (nickname: string, email: string) => void;
+  onRegister?: (nickname: string, phoneNumber: string) => void;
   onSwitchToLogin?: () => void;
   isLoading?: boolean;
   error?: string;
@@ -18,17 +18,23 @@ export default function RegisterForm({
   error: propError = '' 
 }: RegisterFormProps) {
   const [step, setStep] = useState<1 | 2>(1);
-  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [nickname, setNickname] = useState('');
   const [isLoading, setIsLoading] = useState(propIsLoading);
   const [error, setError] = useState(propError);
   const router = useRouter();
 
+  const validatePhoneNumber = (phone: string) => {
+    // 한국 전화번호 형식 검증 (010-0000-0000 또는 01000000000)
+    const phoneRegex = /^010-?\d{4}-?\d{4}$/;
+    return phoneRegex.test(phone.replace(/[^0-9-]/g, ''));
+  };
+
   const handleNextStep = () => {
-    if (email && email.includes('@')) {
+    if (phoneNumber && validatePhoneNumber(phoneNumber)) {
       setStep(2);
     } else {
-      setError('유효한 이메일을 입력해주세요');
+      setError('유효한 전화번호를 입력해주세요 (예: 010-1234-5678)');
     }
   };
 
@@ -40,13 +46,13 @@ export default function RegisterForm({
     e.preventDefault();
     
     if (onRegister) {
-      onRegister(nickname, email);
+      onRegister(nickname, phoneNumber);
     } else {
       setIsLoading(true);
       try {
         // 가입 성공 시뮬레이션 (실제로는 API 호출)
         await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('회원가입 성공', { email, nickname });
+        console.log('회원가입 성공', { phoneNumber, nickname });
         
         // 회원가입 후 메인 페이지로 이동
         router.push('/games');
@@ -99,25 +105,25 @@ export default function RegisterForm({
           
           <div className="email-icon-container">
             <div className="email-icon">
-              <Mail size={24} />
+              <Phone size={24} />
             </div>
           </div>
           
           <div className="simplified-form">
             <div className="form-group">
-              <label htmlFor="email" className="form-label">이메일 입력</label>
+              <label htmlFor="phoneNumber" className="form-label">전화번호 입력 (사이트 ID)</label>
               <div className="email-input-container">
-                <Mail className="email-icon" size={16} />
+                <Phone className="email-icon" size={16} />
                 <input
-                  type="email"
-                  id="email"
+                  type="tel"
+                  id="phoneNumber"
                   className="form-input email-input"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="이메일을 입력하세요"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="010-1234-5678"
                   required
                   disabled={isLoading}
-                  autoComplete="email"
+                  autoComplete="tel"
                 />
               </div>
               {error && <div className="field-error">{error}</div>}
@@ -127,7 +133,7 @@ export default function RegisterForm({
               type="button"
               className="auth-button"
               onClick={handleNextStep}
-              disabled={isLoading || !email}
+              disabled={isLoading || !phoneNumber}
             >
               <span>다음</span>
               <ArrowRight size={16} />

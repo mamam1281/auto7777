@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { User, KeyRound, Loader2, LogIn } from 'lucide-react';
+import { User, Phone, Loader2, LogIn } from 'lucide-react';
 
 interface LoginFormProps {
-  onLogin?: (nickname: string, password: string) => void;
+  onLogin?: (nickname: string, phoneNumber: string) => void;
   onSwitchToSignup?: () => void;
   onSwitchToResetPassword?: () => void;
   isLoading?: boolean;
@@ -22,7 +22,7 @@ export default function LoginForm({
   autoFillTestAccount = false 
 }: LoginFormProps) {
   const [nickname, setNickname] = useState('');
-  const [password, setPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(propIsLoading);
   const [error, setError] = useState(propError);
@@ -34,7 +34,7 @@ export default function LoginForm({
     const useTestAccount = autoFillTestAccount || searchParams?.get('test') === 'true';
     if (useTestAccount) {
       setNickname('test001');
-      setPassword('1234');
+      setPhoneNumber('010-1234-5678');
     }
   }, [autoFillTestAccount, searchParams]);
 
@@ -42,18 +42,18 @@ export default function LoginForm({
     e.preventDefault();
     
     if (onLogin) {
-      onLogin(nickname, password);
+      onLogin(nickname, phoneNumber);
     } else {
       setIsLoading(true);
       try {
         // 로그인 성공 시뮬레이션 (실제로는 API 호출)
         await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('로그인 성공', { nickname });
+        console.log('로그인 성공', { nickname, phoneNumber });
         
         // 로그인 후 메인 페이지로 이동
         router.push('/games');
       } catch (error) {
-        setError('로그인에 실패했습니다. 닉네임을 확인해주세요.');
+        setError('로그인에 실패했습니다. 닉네임과 전화번호를 확인해주세요.');
         console.error('로그인 실패', error);
       } finally {
         setIsLoading(false);
@@ -87,7 +87,7 @@ export default function LoginForm({
         
         <div className="form-group">
           <label htmlFor="nickname" className="form-label">
-            이메일 또는 닉네임
+            닉네임
           </label>
           <div className="email-input-container">
             <User className="email-icon" size={16} />
@@ -100,6 +100,26 @@ export default function LoginForm({
               placeholder="닉네임을 입력하세요"
               required
               disabled={isLoading}
+              autoComplete="username"
+            />
+          </div>
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="phoneNumber" className="form-label">
+            전화번호 (사이트 ID)
+          </label>
+          <div className="email-input-container">
+            <Phone className="email-icon" size={16} />
+            <input
+              type="tel"
+              id="phoneNumber"
+              className="form-input email-input"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="010-1234-5678"
+              required
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -107,7 +127,7 @@ export default function LoginForm({
         <button
           type="submit"
           className="auth-button"
-          disabled={isLoading}
+          disabled={isLoading || !nickname || !phoneNumber}
         >
           {isLoading ? (
             <>

@@ -35,6 +35,15 @@ class RPSService:
     def __init__(self, repository: Optional[GameRepository] = None, token_service: Optional[TokenService] = None, db: Optional[Session] = None) -> None:
         self.repo = repository or GameRepository()
         self.token_service = token_service or TokenService(db or None, self.repo)
+        
+    def _get_winning_choice(self, user_choice: str) -> str:
+        """사용자 선택을 이기는 AI 선택을 반환"""
+        winning_map = {
+            "rock": "paper",
+            "paper": "scissors",
+            "scissors": "rock"
+        }
+        return winning_map[user_choice]
 
     def play(self, user_id: int, user_choice: str, bet_amount: int, db: Session) -> RPSResult:
         """RPS 게임을 플레이하고 결과를 반환."""
@@ -55,23 +64,47 @@ class RPSService:
             logger.error(f"Insufficient tokens for user {user_id}")
             raise ValueError("Insufficient tokens")
 
-        # 컴퓨터 선택 (랜덤)
-        computer_choice = random.choice(self.VALID_CHOICES)
-        logger.debug(f"Computer choice: {computer_choice}")
+        # 연승 상태 확인
+        streak = self.repo.get_streak(user_id) or 0
         
-        # 게임 결과 결정
-        if user_choice == computer_choice:
-            result = "draw"
-        elif self.WINNING_COMBINATIONS[user_choice] == computer_choice:
-            result = "win"
+        # 수익성 개선을 위한 AI 선택 알고리즘
+        # 실제 승률 30%, 무승부 10%, 패배 60%
+        rand = random.random()
+        
+        if streak >= 3:
+            # 3연승 후 90% 패배 확률
+            if rand < 0.90:
+                # 강제 패배: 사용자 선택을 이기는 AI 선택
+                computer_choice = self._get_winning_choice(user_choice)
+                result = "lose"
+            else:
+                # 10% 확률로 승리 허용
+                computer_choice = self.WINNING_COMBINATIONS[user_choice]
+                result = "win"
         else:
-            result = "lose"
-            
+            # 일반적인 확률 적용
+            if rand < 0.30:  # 30% 승률
+                computer_choice = self.WINNING_COMBINATIONS[user_choice]
+                result = "win"
+            elif rand < 0.40:  # 10% 무승부
+                computer_choice = user_choice
+                result = "draw"
+            else:  # 60% 패배
+                computer_choice = self._get_winning_choice(user_choice)
+                result = "lose"
+        
         logger.info(f"Game result: user={user_choice}, computer={computer_choice}, result={result}")
             
         # 사용자 세그먼트에 따른 보상 조정
         segment = self.repo.get_user_segment(db, user_id)
         logger.debug(f"User {user_id} segment: {segment}")
+        
+        # 연승 카운터 업데이트
+        if result == "win":
+            streak += 1
+        else:
+            streak = 0
+        self.repo.set_streak(user_id, streak)
         
         # 토큰 변화량 계산
         tokens_change = 0

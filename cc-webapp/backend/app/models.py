@@ -11,6 +11,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nickname = Column(String(50), unique=True, nullable=False)
+    phone_number = Column(String(20), unique=True, nullable=False, index=True)  # 사이트 ID로 사용될 전화번호
     invite_code = Column(String(6), nullable=False, index=True)  # 초대코드로 가입
     cyber_token_balance = Column(Integer, default=200)
     created_at = Column(DateTime, default=datetime.utcnow)    # 랭크 시스템 - VIP, PREMIUM, STANDARD 등
