@@ -124,17 +124,15 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
     // 포인터가 상단에 있고 시계방향으로 회전하므로 -90도 오프셋
     const targetAngle = (segmentIndex * segmentAngle) + (segmentAngle / 2) - 90;
     
-    // 현재 회전값을 정규화
-    const currentRotation = rotation % 360;
+    // 현재 회전값을 정규화 (항상 0-360 사이의 값으로)
+    const normalizedRotation = ((rotation % 360) + 360) % 360;
     
-    // 최소 3바퀴 + 타겟 각도로 이동
-    const minRotations = 3;
-    let finalRotation = rotation + (minRotations * 360) + (targetAngle - currentRotation);
+    // 최소 5바퀴(1800도) + 타겟 각도로 이동
+    const minRotations = 5;
+    let finalRotation = (minRotations * 360) + targetAngle;
     
-    // 음수 각도 보정
-    if (targetAngle - currentRotation < 0) {
-      finalRotation += 360;
-    }
+    // 이전 회전 방향을 유지하기 위해 현재 회전값에 더하는 방식으로 계산
+    finalRotation = Math.floor(rotation / 360) * 360 + finalRotation;
     
     setRotation(finalRotation);
 
@@ -248,10 +246,12 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
         
         <motion.div
           className={`roulette-wheel ${isSpinning ? 'spinning' : ''} ${nearMissEffect ? 'jackpot-glow' : ''}`}
-          style={{ transform: `rotate(${rotation}deg)` }}
+          initial={false}
+          animate={{ rotate: rotation }}
           transition={{
             duration: isSpinning ? 3 : 0,
-            ease: isSpinning ? [0.23, 1, 0.32, 1] : "linear"
+            ease: isSpinning ? [0.23, 1, 0.32, 1] : "linear",
+            type: "tween"
           }}
         >
           <svg width="100%" height="100%" viewBox="0 0 400 400" className="roulette-svg">
@@ -329,12 +329,10 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
         </motion.div>
 
         {/* 중앙 버튼 */}
-        <motion.button
+        <button
           className={`roulette-spin-button ${isSpinning ? 'spinning' : ''} ${spinsLeft <= 0 ? 'disabled' : ''}`}
           onClick={spinRoulette}
           disabled={isSpinning || spinsLeft <= 0}
-          whileHover={!isSpinning && spinsLeft > 0 ? { scale: 1.05 } : {}}
-          whileTap={!isSpinning && spinsLeft > 0 ? { scale: 0.95 } : {}}
         >
           {isSpinning ? (
             <motion.div
@@ -355,7 +353,7 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
               <span className="button-text">내일 다시</span>
             </>
           )}
-        </motion.button>
+        </button>
       </div>
 
       {/* 최근 결과 */}

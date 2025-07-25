@@ -131,6 +131,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 400px;
+  min-height: 400px;
+  overflow: visible;
 }
 
 /* 룰렛 포인터 */
@@ -162,8 +165,9 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  overflow: hidden;
-  transition: transform 3s cubic-bezier(0.23, 1, 0.32, 1);
+  overflow: visible;
+  transform-origin: center center;
+  transform-box: fill-box;
   box-shadow: 
     0 0 50px rgba(0, 0, 0, 0.5),
     inset 0 0 50px rgba(0, 0, 0, 0.3),
@@ -174,6 +178,8 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
+  transform-origin: center;
+  overflow: visible;
 }
 
 .segment-group {
@@ -210,8 +216,8 @@
 }
 
 @keyframes jackpot-pulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 50px rgba(255, 215, 0, 0.5); }
-  50% { transform: scale(1.05); box-shadow: 0 0 100px rgba(255, 215, 0, 0.8); }
+  0%, 100% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.5); }
+  50% { box-shadow: 0 0 100px rgba(255, 215, 0, 0.8); }
 }
 
 /* 티어별 호버 효과 */
@@ -264,13 +270,16 @@
   justify-content: center;
   gap: 5px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
   box-shadow: 
     0 5px 25px rgba(123, 41, 205, 0.5),
     inset 0 -2px 10px rgba(0, 0, 0, 0.3);
-  z-index: 15;
+  z-index: 50;
   /* 버튼 위치 고정 */
   pointer-events: all;
+  /* 위치 절대 고정 */
+  will-change: transform;
+  transform-style: preserve-3d;
 }
 
 .roulette-spin-button:hover:not(.disabled):not(.spinning) {
@@ -288,6 +297,11 @@
   transform: translate(-50%, -50%);
   animation: button-pulse 1s ease-in-out infinite;
   pointer-events: none;
+}
+
+@keyframes button-pulse {
+  0%, 100% { box-shadow: 0 5px 25px rgba(123, 41, 205, 0.5); }
+  50% { box-shadow: 0 10px 40px rgba(123, 41, 205, 0.8); }
 }
 
 .roulette-spin-button.disabled {
