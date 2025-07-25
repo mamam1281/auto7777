@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 
 interface Prize {
   id: string;
@@ -36,13 +37,19 @@ const PRIZES: Prize[] = [
   { id: "bonus", name: "보너스 스핀", value: 1, color: "#00FF88", probability: 0.005, icon: "🎁" }
 ];
 
-export default function PrizeRoulette({ className = '' }: PrizeRouletteProps) {
+function PrizeRouletteInner({ className = '' }: PrizeRouletteProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinsLeft, setSpinsLeft] = useState(3);
   const [lastResult, setLastResult] = useState<PrizeRouletteSpinResult | null>(null);
   const [rotation, setRotation] = useState(0);
   const [showResultModal, setShowResultModal] = useState(false);
   const [spinHistory, setSpinHistory] = useState<Prize[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Hydration 문제 해결을 위한 마운트 체크
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // 사용자 정보 가져오기
   const fetchRouletteInfo = useCallback(async () => {
@@ -132,6 +139,18 @@ export default function PrizeRoulette({ className = '' }: PrizeRouletteProps) {
     fetchRouletteInfo();
   }, [fetchRouletteInfo]);
 
+  // Hydration 문제 방지 - 클라이언트에서만 렌더링
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-3"></div>
+          <p className="text-slate-300 text-sm">룰렛 로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full bg-gradient-to-br from-[var(--color-primary-dark-navy)] via-[var(--color-primary-charcoal)] 
     to-[var(--color-primary-dark-navy)] min-h-screen flex flex-col items-center">
@@ -170,141 +189,167 @@ export default function PrizeRoulette({ className = '' }: PrizeRouletteProps) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-          {/* 스핀 정보 */}
-          <div className="mb-6">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[var(--color-primary-charcoal)]/80 to-[var(--color-primary-dark-navy)]/80 
-            px-4 py-2 rounded-full border border-[var(--border)]/30">
-              <span className="text-[var(--color-accent-amber)]">🎲</span>
-              <span className="text-[var(--text-primary)] font-semibold">남은 스핀: {spinsLeft}/3</span>
-            </div>
+          {/* 스핀 정보 - 더 강조 */}
+          <div className="mb-8">
+            <motion.div 
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600/30 via-amber-500/20 to-purple-600/30 
+              px-6 py-3 rounded-2xl border border-amber-400/40 backdrop-blur-md shadow-lg"
+              whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(251,191,36,0.4)" }}
+              animate={{ 
+                boxShadow: spinsLeft === 0 ? ["0 0 20px rgba(239,68,68,0.4)", "0 0 30px rgba(239,68,68,0.6)", "0 0 20px rgba(239,68,68,0.4)"] : "0 0 20px rgba(251,191,36,0.3)"
+              }}
+              transition={{ duration: 1, repeat: spinsLeft === 0 ? Infinity : 0 }}
+            >
+              <motion.span 
+                className="text-2xl"
+                animate={{ rotate: isSpinning ? 360 : 0 }}
+                transition={{ duration: 2, repeat: isSpinning ? Infinity : 0, ease: "linear" }}
+              >
+                🎲
+              </motion.span>
+              <div className="text-center">
+                <div className="text-amber-400 font-bold text-lg">남은 스핀</div>
+                <div className={`font-black text-2xl ${spinsLeft === 0 ? 'text-red-400' : 'text-white'}`}>
+                  {spinsLeft}/3
+                </div>
+              </div>
+            </motion.div>
           </div>
 
           {/* 룰렛 휠 - 훨씬 더 크게 */}
           <div className="flex justify-center items-center mb-8">
-            <div className="relative w-[380px] h-[380px] sm:w-[420px] sm:h-[420px]">
+            <div className="relative w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] md:w-[420px] md:h-[420px]">
+              {/* 포인터 - 휠 바로 위에 */}
+              <div className="absolute top-[-25px] left-1/2 transform -translate-x-1/2 z-20">
+                <motion.div
+                  animate={{ 
+                    scale: isSpinning ? [1, 1.2, 1] : 1,
+                    y: isSpinning ? [0, -5, 0] : 0
+                  }}
+                  transition={{ 
+                    duration: 0.3,
+                    repeat: isSpinning ? Infinity : 0 
+                  }}
+                >
+                  <div className="w-0 h-0 border-l-[18px] border-r-[18px] border-b-[30px] 
+                  border-l-transparent border-r-transparent border-b-amber-400 
+                  drop-shadow-[0_4px_8px_rgba(251,191,36,0.5)] filter brightness-110">
+                  </div>
+                </motion.div>
+              </div>
+
               {/* 외부 링과 그림자 */}
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[var(--color-accent-amber)] via-yellow-400 to-[var(--color-accent-red)] p-2 shadow-2xl">
-                <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden relative shadow-inner">
+                <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden relative shadow-inner"
+                style={{
+                  boxShadow: 'inset 0 0 30px rgba(0,0,0,0.8), 0 0 50px rgba(251,191,36,0.3)'
+                }}>
                   
-                  {/* SVG 기반 룰렛 휠 */}
+                  {/* 간단한 CSS 기반 룰렛 휠 */}
                   <motion.div
-                    className="w-full h-full relative"
+                    className="w-full h-full relative rounded-full overflow-hidden"
                     animate={{ rotate: rotation }}
                     transition={{ 
                       duration: isSpinning ? 3 : 0, 
                       ease: isSpinning ? "easeOut" : "linear"
                     }}
                   >
-                    <svg width="100%" height="100%" viewBox="0 0 200 200" className="absolute inset-0">
+                    {/* 각 세그먼트를 CSS로 구현 */}
+                    <div className="absolute inset-0 rounded-full">
                       {PRIZES.map((prize, index) => {
-                        const anglePerSegment = 360 / PRIZES.length;
-                        const startAngle = index * anglePerSegment;
-                        const endAngle = (index + 1) * anglePerSegment;
-                        const centerAngle = startAngle + anglePerSegment / 2;
-                        
-                        const x1 = 100 + 90 * Math.cos((startAngle - 90) * Math.PI / 180);
-                        const y1 = 100 + 90 * Math.sin((startAngle - 90) * Math.PI / 180);
-                        const x2 = 100 + 90 * Math.cos((endAngle - 90) * Math.PI / 180);
-                        const y2 = 100 + 90 * Math.sin((endAngle - 90) * Math.PI / 180);
-                        
-                        const largeArcFlag = anglePerSegment > 180 ? 1 : 0;
-                        const pathData = `M 100 100 L ${x1} ${y1} A 90 90 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
-                        
-                        const textX = 100 + 60 * Math.cos((centerAngle - 90) * Math.PI / 180);
-                        const textY = 100 + 60 * Math.sin((centerAngle - 90) * Math.PI / 180);
-                        
+                        const rotateAngle = (360 / PRIZES.length) * index;
                         return (
-                          <g key={prize.id}>
-                            {/* 세그먼트 배경 */}
-                            <path
-                              d={pathData}
-                              fill={prize.color}
-                              stroke="#ffffff"
-                              strokeWidth="2"
-                              className="transition-all duration-300 hover:brightness-110"
-                            />
-                            
-                            {/* 아이콘 */}
-                            <text
-                              x={textX}
-                              y={textY - 6}
-                              textAnchor="middle"
-                              fontSize="16"
-                              fill="white"
-                              style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9)' }}
+                          <div
+                            key={prize.id}
+                            className="absolute w-full h-full"
+                            style={{
+                              transform: `rotate(${rotateAngle}deg)`,
+                              transformOrigin: 'center center'
+                            }}
+                          >
+                            <div
+                              className="absolute w-full h-1/2 origin-bottom flex flex-col items-center justify-end pb-8 text-center"
+                              style={{
+                                background: `linear-gradient(to bottom, ${prize.color}, ${prize.color}dd)`,
+                                clipPath: `polygon(50% 0%, ${50 + 50 * Math.tan(Math.PI / PRIZES.length)}% 100%, ${50 - 50 * Math.tan(Math.PI / PRIZES.length)}% 100%)`
+                              }}
                             >
-                              {prize.icon}
-                            </text>
-                            
-                            {/* 텍스트 */}
-                            <text
-                              x={textX}
-                              y={textY + 8}
-                              textAnchor="middle"
-                              fontSize="8"
-                              fill="white"
-                              fontWeight="bold"
-                              style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9)' }}
-                            >
-                              {prize.name.length > 6 ? prize.name.substring(0, 5) + '...' : prize.name}
-                            </text>
-                          </g>
+                              <div className="text-2xl mb-1 filter drop-shadow-lg">
+                                {prize.icon}
+                              </div>
+                              <div className="text-xs font-bold text-white filter drop-shadow-md">
+                                {prize.name.length > 8 ? prize.name.substring(0, 6) + '...' : prize.name}
+                              </div>
+                            </div>
+                          </div>
                         );
                       })}
-                    </svg>
+                    </div>
                   </motion.div>
                   
-                  {/* 중앙 원 - 더 크게 */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-gradient-to-br from-[var(--color-accent-amber)] via-yellow-400 to-[var(--color-accent-red)] rounded-full border-4 border-white shadow-2xl flex items-center justify-center z-20">
-                    <span className="text-3xl font-bold text-black drop-shadow">🎯</span>
+                  {/* 중앙 원 */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-gradient-to-br from-amber-400 via-yellow-400 to-orange-500 rounded-full border-4 border-white shadow-xl flex items-center justify-center z-20">
+                    <span className="text-2xl">🎯</span>
                   </div>
                 </div>
               </div>
-              
-              {/* 포인터 - 더 크고 명확하게 */}
-              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-30">
-                <div className="relative">
-                  <div className="w-0 h-0 border-l-[24px] border-r-[24px] border-t-[36px] border-l-transparent border-r-transparent border-t-[var(--color-accent-amber)] filter drop-shadow-lg"></div>
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[20px] border-r-[20px] border-t-[30px] border-l-transparent border-r-transparent border-t-white"></div>
-                </div>
-              </div>
+            </div>
+            
+            {/* 스핀 버튼 - 휠 바로 아래, 더 크게 */}
+            <div className="mt-6">
+              <motion.button
+                onClick={spinRoulette}
+                disabled={isSpinning || spinsLeft <= 0}
+                className={`relative px-10 py-5 rounded-2xl font-bold text-white text-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px] shadow-2xl ${
+                  spinsLeft > 0 && !isSpinning
+                    ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:from-amber-600 hover:via-orange-600 hover:to-red-600 shadow-amber-500/50 hover:shadow-amber-500/70 transform hover:scale-110 active:scale-95'
+                    : 'bg-gradient-to-r from-gray-600 to-gray-700'
+                }`}
+                whileHover={spinsLeft > 0 && !isSpinning ? { 
+                  scale: 1.1,
+                  boxShadow: "0 0 40px rgba(245,158,11,0.6)"
+                } : {}}
+                whileTap={spinsLeft > 0 && !isSpinning ? { scale: 0.95 } : {}}
+                animate={isSpinning ? {
+                  boxShadow: ["0 0 20px rgba(245,158,11,0.4)", "0 0 40px rgba(245,158,11,0.8)", "0 0 20px rgba(245,158,11,0.4)"]
+                } : {}}
+                transition={{ duration: 0.5, repeat: isSpinning ? Infinity : 0 }}
+              >
+                {isSpinning ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <motion.div 
+                      className="rounded-full h-6 w-6 border-b-3 border-white"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    />
+                    <span>스핀 중...</span>
+                  </div>
+                ) : spinsLeft > 0 ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <motion.span 
+                      className="text-2xl"
+                      whileHover={{ rotate: [0, -10, 10, 0] }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      �
+                    </motion.span>
+                    <span>스핀하기!</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    <span>⏰</span>
+                    <span>스핀 소진</span>
+                  </div>
+                )}
+              </motion.button>
             </div>
           </div>
 
-          {/* 스핀 버튼 */}
-          <div className="text-center mb-6">
-            <motion.button
-              onClick={spinRoulette}
-              disabled={isSpinning || spinsLeft <= 0}
-              className={`relative px-8 py-4 rounded-xl font-bold text-white text-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed min-w-[180px] ${
-                spinsLeft > 0 && !isSpinning
-                  ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95'
-                  : 'bg-gradient-to-r from-gray-600 to-gray-700'
-              }`}
-              whileHover={spinsLeft > 0 && !isSpinning ? { scale: 1.05 } : {}}
-              whileTap={spinsLeft > 0 && !isSpinning ? { scale: 0.95 } : {}}
-            >
-              {isSpinning ? (
-                <div className="flex items-center justify-center gap-3">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>스핀 중...</span>
-                </div>
-              ) : spinsLeft > 0 ? (
-                <div className="flex items-center justify-center gap-2">
-                  <span>🎲</span>
-                  <span>스핀하기</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <span>⏰</span>
-                  <span>스핀 소진</span>
-                </div>
-              )}
-            </motion.button>
-            
+          {/* 하단 정보 - 간소화 */}
+          <div className="text-center">
             {spinsLeft === 0 && (
               <motion.p 
-                className="text-[var(--text-secondary)] text-sm mt-3 flex items-center justify-center gap-2"
+                className="text-red-400 text-sm flex items-center justify-center gap-2"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
@@ -449,3 +494,18 @@ export default function PrizeRoulette({ className = '' }: PrizeRouletteProps) {
     </div>
   );
 }
+
+// Hydration 오류 방지를 위한 클라이언트 전용 컴포넌트
+const PrizeRoulette = dynamic(() => Promise.resolve(PrizeRouletteInner), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-3"></div>
+        <p className="text-slate-300 text-sm">룰렛 로딩 중...</p>
+      </div>
+    </div>
+  )
+});
+
+export default PrizeRoulette;
