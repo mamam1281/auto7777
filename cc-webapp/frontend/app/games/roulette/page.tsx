@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import PrizeRoulette from '../../../components/games/roulette/PrizeRoulette';
+import RouletteGame from '../../../components/games/roulette/RouletteGame';
 
 function RouletteMainContent() {
   const [mounted, setMounted] = useState(false);
@@ -70,7 +70,7 @@ function RouletteMainContent() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5, duration: 0.6 }}
         >
-          <PrizeRoulette className="w-full" />
+          <RouletteGame />
         </motion.div>
         
         {/* 추가 정보 카드 */}

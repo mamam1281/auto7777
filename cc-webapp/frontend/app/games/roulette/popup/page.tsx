@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import PrizeRoulette from '../../../../components/games/roulette/PrizeRoulette';
+import RouletteGame from '../../../../components/games/roulette/RouletteGame';
 import GamePopupLayout from '../../../../components/GamePopupLayout';
 
 function PopupLoadingSkeleton() {
@@ -19,7 +19,7 @@ function RouletteGamePopupContent() {
   return (
     <div className="w-full h-full overflow-y-auto bg-gradient-to-br from-[var(--color-primary-dark-navy)] via-[var(--color-primary-charcoal)] to-[var(--color-primary-dark-navy)] p-1">
       <div className="w-full max-w-full mx-auto h-full flex flex-col justify-center">
-        <PrizeRoulette />
+        <RouletteGame isPopup={true} />
       </div>
     </div>
   );
