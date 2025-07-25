@@ -18,6 +18,10 @@ export const useRPSGame = (isPopup = false) => {
     playerLossStreak: 0,
   });
 
+  // 심리적 효과를 위한 추가 상태
+  const [isAIThinking, setIsAIThinking] = useState(false);
+  const [showPsychMessage, setShowPsychMessage] = useState(false);
+
   const getAIChoice = useCallback((): Choice => {
     const choices: Choice[] = ['rock', 'paper', 'scissors'];
     return choices[Math.floor(Math.random() * choices.length)];
@@ -36,46 +40,70 @@ export const useRPSGame = (isPopup = false) => {
   }, []);
 
   const handlePlayerChoice = useCallback((choice: Choice) => {
-    if (gameState.isPlaying) return;
+    if (gameState.isPlaying || isAIThinking) return;
     
-    // AI 선택을 즉시 결정 (딜레이 없음)
-    const aiChoice = getAIChoice();
-    const result = getGameResult(choice, aiChoice);
-    
-    // 점수 및 상태 업데이트
-    const newScore = { ...gameState.score };
-    const newWinStreak = result === 'win' ? gameState.playerWinStreak + 1 : 0;
-    const newLossStreak = result === 'lose' ? gameState.playerLossStreak + 1 : 0;
-    
-    if (result === 'win') {
-      newScore.player++;
-    } else if (result === 'lose') {
-      newScore.ai++;
-    } else {
-      newScore.draws++;
-    }
-
-    let message = "좋은 게임이었어요! 🎮";
-    if (result === 'win') {
-      message = newWinStreak >= 3 ? "🔥 연승 중이에요! 대단해요!" : "🎉 승리했어요! 축하해요!";
-    } else if (result === 'lose') {
-      message = newLossStreak >= 3 ? "😅 다음엔 더 잘할 수 있어요!" : "😔 아쉽네요... 다시 도전해 보세요!";
-    }
-
-    // 한 번에 모든 상태 업데이트 (isPlaying 상태를 거치지 않음)
+    // AI 사고 중 표시
+    setIsAIThinking(true);
     setGameState(prev => ({
       ...prev,
       playerChoice: choice,
-      aiChoice: aiChoice,
-      result: result,
-      isPlaying: false,
-      score: newScore,
-      showResultScreen: true,
-      cjaiMessage: message,
-      playerWinStreak: newWinStreak,
-      playerLossStreak: newLossStreak,
+      cjaiMessage: "🤖 AI가 전략을 분석 중..."
     }));
-  }, [gameState.isPlaying, gameState.score, gameState.playerWinStreak, gameState.playerLossStreak, getAIChoice, getGameResult]);
+
+    // 심리적 긴장감을 위한 딜레이
+    setTimeout(() => {
+      // AI 선택 결정
+      const aiChoice = getAIChoice();
+      const result = getGameResult(choice, aiChoice);
+      
+      // 점수 및 상태 업데이트
+      const newScore = { ...gameState.score };
+      const newWinStreak = result === 'win' ? gameState.playerWinStreak + 1 : 0;
+      const newLossStreak = result === 'lose' ? gameState.playerLossStreak + 1 : 0;
+    
+      if (result === 'win') {
+        newScore.player++;
+      } else if (result === 'lose') {
+        newScore.ai++;
+      } else {
+        newScore.draws++;
+      }
+
+      // 향상된 심리적 메시지
+      let message = "좋은 게임이었어요! 🎮";
+      if (result === 'win') {
+        if (newWinStreak >= 3) {
+          message = "🔥 연승 중이에요! 이 기세를 계속 이어가세요!";
+        } else {
+          message = "🎉 승리했어요! 한 번 더 도전해보세요!";
+        }
+      } else if (result === 'lose') {
+        if (newLossStreak >= 3) {
+          message = "😅 패턴을 바꿔보세요! 반전의 기회가 올 거예요!";
+        } else {
+          message = "😔 아쉽네요... 다음엔 이길 수 있어요!";
+        }
+      } else {
+        message = "🤝 무승부! 이번엔 승부를 가려보세요!";
+      }
+
+      // 한 번에 모든 상태 업데이트
+      setGameState(prev => ({
+        ...prev,
+        playerChoice: choice,
+        aiChoice: aiChoice,
+        result: result,
+        isPlaying: false,
+        score: newScore,
+        showResultScreen: true,
+        cjaiMessage: message,
+        playerWinStreak: newWinStreak,
+        playerLossStreak: newLossStreak,
+      }));
+      
+      setIsAIThinking(false);
+    }, 1500); // 1.5초 딜레이로 심리적 긴장감 조성
+  }, [gameState.isPlaying, gameState.score, gameState.playerWinStreak, gameState.playerLossStreak, isAIThinking, getAIChoice, getGameResult]);
 
   const handlePlayAgain = useCallback(() => {
     setGameState(prev => ({
@@ -109,5 +137,7 @@ export const useRPSGame = (isPopup = false) => {
     handlePlayerChoice,
     handlePlayAgain,
     handleResetScore,
+    isAIThinking,
+    showPsychMessage,
   };
 };

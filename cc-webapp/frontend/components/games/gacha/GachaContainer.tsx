@@ -13,6 +13,12 @@ export function GachaContainer() {
   const [result, setResult] = useState<GachaResult | null>(null);
   const [isPopup, setIsPopup] = useState(false);
   
+  // 심리적 효과를 위한 상태
+  const [nearMiss, setNearMiss] = useState(false);
+  const [psychMessage, setPsychMessage] = useState('');
+  const [showPsychMessage, setShowPsychMessage] = useState(false);
+  const [pullCount, setPullCount] = useState(0);
+  
   // 팝업 모드 감지
   useEffect(() => {
     setIsPopup(isPopupWindow());
@@ -69,9 +75,12 @@ export function GachaContainer() {
 
     setIsPlaying(true);
     setTickets(prev => prev - 1);
+    setPullCount(prev => prev + 1);
+    setNearMiss(false);
+    setShowPsychMessage(false);
 
-    // 애니메이션 시간
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // 심리적 긴장감을 위한 연장된 애니메이션
+    await new Promise(resolve => setTimeout(resolve, 2500));
 
     const item = performGacha();
     const gachaResult: GachaResult = {
@@ -79,9 +88,44 @@ export function GachaContainer() {
       isNew: Math.random() > 0.7 // 30% chance for new
     };
 
+    // 근접 실패 감지 (레어 아이템을 거의 뽑을 뻔한 상황)
+    const random = Math.random() * 100;
+    const isNearMissDetected = item.tier !== 'legendary' && 
+                              item.tier !== 'epic' && 
+                              random < 15; // 15% 확률로 근접 실패 연출
+
+    if (isNearMissDetected) {
+      setNearMiss(true);
+      setPsychMessage('💫 아쉬워! 레어 아이템이 코앞이었는데!');
+      setShowPsychMessage(true);
+    } else {
+      // 심리적 메시지 설정
+      let message = '';
+      if (item.tier === 'legendary') {
+        message = '🎉 대박! 전설 등급 획득!';
+      } else if (item.tier === 'epic') {
+        message = '⭐ 에픽 등급! 운이 좋네요!';
+      } else if (pullCount % 5 === 0) {
+        message = '🔥 연속 도전! 다음엔 더 좋은 결과가!';
+      } else if (tickets === 0) {
+        message = '💰 티켓을 충전하고 더 큰 행운을!';
+      }
+      
+      if (message) {
+        setPsychMessage(message);
+        setShowPsychMessage(true);
+      }
+    }
+
     setResult(gachaResult);
     setShowModal(true);
     setIsPlaying(false);
+
+    // 심리적 메시지 자동 숨기기
+    setTimeout(() => {
+      setShowPsychMessage(false);
+      setNearMiss(false);
+    }, 3000);
   };
 
   const handleCloseModal = () => {

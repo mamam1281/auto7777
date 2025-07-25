@@ -118,6 +118,11 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
   const [balance, setBalance] = useState(1000);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [shake, setShake] = useState(false);
+  
+  // 근접 실패 및 심리적 효과 상태
+  const [nearMiss, setNearMiss] = useState(false);
+  const [displayBalance, setDisplayBalance] = useState(1000);
+  const [balanceUpdateDelay, setBalanceUpdateDelay] = useState(false);
 
   // 잭팟 애니메이션 효과
   useEffect(() => {
@@ -126,6 +131,19 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
     }, 2500);
     return () => clearInterval(interval);
   }, []);
+
+  // 잔액 표시 지연 효과 (손실 시)
+  useEffect(() => {
+    if (balanceUpdateDelay && !winResult?.isWin) {
+      const timer = setTimeout(() => {
+        setDisplayBalance(balance);
+        setBalanceUpdateDelay(false);
+      }, 1500); // 1.5초 지연
+      return () => clearTimeout(timer);
+    } else {
+      setDisplayBalance(balance);
+    }
+  }, [balance, balanceUpdateDelay, winResult]);
   
   const handleSpin = useCallback(() => {
     if (balance < betAmount || isSpinning) {
@@ -137,20 +155,40 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
     setBalance(prev => prev - betAmount);
     setWinResult(null);
     setShake(false);
+    setNearMiss(false);
 
     // 스핀 결과 생성 및 적용
     setTimeout(() => {
       const newReels = generateSpinResult();
       const result = checkWinCondition(newReels, betAmount);
       
+      // 근접 실패 체크 (2개 일치 시)
+      const isNearMiss = !result.isWin && (
+        (newReels[0] === newReels[1] && newReels[0] === '⭐') ||
+        (newReels[1] === newReels[2] && newReels[1] === '⭐') ||
+        (newReels[0] === newReels[1] && newReels[0] === '💎')
+      );
+      
+      if (isNearMiss) {
+        setNearMiss(true);
+      }
+      
       setReels(newReels);
       setWinResult(result);
       
       if (result.isWin) {
         setBalance(prev => prev + result.payout);
+        setDisplayBalance(prev => prev + result.payout); // 승리 시 즉시 업데이트
         if (result.type === "jackpot") {
           setShake(true);
         }
+      } else {
+        setBalanceUpdateDelay(true); // 패배 시 지연 업데이트
+        // 패배 시 잔액 업데이트 지연
+        setTimeout(() => {
+          setDisplayBalance(prev => prev - betAmount);
+          setBalanceUpdateDelay(false);
+        }, 1500);
       }
       
       setIsSpinning(false);
@@ -159,6 +197,7 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
       // 일정 시간 후 대기 상태로 되돌리기
       setTimeout(() => {
         setGameState('idle');
+        setNearMiss(false);
       }, 3000);
     }, 2000);
   }, [betAmount, balance, isSpinning]);
@@ -222,6 +261,42 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
           winType={winResult.type}
           onComplete={() => setWinResult(null)}
         />
+      )}
+
+      {/* Near Miss Effect - 근접 실패 시 심리적 효과 */}
+      {nearMiss && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="absolute inset-0 flex items-center justify-center bg-black/50 pointer-events-none"
+        >
+          <motion.div
+            animate={{ 
+              y: [0, -10, 0],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{ 
+              duration: 0.8,
+              repeat: 2,
+              ease: "easeInOut"
+            }}
+            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-lg font-bold text-lg shadow-lg"
+          >
+            💫 아쉬워! 거의 다 왔는데! 💫
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Balance Update Delay Indicator - 잔액 업데이트 지연 표시 */}
+      {balanceUpdateDelay && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="absolute top-4 right-4 bg-red-500/80 text-white px-3 py-1 rounded text-sm"
+        >
+          💰 계산 중...
+        </motion.div>
       )}
     </motion.div>
   );

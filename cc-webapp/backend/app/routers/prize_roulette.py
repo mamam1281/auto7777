@@ -150,6 +150,54 @@ async def spin_roulette(
 ):
     """
     룰렛 스핀 실행
+    - 유저 타입별 차등 확률 적용
+    - 시간대별 승률 조정
+    - 근접 실패 로직 적용
+    """
+    try:
+        from ..services.roulette_service import RouletteService
+        from ..repositories.game_repository import GameRepository
+        
+        # 서비스 초기화
+        game_repo = GameRepository()
+        roulette_service = RouletteService(game_repo)
+        
+        # 사용자 ID 처리 (임시로 숫자 변환)
+        user_id = hash(request.user_id) % 1000000  # 문자열을 숫자로 변환
+        
+        # 룰렛 스핀 실행 (DB 세션 전달)
+        result = roulette_service.spin_prize_roulette(user_id, db)
+        
+        # 응답 변환
+        prize_data = None
+        if result.prize:
+            prize_data = Prize(
+                id=result.prize.id,
+                name=result.prize.name,
+                value=result.prize.value,
+                color=result.prize.color,
+                probability=result.prize.probability,
+                icon=getattr(result.prize, 'icon', None)
+            )
+        
+        return PrizeRouletteSpinResponse(
+            success=result.success,
+            prize=prize_data,
+            message=result.message,
+            spins_left=result.spins_left,
+            cooldown_expires=result.cooldown_expires,
+            is_near_miss=result.is_near_miss,
+            animation_type=result.animation_type
+        )
+        
+    except Exception as e:
+        logger.error(f"룰렛 스핀 실패: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"룰렛 스핀 중 오류가 발생했습니다: {str(e)}"
+        )
+    """
+    룰렛 스핀 실행
     - 확률 기반 상품 선택
     - 사용자 제한 확인
     - 상품 지급 처리

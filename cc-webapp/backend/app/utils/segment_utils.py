@@ -34,6 +34,48 @@ class UserSegment(Base): # Placeholder
     # Add other fields as per your schema (e.g., streak_count, etc.)
 
 
+def get_user_segment(user_id: int, db: Session) -> str:
+    """유저 세그먼트 조회"""
+    try:
+        # 유저 세그먼트 테이블에서 조회
+        user_segment = db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
+        
+        if user_segment and user_segment.rfm_group:
+            return user_segment.rfm_group
+        
+        # 세그먼트가 없으면 활동 기반으로 추정
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        
+        # 최근 7일 활동 확인
+        recent_actions = db.query(UserAction).filter(
+            UserAction.user_id == user_id,
+            UserAction.timestamp >= seven_days_ago
+        ).count()
+        
+        # 최근 30일 활동 확인
+        monthly_actions = db.query(UserAction).filter(
+            UserAction.user_id == user_id,
+            UserAction.timestamp >= thirty_days_ago
+        ).count()
+        
+        # 간단한 세그먼트 분류 로직
+        if recent_actions == 0 and monthly_actions == 0:
+            return "NEW"  # 신규 유저
+        elif recent_actions >= 10:
+            return "VIP"  # 활발한 유저
+        elif recent_actions >= 3:
+            return "REGULAR"  # 일반 유저
+        elif monthly_actions > 0:
+            return "RETURNING"  # 복귀 유저
+        else:
+            return "NEW"
+            
+    except Exception as e:
+        print(f"Error getting user segment: {e}")
+        return "REGULAR"  # 기본값
+
+
 # Define RFM thresholds (these should come from 02_data_personalization_en.md)
 # Using placeholder values/logic here as direct doc parsing isn't feasible for the agent.
 # These values represent:
