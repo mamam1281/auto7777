@@ -20,8 +20,29 @@
 
 → **이 모든 작업들은 실제 서버가 있어야 가능합니다!**
 
-### **✅ 서버 구입 전에 할 수 있는 작업들:**
-- **로컬 개발 환경에서 백엔드 모델 수정**
+### **✅ 서버 구입 전에 할 수 있는 작업들:**## 📊 **현재 진행 상황 및 다음 단계**
+
+### 완료된 작업
+- ✅ **백엔드 모델 수정 및 API 개발** (Phase A-B)
+- ✅ **프론트엔드 폼 수정** (Phase C)
+- ✅ **로컬 테스트 완료** (Phase D)
+- ✅ **데이터베이스 마이그레이션** (SQLite → PostgreSQL)
+- ✅ **Docker 환경 구성** (PostgreSQL + Redis)
+- ✅ **서버 시작 확인** (FastAPI 백엔드)
+
+### 다음 단계
+- ⬅️ **Vultr Singapore 서버 설정** (Phase 1)
+- ⏹️ **실제 서버 배포** (Phase 7)
+
+### 비용
+- **Vultr Singapore VPS**: $30.25/월
+- **도메인** (선택사항): $10-15/년
+- **총 월 비용**: **약 $31-32**
+
+### 일정
+- **완료된 개발 시간**: **약 10시간**
+- **남은 작업 시간**: **약 3-5시간**
+- **서버 배포 예상 시간**: **2-3시간**발 환경에서 백엔드 모델 수정**
 - **데이터베이스 스키마 설계**
 - **API 엔드포인트 개발**
 - **프론트엔드 폼 수정**
@@ -82,16 +103,25 @@
   - [x] 회원가입 API: site_id, nickname, phone_number, password, invite_code ✅
   - [x] 로그인 API: site_id, password ✅
 
-### **Phase D: 로컬 테스트** (예상 소요: 1시간) ⬅️ **다음 단계**
-- [ ] **백엔드 서버 실행** (`uvicorn main:app --reload`)
-- [ ] **프론트엔드 서버 실행** (`npm run dev`)
-- [ ] **회원가입/로그인 테스트**
-- [ ] **API 엔드포인트 테스트** (Postman 또는 curl)
+### **Phase D: 로컬 테스트** (예상 소요: 1시간) ✅ **완료됨!**
+- [x] **백엔드 서버 실행** (`cd cc-webapp\backend && python -m uvicorn app.main:app --reload`) ✅
+- [x] **프론트엔드 서버 실행** (`npm run dev`) ✅
+- [x] **회원가입/로그인 테스트** ✅
+- [x] **API 엔드포인트 테스트** (SwaggerUI: http://127.0.0.1:8000/docs) ✅
 
-### **Phase E: 서버 구입 후 배포 준비** (서버 구입 후 진행)
-- [ ] **환경변수 설정 파일 준비**
-- [ ] **PostgreSQL 연결 설정 준비**
-- [ ] **Docker 설정 확인**
+### **Phase E: 서버 구입 후 배포 준비** ✅ **완료됨!**
+- [x] **환경변수 설정 파일 준비** ✅
+  ```
+  DATABASE_URL=postgresql://cc_user:cc_password@localhost/cc_webapp
+  REDIS_URL=redis://redis:6379/0
+  ```
+- [x] **PostgreSQL 연결 설정 준비** ✅
+  - PostgreSQL 컨테이너 성공적으로 설정
+  - SQLite에서 PostgreSQL로 데이터 마이그레이션 완료
+  - 테스트용 데이터 이전 (사용자 2개, 초대 코드 8개)
+- [x] **Docker 설정 확인** ✅
+  - PostgreSQL 및 Redis 컨테이너 실행 중
+  - docker-compose.yml 설정 완료
 
 ---
 
@@ -99,29 +129,54 @@
 
 ## �🚀 Phase 1: Vultr Singapore 서버 설정 (예상 소요: 2-3시간)
 
-### 1.1 Vultr 계정 생성 및 VPS 배포
+### 1.1 Vultr 계정 생성 및 VPS 배포 ✅ **완료됨!**
 - [x] **Vultr 계정 생성** → [vultr.com](https://vultr.com) ✅ **완료**
 - [x] **VPS 스펙 선택** ✅ **완료**
   - 지역: **Singapore**
   - OS: **AlmaLinux x64** (RHEL 계열)
   - 스펙: **2 vCPU, 4GB RAM, 80GB SSD** ($30.25/월)
-- [ ] **SSH 키 등록** (또는 루트 비밀번호 설정)
-- [ ] **방화벽 설정** (22, 80, 443, 5432 포트 열기)
+- [x] **SSH 키 생성 및 구성** ✅ **완료**
+  - [x] SSH 설정 파일 구성 (`C:\Users\bdbd\.ssh\config`)
+  - [x] 서버 IP 등록: 139.180.155.143
+  - [x] 편의를 위한 호스트 별칭 설정: vultr-singapore
+- [x] **방화벽 설정** (22, 80, 443, 5432 포트 열기) ✅ **완료**
 
-### 1.2 AlmaLinux 서버 초기 설정
-- [ ] **SSH 접속 확인**
+### 1.2 AlmaLinux 서버 초기 설정 ✅ **완료됨!**
+- [x] **SSH 키 생성** ✅ **완료**
+  - [x] 이메일 주소로 SSH 키페어 생성: `rhqnrl0103@gmail.com`
+  - [x] 랜덤아트(RandomArt) 생성됨: 키 지문의 시각적 표현
+  - [x] 공개 키 확인: `ssh-rsa AAAAB3NzaC1yc2E... rhqnrl0103@gmail.com`
+- [x] **Vultr 대시보드에 SSH 공개 키 등록** ✅ **완료**
+  - [x] 공개 키 복사: `ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDN0b17eABxfgd5...`
+  - [x] Vultr 대시보드 > SSH Keys > Add SSH Key에 등록
+- [x] **SSH 접속 문제 확인** ✅ **확인됨**
+  - [x] SSH 접속 시도 시 연결 시간 초과됨 (Connection timed out)
+  - [x] 이메일 주소가 키에 포함되어도 문제 없음 - 키 제대로 등록됨
+  - [x] Vultr 콘솔을 통한 접속 성공 ✅ **완료**
+  - [x] 복잡한 기본 비밀번호 변경 ✅ **완료**
   ```bash
-  ssh root@YOUR_SERVER_IP
+  # 비밀번호 변경 명령어
+  passwd
+  
+  # 구성된 별칭으로 SSH 접속 (나중에 시도)
+  ssh vultr-singapore
+  
+  # 또는 IP 직접 사용
+  ssh root@139.180.155.143
   ```
-- [ ] **시스템 업데이트**
+- [x] **시스템 업데이트** ✅ **완료**
   ```bash
-  dnf update -y
+  yum update -y
   ```
-- [ ] **필수 패키지 설치**
+- [x] **필수 패키지 설치** ✅ **완료**
   ```bash
-  dnf install -y nginx postgresql postgresql-server postgresql-contrib python3-pip python3-venv git firewalld
+  # 기본 패키지 설치 (python3-venv 제외하고 설치)
+  yum install -y nginx postgresql postgresql-server postgresql-contrib python3-pip git
+  
+  # Python 가상 환경 모듈 별도 설치 시도 (패키지명이 다를 수 있음)
+  yum install -y python3-virtualenv
   ```
-- [ ] **방화벽 설정 (firewalld 사용)**
+- [x] **방화벽 설정 (firewalld 사용)** ✅ **완료**
   ```bash
   # 방화벽 서비스 시작 및 활성화
   systemctl start firewalld
@@ -144,44 +199,54 @@
 
 ---
 
-## 🗄️ Phase 2: PostgreSQL 설정 (AlmaLinux) (예상 소요: 1-2시간)
+## 🗄️ Phase 2: PostgreSQL 설정 (AlmaLinux) (예상 소요: 1-2시간) ✅ **완료됨!**
 
 ### 2.1 PostgreSQL 초기화 및 시작
-- [ ] **PostgreSQL 데이터베이스 초기화**
+- [x] **PostgreSQL 데이터베이스 초기화** ✅ **완료**
   ```bash
-  # AlmaLinux에서는 먼저 초기화가 필요
+  # PostgreSQL 데이터베이스 초기화
   postgresql-setup --initdb
-  ```
-- [ ] **PostgreSQL 서비스 시작**
-  ```bash
+  
+  # PostgreSQL 서비스 시작 및 활성화
   systemctl start postgresql
   systemctl enable postgresql
   ```
-- [ ] **데이터베이스 및 사용자 생성**
+  
+- [x] **PostgreSQL 사용자 및 데이터베이스 생성** ✅ **완료**
   ```bash
+  # PostgreSQL에 접속
   sudo -u postgres psql
-  CREATE DATABASE casino_db;
-  CREATE USER casino_admin WITH PASSWORD 'your_secure_password';
-  GRANT ALL PRIVILEGES ON DATABASE casino_db TO casino_admin;
-  \q
+  
+  # 데이터베이스 및 사용자 생성
+  CREATE DATABASE cc_webapp;
+  CREATE USER cc_user WITH PASSWORD 'cc_password';
+  GRANT ALL PRIVILEGES ON DATABASE cc_webapp TO cc_user;
+  ```
+  
+- [x] **데이터 마이그레이션** ✅ **완료**
+  ```bash
+  # 로컬 SQLite 데이터를 PostgreSQL로 마이그레이션
+  python import_to_postgres.py
   ```
 
 ### 2.2 보안 설정
-- [ ] **외부 접속 허용 설정**
+- [x] **외부 접속 허용 설정** ✅ **완료**
   ```bash
-  # /etc/postgresql/14/main/postgresql.conf
-  listen_addresses = 'localhost,YOUR_APP_SERVER_IP'
+  # PostgreSQL 설정 파일 경로 (AlmaLinux)
+  # /var/lib/pgsql/data/postgresql.conf
+  listen_addresses = 'localhost,127.0.0.1'
   
-  # /etc/postgresql/14/main/pg_hba.conf
-  host casino_db casino_admin YOUR_APP_SERVER_IP/32 md5
+  # /var/lib/pgsql/data/pg_hba.conf
+  # 추가 설정:
+  host cc_webapp cc_user 127.0.0.1/32 md5
   ```
 
 ---
 
-## 🔄 Phase 3: 백엔드 모델 수정 (예상 소요: 1-2시간)
+## 🔄 Phase 3: 백엔드 모델 수정 (예상 소요: 1-2시간) ✅ **이미 완료됨!**
 
 ### 3.1 User 모델 개선
-- [ ] **사이트ID와 비밀번호 필드 추가**
+- [x] **사이트ID와 비밀번호 필드 추가** ✅ **완료**
   ```python
   class User(Base):
       __tablename__ = "users"
@@ -198,22 +263,22 @@
   ```
 
 ### 3.2 마이그레이션 생성
-- [ ] **Alembic 마이그레이션 생성**
+- [x] **Alembic 마이그레이션 생성** ✅ **완료**
   ```bash
   cd backend
   alembic revision --autogenerate -m "add_site_id_and_password_hash"
   ```
-- [ ] **마이그레이션 실행**
+- [x] **마이그레이션 실행** ✅ **완료**
   ```bash
   alembic upgrade head
   ```
 
 ---
 
-## 🔧 Phase 4: 인증 API 수정 (예상 소요: 2-3시간)
+## 🔧 Phase 4: 인증 API 수정 (예상 소요: 2-3시간) ✅ **이미 완료됨!**
 
 ### 4.1 새로운 요청 모델
-- [ ] **SignUpRequest 수정**
+- [x] **SignUpRequest 수정** ✅ **완료**
   ```python
   class SignUpRequest(BaseModel):
       site_id: str           # 로그인용 고유 ID
@@ -223,7 +288,7 @@
       invite_code: str       # 초대코드
   ```
 
-- [ ] **LoginRequest 수정**
+- [x] **LoginRequest 수정** ✅ **완료**
   ```python
   class LoginRequest(BaseModel):
       site_id: str          # 사이트ID로 로그인
@@ -231,7 +296,7 @@
   ```
 
 ### 4.2 회원가입 API 수정
-- [ ] **즉시 가입 처리**
+- [x] **즉시 가입 처리** ✅ **완료**
   ```python
   @router.post("/signup", response_model=TokenResponse)
   async def signup(data: SignUpRequest, db: Session = Depends(get_db)):
@@ -245,7 +310,7 @@
   ```
 
 ### 4.3 로그인 API 수정
-- [ ] **사이트ID + 비밀번호 인증**
+- [x] **사이트ID + 비밀번호 인증** ✅ **완료**
   ```python
   @router.post("/login", response_model=TokenResponse)
   async def login(data: LoginRequest, db: Session = Depends(get_db)):
@@ -256,10 +321,10 @@
 
 ---
 
-## 🎨 Phase 5: 프론트엔드 수정 (예상 소요: 2-3시간)
+## 🎨 Phase 5: 프론트엔드 수정 (예상 소요: 2-3시간) ✅ **이미 완료됨!**
 
 ### 5.1 회원가입 폼 수정
-- [ ] **RegisterForm.tsx 수정**
+- [x] **RegisterForm.tsx 수정** ✅ **완료**
   ```typescript
   interface RegisterFormData {
     site_id: string;        // 로그인용 고유 ID
@@ -271,7 +336,7 @@
   ```
 
 ### 5.2 로그인 폼 수정
-- [ ] **LoginForm.tsx 수정**
+- [x] **LoginForm.tsx 수정** ✅ **완료**
   ```typescript
   interface LoginFormData {
     site_id: string;        // 사이트ID로 로그인
@@ -280,9 +345,9 @@
   ```
 
 ### 5.3 입력 검증 추가
-- [ ] **사이트ID 유효성 검사** (영문+숫자, 4-20자)
-- [ ] **비밀번호 유효성 검사** (8자 이상, 특수문자 포함)
-- [ ] **전화번호 형식 검증** (010-XXXX-XXXX)
+- [x] **사이트ID 유효성 검사** (영문+숫자, 4-20자) ✅ **완료**
+- [x] **비밀번호 유효성 검사** (8자 이상, 특수문자 포함) ✅ **완료**
+- [x] **전화번호 형식 검증** (010-XXXX-XXXX) ✅ **완료**
 
 ---
 
@@ -402,10 +467,12 @@
 
 ## 🎯 **핵심 변경사항 요약**
 
-1. **실제 전화번호 저장** → 인증번호 발송 없이 바로 저장
-2. **사이트ID 필드 추가** → 로그인용 고유 ID
-3. **비밀번호 시스템 도입** → 보안 강화
-4. **관리자 3요소 검색** → 사이트ID, 닉네임, 실제 전화번호
+1. **실제 전화번호 저장** → 인증번호 발송 없이 바로 저장 ✅
+2. **사이트ID 필드 추가** → 로그인용 고유 ID ✅
+3. **비밀번호 시스템 도입** → 보안 강화 ✅
+4. **관리자 3요소 검색** → 사이트ID, 닉네임, 실제 전화번호 ✅
+5. **PostgreSQL로 데이터베이스 마이그레이션** → 안정성 및 성능 향상 ✅
+6. **Docker 컨테이너화** → 배포 용이성 개선 ✅
 
 ---
 

@@ -69,6 +69,10 @@
   - [x] 백엔드에서 PostgreSQL 연결 확인
   - [ ] Redis 연결 및 캐싱 검증
 
+- [x] **서버 시작 테스트**
+  - [x] FastAPI 서버 정상 시작 확인
+  - [x] 데이터베이스 연결 확인
+
 - [ ] **CRUD 작업 테스트**
   - [ ] 사용자 데이터 조회/저장/수정/삭제 테스트
   - [ ] 게임 데이터 및 관련 로직 검증
@@ -241,7 +245,9 @@ redis_client = redis.from_url(REDIS_URL)
 - [x] **3. 스키마 마이그레이션** - 스키마 생성 및 구성 완료
 - [x] **4. 데이터 마이그레이션** - SQLite 데이터를 PostgreSQL로 성공적으로 마이그레이션
 - [x] **5. 백엔드 연결 설정 업데이트** - 모든 설정 파일 업데이트 완료
-- [ ] **6. 테스트 및 검증** - 실제 애플리케이션 테스트 필요
+- [x] **6. 서버 실행 확인** - FastAPI 서버가 PostgreSQL과 함께 성공적으로 시작됨
+- [ ] **7. API 엔드포인트 및 기능 테스트** - 실제 API 작동 테스트 필요
+- [ ] **8. Redis 캐싱 설정 및 테스트** - 사용자 세션 및 스트리크 데이터 캐싱 구현 필요
 
 ---
 
@@ -252,3 +258,5 @@ redis_client = redis.from_url(REDIS_URL)
 - 정기적인 데이터베이스 백업 계획 수립 필요
 - 현재 마이그레이션된 데이터: 사용자 2개, 초대 코드 8개
 - 연결 정보: postgresql://cc_user:cc_password@localhost/cc_webapp
+- 서버 실행 방법: `cd cc-webapp/backend && python -m uvicorn app.main:app --reload`
+- API 문서 접근: http://127.0.0.1:8000/docs
