@@ -48,6 +48,9 @@ class TestRPSService:
         self.mock_repository = Mock(spec=GameRepository)
         self.mock_token_service = Mock(spec=TokenService)
         
+        # 기본 Mock 설정
+        self.mock_repository.get_streak.return_value = 0
+        
         self.service = RPSService(
             repository=self.mock_repository,
             token_service=self.mock_token_service,
@@ -77,6 +80,7 @@ class TestRPSService:
         self.mock_token_service.deduct_tokens.return_value = 100
         self.mock_repository.get_user_segment.return_value = "Standard"
         self.mock_token_service.get_token_balance.return_value = 600
+        self.mock_repository.get_streak.return_value = 0  # Mock streak as integer
         
         # 컴퓨터가 가위 선택하도록 패치 (사용자 승리)
         with patch('app.services.rps_service.random.choice', return_value="scissors"):

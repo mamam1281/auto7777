@@ -4,7 +4,7 @@ Phase D: API 엔드포인트 통합 테스트
 import requests
 import json
 
-BASE_URL = "http://127.0.0.1:8001"
+BASE_URL = "http://127.0.0.1:8002"  # 백엔드 포트 수정
 
 def test_server_health():
     """서버 상태 확인"""

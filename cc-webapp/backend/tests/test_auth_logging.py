@@ -16,7 +16,10 @@ def test_login_logging(client, caplog):
     with caplog.at_level(logging.INFO):
         response = client.post(
             "/api/auth/login",
-            json={"nickname": "testuser", "password": "password"},
+            json={
+                "site_id": "testuser", 
+                "password": "password"
+            },
         )
         assert response.status_code == 200
         assert "Test login for testuser" in caplog.text

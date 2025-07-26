@@ -30,13 +30,15 @@ class TestGachaService:
         """Test gacha service initializes with default rarity table."""
         # The service should load the default rarity table on init
         
-        # Assert
-        assert len(self.service.rarity_table) == 4
+        # Assert - Updated to include Near_Miss items
+        assert len(self.service.rarity_table) == 6
         rarities = [r[0] for r in self.service.rarity_table]
         assert "Legendary" in rarities
         assert "Epic" in rarities
         assert "Rare" in rarities
         assert "Common" in rarities
+        assert "Near_Miss_Epic" in rarities
+        assert "Near_Miss_Legendary" in rarities
         
         # Probabilities should sum to 1.0
         probability_sum = sum(p for _, p in self.service.rarity_table)

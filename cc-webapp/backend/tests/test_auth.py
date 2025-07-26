@@ -3,8 +3,18 @@
 RFM 세그먼테이션 유지 + 인증 단순화
 """
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from fastapi.testclient import TestCli    def test_register_success(self):
+        """Test successful user registration"""
+        # 테스트 데이터 준비
+        test_user = User(
+            site_id="testuser123",
+            nickname="테스트유저",
+            phone_number="010-1234-5678",
+            password_hash="hashed_password",
+            invite_code="VIP123",
+            cyber_token_balance=200,
+            rank="STANDARD"
+        )emy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -106,7 +116,10 @@ class TestAuthAPI:
             "/api/auth/register",
             json={
                 "invite_code": sample_invite_code,
-                "nickname": "테스트유저"
+                "nickname": "테스트유저",
+                "site_id": "testuser123",
+                "phone_number": "010-1234-5678",
+                "password": "testpass123"
             }
         )
         print(f"Response status: {response.status_code}")
@@ -134,7 +147,10 @@ class TestAuthAPI:
         """중복 닉네임 가입 테스트"""
         # 첫 번째 사용자 등록
         user = User(
+            site_id="test_site_duplicate",
             nickname="중복닉네임",
+            phone_number="010-1234-5678",
+            password_hash="hashed_password",
             invite_code=sample_invite_code,
             rank="STANDARD"
         )
@@ -175,7 +191,10 @@ class TestAuthAPI:
     def test_get_user_by_nickname(self, client, db_session):
         """닉네임으로 사용자 조회 테스트"""        # 사용자와 세그먼트 생성
         user = User(
+            site_id="test_site_lookup",
             nickname="조회테스트",
+            phone_number="010-9999-9999",
+            password_hash="hashed_password",
             invite_code="VIP123",
             rank="VIP",
             cyber_token_balance=500
@@ -209,7 +228,10 @@ class TestRFMSegmentation:
         """User-UserSegment 관계 테스트"""
         # 사용자 생성
         user = User(
+            site_id="test_site_segment",
             nickname="세그먼트테스트",
+            phone_number="010-8888-8888",
+            password_hash="hashed_password",
             invite_code="TEST01",
             rank="STANDARD"
         )

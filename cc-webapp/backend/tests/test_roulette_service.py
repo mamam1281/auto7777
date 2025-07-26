@@ -19,7 +19,7 @@ class TestRouletteService:
         self.token_service = MagicMock(spec=TokenService)
         self.token_service.db = None  # Add db attribute to mock
         self.db = MagicMock(spec=Session)
-        self.service = RouletteService(repository=self.repo, token_service=self.token_service)
+        self.service = RouletteService(repository=self.repo)  # Remove token_service parameter
         
         # Common setup for tests
         self.user_id = 1
@@ -245,7 +245,7 @@ class TestRoulettePayouts:
         self.token_service = MagicMock(spec=TokenService)
         self.token_service.db = None  # Add db attribute to mock
         self.db = MagicMock(spec=Session)
-        self.service = RouletteService(repository=self.repo, token_service=self.token_service)
+        self.service = RouletteService(repository=self.repo)  # Remove token_service parameter
         
         self.user_id = 1
         self.bet = 10

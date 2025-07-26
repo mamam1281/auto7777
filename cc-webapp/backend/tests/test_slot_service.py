@@ -1,6 +1,19 @@
-"""Tests for slot machine game service."""
+"""Tests for slo    def setup_method(self):
+        """Set up test fixtures before each test method."""
+        self.repo = MagicMock(spec=GameRepository)
+        self.token_service = MagicMock(spec=TokenService)
+        self.token_service.db = MagicMock(spec=Session)  # DB 속성 추가
+        self.db = MagicMock(spec=Session)
+        
+        # Mock User object for all tests
+        self.mock_user = MagicMock()
+        self.mock_user.created_at = datetime.datetime.now() - datetime.timedelta(days=10)
+        self.repo.get_user.return_value = self.mock_user
+        
+        self.service = SlotService(repository=self.repo, token_service=self.token_service, db=self.db)ne game service."""
 
 import pytest
+import datetime
 from unittest.mock import MagicMock, patch
 import random
 from sqlalchemy.orm import Session
@@ -17,6 +30,17 @@ class TestSlotService:
         """Setup test environment before each test."""
         self.repo = MagicMock(spec=GameRepository)
         self.token_service = MagicMock(spec=TokenService)
+        self.token_service.db = MagicMock(spec=Session)
+        self.db = MagicMock(spec=Session)
+        
+        # Mock User object for all tests
+        self.mock_user = MagicMock()
+        self.mock_user.created_at = datetime.datetime.now() - datetime.timedelta(days=10)
+        self.repo.get_user.return_value = self.mock_user
+        
+        self.service = SlotService(repository=self.repo, token_service=self.token_service, db=self.db)
+        self.repo = MagicMock(spec=GameRepository)
+        self.token_service = MagicMock(spec=TokenService)
         self.token_service.db = MagicMock(spec=Session)  # DB 속성 추가
         self.db = MagicMock(spec=Session)
         self.service = SlotService(repository=self.repo, token_service=self.token_service, db=self.db)
@@ -29,6 +53,11 @@ class TestSlotService:
         self.token_service.get_token_balance.return_value = 100
         self.repo.get_user_segment.return_value = "Medium"
         self.repo.get_streak.return_value = 0
+        
+        # Mock User object with created_at
+        mock_user = MagicMock()
+        mock_user.created_at = datetime.datetime.now() - datetime.timedelta(days=10)
+        self.repo.get_user.return_value = mock_user
         
         # Act
         result = self.service.spin(user_id, self.db)
