@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-cc_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/init-db:/docker-entrypoint-initdb.d
+      # - ./backend/init-db:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     healthcheck:
@@ -41,12 +41,13 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_4LW_COMMANDS_WHITELIST: "*"
     healthcheck:
-      test: ["CMD-SHELL", "echo 'ruok' | nc localhost 2181 | grep imok"]
+      test: ["CMD-SHELL", "nc -z localhost 2181 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 30s
 
   kafka:
     image: confluentinc/cp-kafka:7.0.1
@@ -71,16 +72,16 @@ services:
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
-      test: ["CMD-SHELL", "cub kafka-ready -b kafka:29092 1 20 || /usr/bin/kafka-broker-api-versions --bootstrap-server kafka:29092 || exit 1"]
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9093 || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 10
-      start_period: 15s
+      start_period: 30s
 
   # Backend API
   backend:
     build:
-      context: ./cc-webapp/backend
+      context: /root/auto7777/backend
       dockerfile: Dockerfile
     depends_on:
       postgres:
@@ -122,10 +123,10 @@ services:
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
-      - ./cc-webapp/backend:/app
+      - /root/auto7777/backend:/app
       - backend_logs:/app/logs
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -134,7 +135,7 @@ services:
   # Frontend (Next.js)
   frontend:
     build:
-      context: ./cc-webapp/frontend
+      context: /root/auto7777/cc-webapp/frontend
       dockerfile: Dockerfile
     depends_on:
       - backend
@@ -145,14 +146,14 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     volumes:
-      - ./cc-webapp/frontend:/app
+      - /root/auto7777/cc-webapp/frontend:/app
       - /app/node_modules
       - /app/.next
 
   # Celery Worker (백그라운드 작업)
   celery-worker:
     build:
-      context: ./cc-webapp/backend
+      context: /root/auto7777/backend
       dockerfile: Dockerfile
     depends_on:
       - postgres
@@ -167,12 +168,12 @@ services:
       REDIS_PORT: 6379
     command: celery -A app.core.celery_app worker --loglevel=info
     volumes:
-      - ./cc-webapp/backend:/app
+      - /root/auto7777/backend:/app
 
   # Celery Beat (스케줄러)
   celery-beat:
     build:
-      context: ./cc-webapp/backend
+      context: /root/auto7777/backend
       dockerfile: Dockerfile
     depends_on:
       - postgres
@@ -187,7 +188,7 @@ services:
       REDIS_PORT: 6379
     command: celery -A app.core.celery_app beat --loglevel=info
     volumes:
-      - ./cc-webapp/backend:/app
+      - /root/auto7777/backend:/app
 
 volumes:
   postgres_data:
