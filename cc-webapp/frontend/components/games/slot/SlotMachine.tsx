@@ -8,6 +8,7 @@ import { SlotMachineMain } from './SlotMachineReels';
 import BetControl from './BetControl';
 import SlotMachineButton from './SlotMachineButton';
 import WinParticleEffect from './WinParticleEffect';
+import { gameAPI } from '../../../utils/api';
 
 // SYMBOLS은 실제 게임에서 사용할 심볼입니다
 const SYMBOLS = ['🍒', '🔔', '💎', '7️⃣', '⭐'];
@@ -118,6 +119,8 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
   const [balance, setBalance] = useState(1000);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [shake, setShake] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
   // 근접 실패 및 심리적 효과 상태
   const [nearMiss, setNearMiss] = useState(false);
@@ -152,54 +155,73 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
 
     setIsSpinning(true);
     setGameState('spinning');
-    setBalance(prev => prev - betAmount);
+    setBalance(prev => prev - betAmount); // 즉시 UI에 반영
     setWinResult(null);
     setShake(false);
     setNearMiss(false);
+    setError(null);
+    setIsLoading(true);
 
-    // 스핀 결과 생성 및 적용
-    setTimeout(() => {
-      const newReels = generateSpinResult();
-      const result = checkWinCondition(newReels, betAmount);
-      
-      // 근접 실패 체크 (2개 일치 시)
-      const isNearMiss = !result.isWin && (
-        (newReels[0] === newReels[1] && newReels[0] === '⭐') ||
-        (newReels[1] === newReels[2] && newReels[1] === '⭐') ||
-        (newReels[0] === newReels[1] && newReels[0] === '💎')
-      );
-      
-      if (isNearMiss) {
-        setNearMiss(true);
-      }
-      
-      setReels(newReels);
-      setWinResult(result);
-      
-      if (result.isWin) {
-        setBalance(prev => prev + result.payout);
-        setDisplayBalance(prev => prev + result.payout); // 승리 시 즉시 업데이트
-        if (result.type === "jackpot") {
-          setShake(true);
+    // 스핀 결과 생성 
+    const newReels = generateSpinResult();
+    const localResult = checkWinCondition(newReels, betAmount);
+    
+    // 프론트엔드 로직으로 게임 진행하면서도 API 호출 형식 유지
+    gameAPI.mockSpinSlot(betAmount, newReels, localResult)
+      .then(response => {
+        const apiResult = response.data;
+        
+        // 근접 실패 체크 (2개 일치 시)
+        const isNearMiss = !localResult.isWin && (
+          (newReels[0] === newReels[1] && newReels[0] === '⭐') ||
+          (newReels[1] === newReels[2] && newReels[1] === '⭐') ||
+          (newReels[0] === newReels[1] && newReels[0] === '💎')
+        );
+        
+        if (isNearMiss || apiResult.animation === 'near_miss') {
+          setNearMiss(true);
         }
-      } else {
-        setBalanceUpdateDelay(true); // 패배 시 지연 업데이트
-        // 패배 시 잔액 업데이트 지연
+        
         setTimeout(() => {
-          setDisplayBalance(prev => prev - betAmount);
-          setBalanceUpdateDelay(false);
-        }, 1500);
-      }
-      
-      setIsSpinning(false);
-      setGameState('result');
-      
-      // 일정 시간 후 대기 상태로 되돌리기
-      setTimeout(() => {
+          setReels(newReels);
+          setWinResult(localResult);
+          
+          if (localResult.isWin) {
+            setBalance(prev => prev + localResult.payout);
+            setDisplayBalance(prev => prev + localResult.payout); // 승리 시 즉시 업데이트
+            if (localResult.type === "jackpot") {
+              setShake(true);
+            }
+          } else {
+            setBalanceUpdateDelay(true); // 패배 시 지연 업데이트
+            // 패배 시 잔액 업데이트 지연
+            setTimeout(() => {
+              setDisplayBalance(prev => prev - betAmount);
+              setBalanceUpdateDelay(false);
+            }, 1500);
+          }
+          
+          setIsSpinning(false);
+          setGameState('result');
+          setIsLoading(false);
+          
+          // 일정 시간 후 대기 상태로 되돌리기
+          setTimeout(() => {
+            setGameState('idle');
+            setNearMiss(false);
+          }, 3000);
+        }, 2000);
+      })
+      .catch(err => {
+        console.error('슬롯 스핀 에러:', err);
+        setError('슬롯 머신 스핀 중 오류가 발생했습니다.');
+        setIsSpinning(false);
         setGameState('idle');
-        setNearMiss(false);
-      }, 3000);
-    }, 2000);
+        setIsLoading(false);
+        // 에러 시 차감된 잔액 복구
+        setBalance(prev => prev + betAmount);
+        setDisplayBalance(prev => prev + betAmount);
+      });
   }, [betAmount, balance, isSpinning]);
 
   const canSpin = balance >= betAmount && !isSpinning;
@@ -211,6 +233,20 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
       transition={{ duration: 0.5 }}
       style={{ pointerEvents: 'auto' }} // CSS 강제 활성화
     >
+      {/* 에러 메시지 표시 */}
+      {error && (
+        <div className="w-full bg-red-600 text-white p-2 mb-2 rounded text-center">
+          {error}
+        </div>
+      )}
+      
+      {/* 로딩 인디케이터 */}
+      {isLoading && (
+        <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-sm z-10">
+          로딩 중...
+        </div>
+      )}
+      
       {/* Main - Slot Reels (압축된 여백) */}
       <div className="w-full" style={{ marginBottom: '8px' }}>
         <SlotMachineMain 

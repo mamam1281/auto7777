@@ -8,7 +8,8 @@ import type {
   LoginRequest,
   RegisterRequest,
   ContentUnlockRequest,
-  GamePlayRequest
+  GamePlayRequest,
+  SlotSpinResponse
 } from '../types/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -59,6 +60,27 @@ export const gameAPI = {
   
   playGame: (data: GamePlayRequest) => 
     apiClient.post('/games/play', data),
+    
+  // 슬롯 머신 스핀 API
+  spinSlot: (betAmount: number = 2) => 
+    apiClient.post<SlotSpinResponse>('/api/games/slot/spin', { bet_amount: betAmount }),
+    
+  // 슬롯 머신 임의 스핀 API (프론트엔드 로직 사용)
+  mockSpinSlot: (betAmount: number, reels: string[], result: any) => {
+    // 프론트엔드 로직 기반 응답 생성
+    // 백엔드와 동일한 인터페이스를 유지하지만 실제로는 프론트엔드 로직 사용
+    const response: SlotSpinResponse = {
+      result: result.isWin ? (result.type === 'jackpot' ? 'jackpot' : 'win') : 'lose',
+      tokens_change: result.isWin ? result.payout - betAmount : -betAmount,
+      balance: 0, // 클라이언트에서 업데이트
+      streak: result.isWin ? 0 : 1, // 임시값, 클라이언트에서 관리
+      animation: result.isWin ? 
+        (result.type === 'jackpot' ? 'jackpot' : 'win') : 
+        (Math.random() < 0.8 ? 'near_miss' : 'lose')
+    };
+    
+    return Promise.resolve({ data: response });
+  }
 };
 
 export const adultContentAPI = {
