@@ -10,7 +10,7 @@ def test_server_health():
     """서버 상태 확인"""
     print("🏥 서버 헬스체크")
     try:
-        response = requests.get(f"{BASE_URL}/api/health")
+        response = requests.get(f"{BASE_URL}/health")  # '/api/health'에서 '/health'로 수정
         if response.status_code == 200:
             print("✅ 서버 정상 동작")
             return True

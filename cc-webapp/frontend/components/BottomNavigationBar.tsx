@@ -7,12 +7,13 @@ export interface NavItemData {
   label: string;
   icon: React.ElementType;
   path: string;
+  isHighlighted?: boolean; // 강조 표시 여부를 나타내는 속성 추가
 }
 
 export const navItems: NavItemData[] = [
   { id: 'home', label: '홈', icon: Home, path: '/' },
   { id: 'game', label: '게임', icon: Gamepad, path: '/games' },
-  { id: 'shop', label: '상점', icon: Store, path: '/shop' },
+  { id: 'shop', label: '상점', icon: Store, path: '/shop', isHighlighted: true }, // 상점 버튼만 강조 표시
   { id: 'history', label: '내역', icon: MessageCircle, path: '/history' },
   { id: 'profile', label: '프로필', icon: User, path: '/profile' },
 ];
@@ -70,6 +71,7 @@ const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
       >
       {navItems.map((item) => {
         const isActive = activeTab === item.id;
+        const isShop = item.id === 'shop'; // 상점 버튼인지 확인
         const IconComponent = item.icon;        return (
           <motion.button
             key={item.id}
@@ -82,6 +84,7 @@ const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
                 ? 'bg-gradient-to-br from-purple-500/20 to-indigo-600/20 shadow-md shadow-purple-500/10 border border-purple-400/25' 
                 : 'hover:bg-gradient-to-br hover:from-white/5 hover:to-purple-500/5 hover:border hover:border-purple-500/15'
               }
+              ${isShop && !isActive ? 'bg-gradient-to-br from-amber-500/20 to-amber-400/10 shadow-md shadow-amber-500/15 border border-amber-400/25' : ''}
             `}
             style={{
               color: isActive ? '#ffffff' : '#e5e7eb',
@@ -103,21 +106,45 @@ const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
             {/* 활성 상태일 때 글로우 효과 */}
             {isActive && (
               <motion.div
-                className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-indigo-500/20 rounded-xl"
+                className={`absolute inset-0 rounded-xl ${
+                  isShop 
+                    ? 'bg-gradient-to-br from-amber-400/30 to-amber-500/30' 
+                    : 'bg-gradient-to-br from-purple-400/20 to-indigo-500/20'
+                }`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
               />
             )}
             <IconComponent 
-              size={iconSize} 
+              size={isShop ? iconSize * 1.05 : iconSize} // 상점 아이콘은 5%만 크게 표시
               className={`mb-0.5 transition-all duration-300 relative z-10 ${
-                isActive ? 'text-purple-300 drop-shadow-sm' : 'text-gray-300 group-hover:text-purple-200'
+                isActive ? 'text-purple-300 drop-shadow-sm' : 
+                isShop ? 'text-amber-300 drop-shadow-lg' : 'text-gray-300 group-hover:text-purple-200'
               }`} 
-            />            <span className={`font-medium transition-all duration-300 relative z-10 ${
-              isActive ? 'text-purple-200' : 'text-gray-300 group-hover:text-white'
+            />
+            {/* 상점 버튼에만 특별한 펄스 효과 추가 */}
+            {isShop && !isActive && (
+              <motion.div
+                className="absolute inset-0 bg-amber-400/10 rounded-xl z-0"
+                animate={{ 
+                  boxShadow: ['0 0 0 0 rgba(251, 191, 36, 0)', '0 0 0 8px rgba(251, 191, 36, 0)'], 
+                }}
+                transition={{ 
+                  repeat: Infinity, 
+                  repeatType: "reverse", 
+                  duration: 1.5,
+                }}
+              />
+            )}
+            <span className={`font-medium transition-all duration-300 relative z-10 ${
+              isActive ? 'text-purple-200' : 
+              isShop ? 'text-amber-200 font-bold' : 'text-gray-300 group-hover:text-white'
             }`}
-            style={{ fontSize: '10px' }}
+            style={{ 
+              fontSize: isShop ? '11px' : '10px',
+              fontWeight: isShop ? 'bold' : 'normal'
+            }}
             >
               {item.label}
             </span>

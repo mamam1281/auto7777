@@ -1,8 +1,16 @@
 """
 고정 초대코드 생성 스크립트
+- 테스트용 초대코드 생성: 5882, 6969, 6974
 """
 import sys
+import os
+
+# 현재 디렉토리를 스크립트 위치로 변경
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+# 상위 경로 추가
 sys.path.insert(0, '.')
+sys.path.insert(0, '..')
 
 from sqlalchemy.orm import sessionmaker
 from app.models import InviteCode
@@ -15,6 +23,8 @@ def create_fixed_invite_codes():
     print("🎫 고정 초대코드 생성 시작")
     
     fixed_codes = ["5882", "6969", "6974"]
+    success_count = 0
+    existing_count = 0
     
     db = SessionLocal()
     try:
@@ -23,11 +33,13 @@ def create_fixed_invite_codes():
             existing = db.query(InviteCode).filter(InviteCode.code == code).first()
             if existing:
                 print(f"   ℹ️ {code} - 이미 존재함")
+                existing_count += 1
             else:
                 # 새로 생성
                 invite = InviteCode(code=code, is_used=False)
                 db.add(invite)
                 print(f"   ✅ {code} - 새로 생성")
+                success_count += 1
         
         db.commit()
         print("🎉 고정 초대코드 설정 완료!")

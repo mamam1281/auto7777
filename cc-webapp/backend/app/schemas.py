@@ -54,6 +54,17 @@ class InviteCodeResponse(BaseModel):
     is_used: bool
     created_at: datetime
 
+class InviteCodeList(BaseModel):
+    codes: List[InviteCodeResponse]
+    total: int
+    used_count: int
+    available_count: int
+    
+    id: int
+    code: str
+    is_used: bool
+    created_at: datetime
+
 # Game related schemas
 class GameType(str, Enum):
     SLOT = "slot"

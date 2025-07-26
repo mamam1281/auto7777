@@ -5,13 +5,14 @@
 - 랭크 시스템으로 서비스 레벨 제어
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas import UserRegister, UserResponse, InviteCodeCreate, InviteCodeResponse
+from app.schemas import UserRegister, UserResponse, InviteCodeCreate, InviteCodeResponse, InviteCodeList
 from app.auth.simple_auth import SimpleAuth
-from app.models import InviteCode
+from app.models import InviteCode, User
 from typing import List
+import time
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -31,6 +32,24 @@ def register_with_invite_code(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@router.get("/check-invite/{code}", response_model=dict)
+def check_invite_code(
+    code: str,
+    db: Session = Depends(get_db)
+):
+    """초대코드 유효성 검사"""
+    invite = db.query(InviteCode).filter(
+        InviteCode.code == code
+    ).first()
+    
+    if not invite:
+        return {"valid": False, "message": "존재하지 않는 초대코드입니다"}
+    
+    if invite.is_used:
+        return {"valid": False, "message": "이미 사용된 초대코드입니다"}
+        
+    return {"valid": True, "message": "유효한 초대코드입니다"}
+
 @router.post("/invite-codes", response_model=List[InviteCodeResponse])
 def create_invite_codes(
     invite_data: InviteCodeCreate,
@@ -47,6 +66,28 @@ def create_invite_codes(
     
     db.commit()
     return codes
+
+@router.get("/invite-codes", response_model=InviteCodeList)
+def list_invite_codes(
+    limit: int = 50,
+    used: bool = None,
+    db: Session = Depends(get_db)
+):
+    """초대코드 목록 조회"""
+    query = db.query(InviteCode)
+    
+    if used is not None:
+        query = query.filter(InviteCode.is_used == used)
+    
+    codes = query.order_by(InviteCode.created_at.desc()).limit(limit).all()
+    total = query.count()
+    
+    return {
+        "codes": codes,
+        "total": total,
+        "used_count": db.query(InviteCode).filter(InviteCode.is_used == True).count(),
+        "available_count": db.query(InviteCode).filter(InviteCode.is_used == False).count()
+    }
 
 @router.get("/invite-codes", response_model=List[InviteCodeResponse]) 
 def list_invite_codes(db: Session = Depends(get_db)):
