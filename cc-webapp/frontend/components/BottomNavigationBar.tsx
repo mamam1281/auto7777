@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Gamepad, Store, Wallet, User } from 'lucide-react';
+import { Home, Gamepad, Store, MessageCircle, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export interface NavItemData {
@@ -13,7 +13,7 @@ export const navItems: NavItemData[] = [
   { id: 'home', label: '홈', icon: Home, path: '/' },
   { id: 'game', label: '게임', icon: Gamepad, path: '/games' },
   { id: 'shop', label: '상점', icon: Store, path: '/shop' },
-  { id: 'wallet', label: '월렛', icon: Wallet, path: '/wallet' },
+  { id: 'history', label: '내역', icon: MessageCircle, path: '/history' },
   { id: 'profile', label: '프로필', icon: User, path: '/profile' },
 ];
 

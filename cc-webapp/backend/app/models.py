@@ -10,8 +10,10 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    site_id = Column(String(50), unique=True, nullable=False, index=True)  # 로그인용 사이트ID 추가
     nickname = Column(String(50), unique=True, nullable=False)
-    phone_number = Column(String(20), unique=True, nullable=False, index=True)  # 사이트 ID로 사용될 전화번호
+    phone_number = Column(String(20), unique=True, nullable=False, index=True)  # 실제 전화번호
+    password_hash = Column(String(100), nullable=False)  # 비밀번호 해시 추가
     invite_code = Column(String(6), nullable=False, index=True)  # 초대코드로 가입
     cyber_token_balance = Column(Integer, default=200)
     created_at = Column(DateTime, default=datetime.utcnow)    # 랭크 시스템 - VIP, PREMIUM, STANDARD 등

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 // 프로젝트 표준 컴포넌트들만 사용
-import GameCard from '../components/GameCard';
 import Button from '../components/Button';
 import QuickStartItem from '../components/QuickStartItem';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -36,25 +35,25 @@ export default function CasinoDashboard() {
       @keyframes premium-gradient-shift {
         0%, 100% { 
           background-position: 0% 50%; 
-          filter: hue-rotate(0deg);
+          filter: hue-rotate(0deg) saturate(1.2);
         }
         25% { 
           background-position: 25% 25%; 
-          filter: hue-rotate(10deg);
+          filter: hue-rotate(15deg) saturate(1.3);
         }
         50% { 
           background-position: 100% 50%; 
-          filter: hue-rotate(20deg);
+          filter: hue-rotate(30deg) saturate(1.4);
         }
         75% { 
           background-position: 75% 75%; 
-          filter: hue-rotate(10deg);
+          filter: hue-rotate(15deg) saturate(1.3);
         }
       }
 
       .cosmic-premium-bg {
         background-size: 400% 400% !important;
-        animation: premium-gradient-shift 12s ease-in-out infinite !important;
+        animation: premium-gradient-shift 10s ease-in-out infinite !important;
       }
     `;
     document.head.appendChild(style);
@@ -72,64 +71,28 @@ export default function CasinoDashboard() {
     setIsLoading(false);
   };
 
-  // 게임 데이터 - 팝업으로 열기
-  const featuredGames = [
-    {
-      id: 'cosmic-fortune',
-      title: '코스믹 포츈',
-      rating: 4.9,
-      players: '31K명',
-      imagePlaceholder: '🎰',
-      onClick: () => openGamePopup('slots')
-    },
-    {
-      id: 'royal-roulette',
-      title: 'Royal Roulette',
-      rating: 4.7,
-      players: '18K명',
-      imagePlaceholder: '🎰',
-      onClick: () => openGamePopup('roulette')
-    },
-    {
-      id: 'rps-battle',
-      title: 'RPS Battle',
-      rating: 4.5,
-      players: '956명',
-      imagePlaceholder: '✂️',
-      onClick: () => openGamePopup('rps')
-    },
-    {
-      id: 'lucky-gacha',
-      title: 'Lucky Gacha',
-      rating: 4.9,
-      players: '3.1K명',
-      imagePlaceholder: '🎁',
-      onClick: () => openGamePopup('gacha')
-    }
-  ];
-
   // 빠른 시작 액션들 - 일부 팝업으로 열기
   const quickActions = [
     {
-      id: 'game-start',
-      label: '게임 시작',
-      iconPlaceholder: '🎮',
-      iconBgColor: '#5B30F6',
-      onClick: () => openGamePopup('slots') // 슬롯 게임 팝업으로 시작
-    },
-    {
-      id: 'deposit',
-      label: '입금하기',
-      iconPlaceholder: '💰',
-      iconBgColor: '#10B981',
-      onClick: () => router.push('/wallet')
-    },
-    {
-      id: 'promotion',
-      label: '프로모션',
+      id: 'daily-reward',
+      label: '오늘보상받기',
       iconPlaceholder: '🎁',
+      iconBgColor: '#5B30F6',
+      onClick: () => router.push('/wallet') // 월렛 페이지로 안내 (바텀네비 "내역"과 동일)
+    },
+    {
+      id: 'model-site',
+      label: '모델사이트',
+      iconPlaceholder: '💎',
+      iconBgColor: '#10B981',
+      onClick: () => window.open('https://md-2424.com', '_blank')
+    },
+    {
+      id: 'popular-games',
+      label: '인기게임',
+      iconPlaceholder: '🔥',
       iconBgColor: '#F59E0B',
-      onClick: () => router.push('/promotions')
+      onClick: () => router.push('/games') // 게임 대시보드 페이지로 연결
     }
   ];
 
@@ -151,10 +114,10 @@ export default function CasinoDashboard() {
   return (
     <div className="min-h-screen w-full cosmic-premium-bg"
          style={{ 
-           background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #0f0f23 50%, #1a1a2e 75%, #0a0a0a 100%)',
+           background: 'linear-gradient(135deg, #0f0f23 0%, #1a1a3a 25%, #16213e 50%, #1a1a3a 75%, #0f0f23 100%)',
            color: '#ffffff',
            fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
-           overflow: 'hidden', // 가로 스크롤 방지
+           overflow: 'hidden',
            position: 'relative'
          }}>
 
@@ -166,17 +129,17 @@ export default function CasinoDashboard() {
         right: 0,
         bottom: 0,
         background: `
-          radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-          radial-gradient(circle at 80% 80%, rgba(79, 70, 229, 0.08) 0%, transparent 50%),
-          radial-gradient(circle at 40% 60%, rgba(168, 85, 247, 0.05) 0%, transparent 50%)
+          radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+          radial-gradient(circle at 40% 60%, rgba(59, 130, 246, 0.08) 0%, transparent 50%)
         `,
         pointerEvents: 'none'
       }} />
 
       {/* Main Content - 스크롤 가능한 콘텐츠 */}
       <div className="w-full min-h-full relative z-10" style={{ 
-        background: 'rgba(0,0,0,0.02)',
-        backdropFilter: 'blur(0.5px)'
+        background: 'rgba(15, 15, 35, 0.3)',
+        backdropFilter: 'blur(1px)'
       }}> 
         
         <div className="py-2 sm:py-4">
@@ -189,31 +152,29 @@ export default function CasinoDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <h1 style={{ 
-            fontSize: '56px',
-            fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
-            fontWeight: '300',
-            letterSpacing: '0.02em',
+          <h1 style={{
+            fontFamily: "'Inter', sans-serif",
+            fontSize: '48px',
+            fontWeight: 'bold',
             lineHeight: '1.1',
-            background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 25%, #a5b4fc 50%, #8b5cf6 75%, #7c3aed 100%)',
-            backgroundClip: 'text',
+            background: 'linear-gradient(135deg, #c084fc 0%, #8b5cf6 20%, #7c3aed 40%, #6366f1 60%, #3b82f6 80%, #06b6d4 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             color: 'transparent',
             marginBottom: '12px',
-            textShadow: '0 8px 32px rgba(139, 92, 246, 0.3)'
+            textShadow: '0 8px 32px rgba(192, 132, 252, 0.4)'
           }}>
-            Welcome to Cosmic Casino
+            Welcome to MODELCASINO
           </h1>
           <p style={{
             fontFamily: "'Inter', sans-serif",
             fontSize: '18px',
-            color: 'rgba(255, 255, 255, 0.8)',
-            fontWeight: '400',
+            color: '#ddd6fe',
+            fontWeight: '500',
             letterSpacing: '0.025em',
             marginTop: '8px'
           }}>
-            Premium Gaming Experience
+            최고급 모델과 함께하는 특별한 시간
           </p>
          </motion.div>
 
@@ -228,30 +189,31 @@ export default function CasinoDashboard() {
           <h2 style={{ 
             fontSize: '24px',
             fontFamily: "'Inter', sans-serif",
-            color: 'rgba(255, 255, 255, 0.95)',
-            fontWeight: '600',
+            color: '#fde047',
+            fontWeight: '700',
             letterSpacing: '0.02em',
-            marginBottom: '24px'
-          }}>🎰 Start Your Journey</h2>
+            marginBottom: '24px',
+            textShadow: '0 4px 16px rgba(253, 224, 71, 0.4)'
+          }}>🎯 지금 바로 시작하세요</h2>
           <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 w-full max-w-full overflow-hidden">
             <Button
               variant="primary"
               size="lg"
-              onClick={() => openGamePopup('slots')} // 팝업으로 게임 시작
+              onClick={() => router.push('/games')} // 게임 대시보드로 연결
             >
-              🎮 Play Games
+              🎮 게임시작하기
             </Button>
             <Button
               variant="secondary"
               size="lg"
-              onClick={() => router.push('/wallet')}
+              onClick={() => window.open('https://md-2424.com', '_blank')}
             >
-              💰 토큰 충전
+              💎 모델사이트방문
             </Button>
             <Button
               variant="accent"
               size="lg"
-              onClick={() => openGamePopup('gacha')} // 가챠 팝업으로 열기
+              onClick={() => router.push('/wallet')} // 월렛 페이지로 연결
             >
               🎁 보너스 받기
             </Button>
@@ -268,11 +230,12 @@ export default function CasinoDashboard() {
           <h2 style={{ 
             fontSize: '24px',
             fontFamily: "'Inter', sans-serif",
-            color: 'rgba(255, 255, 255, 0.95)',
-            fontWeight: '600',
+            color: '#60a5fa',
+            fontWeight: '700',
             letterSpacing: '0.02em',
-            marginBottom: '16px'
-          }}>⚡ Quick Start</h2>
+            marginBottom: '16px',
+            textShadow: '0 4px 16px rgba(96, 165, 250, 0.4)'
+          }}>⚡ 빠른 접속</h2>
           <div style={{ marginTop: '24px' }}> 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-full overflow-hidden"
                  style={{ gridAutoRows: '200px' }}>
@@ -291,49 +254,6 @@ export default function CasinoDashboard() {
                   iconPlaceholder={action.iconPlaceholder}
                   iconBgColor={action.iconBgColor}
                   onClick={action.onClick}
-                />
-              </motion.div>
-            ))}
-          </div>
-          </div>
-        </motion.section>
-
-        {/* 인기 게임 섹션 - 프로젝트 표준 GameCard 사용 */}
-        <motion.section
-          style={{ marginBottom: '40px' }} 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.6 }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 style={{ 
-              fontSize: '24px',
-              fontFamily: "'Inter', sans-serif",
-              color: 'rgba(255, 255, 255, 0.95)',
-              fontWeight: '600',
-              letterSpacing: '0.02em'
-            }}>🔥 Featured Games</h2>
-            </div>
-          
-          <div style={{ marginTop: '24px' }}> 
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-full overflow-hidden" 
-               style={{ gridAutoRows: '200px' }}>
-            {featuredGames.map((game, index) => (
-              <motion.div
-                key={game.id}
-                className="w-full h-full"
-                style={{ height: '200px' }}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-              >
-                <GameCard
-                  id={game.id}
-                  title={game.title}
-                  rating={game.rating}
-                  players={game.players}
-                  imagePlaceholder={game.imagePlaceholder}
-                  onClick={game.onClick}
                 />
               </motion.div>
             ))}

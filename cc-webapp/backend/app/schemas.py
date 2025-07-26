@@ -5,9 +5,29 @@ from typing import Optional, List, Dict, Union
 from enum import Enum
 from datetime import datetime
 
-# User related schemas - 단순 초대코드 기반 시스템
+# User related schemas - 새로운 사이트ID + 비밀번호 시스템
+class SignUpRequest(BaseModel):
+    """사이트ID + 닉네임 + 전화번호 + 비밀번호로 회원가입"""
+    site_id: str = Field(..., min_length=4, max_length=20, description="로그인용 고유 ID (영문+숫자)")
+    nickname: str = Field(..., min_length=2, max_length=50, description="닉네임")
+    phone_number: str = Field(..., description="실제 전화번호 (010-XXXX-XXXX)")
+    password: str = Field(..., min_length=8, description="비밀번호 (8자 이상)")
+    invite_code: str = Field(..., min_length=6, max_length=6, description="초대코드")
+
+class LoginRequest(BaseModel):
+    """사이트ID + 비밀번호로 로그인"""
+    site_id: str = Field(..., description="사이트ID")
+    password: str = Field(..., description="비밀번호")
+
+class TokenResponse(BaseModel):
+    """로그인/회원가입 성공 시 JWT 토큰 응답"""
+    access_token: str
+    token_type: str = "bearer"
+    user: 'UserResponse'
+
+# 기존 초대코드 기반 시스템 (호환성 유지)
 class UserRegister(BaseModel):
-    """초대코드로 간단 가입"""
+    """초대코드로 간단 가입 (기존 방식)"""
     invite_code: str = Field(..., min_length=6, max_length=6)
     nickname: str = Field(..., min_length=2, max_length=50)
 
@@ -15,7 +35,9 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
     id: int
+    site_id: str  # 새로 추가
     nickname: str
+    phone_number: str  # 새로 추가
     rank: str  # VIP, PREMIUM, STANDARD
     cyber_token_balance: int
     created_at: datetime

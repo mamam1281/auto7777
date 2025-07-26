@@ -30,13 +30,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 class LoginRequest(BaseModel):
-    nickname: str
-    phone_number: str
+    site_id: str
+    password: str
 
 
 class SignUpRequest(BaseModel):
+    site_id: str
     nickname: str
     phone_number: str
+    password: str
     invite_code: str
 
 
@@ -53,8 +55,11 @@ class UserMe(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
     id: int
+    site_id: str           # 사이트ID
     nickname: str
+    phone_number: str      # 실제 전화번호
     cyber_token_balance: int
+    rank: str
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -98,13 +103,18 @@ async def verify_invite(req: VerifyInviteRequest, db: Session = Depends(get_db))
 
 @router.post("/signup", response_model=TokenResponse)
 async def signup(data: SignUpRequest, db: Session = Depends(get_db)):
-    """회원 가입 처리 - 닉네임과 전화번호로 가입"""
+    """회원 가입 처리 - 사이트ID, 닉네임, 전화번호, 비밀번호로 가입"""
+    # 사이트ID 중복 검사 (새로운 site_id 필드 사용)
+    if db.query(models.User).filter(models.User.site_id == data.site_id).first():
+        logger.warning("Signup failed: site_id %s already taken", data.site_id)
+        raise HTTPException(status_code=400, detail="Site ID already taken")
+    
     # 닉네임 중복 검사
     if db.query(models.User).filter(models.User.nickname == data.nickname).first():
         logger.warning("Signup failed: nickname %s already taken", data.nickname)
         raise HTTPException(status_code=400, detail="Nickname already taken")
     
-    # 전화번호 중복 검사
+    # 전화번호 중복 검사 (실제 phone_number 필드 사용)
     if db.query(models.User).filter(models.User.phone_number == data.phone_number).first():
         logger.warning("Signup failed: phone number %s already taken", data.phone_number)
         raise HTTPException(status_code=400, detail="Phone number already taken")
@@ -118,10 +128,15 @@ async def signup(data: SignUpRequest, db: Session = Depends(get_db)):
         logger.warning("Signup failed: invalid invite code %s", data.invite_code)
         raise HTTPException(status_code=400, detail="Invalid invite code")
     
-    # 사용자 생성 (비밀번호 없이)
+    # 비밀번호 해싱
+    password_hash = pwd_context.hash(data.password)
+    
+    # 사용자 생성 - 새로운 필드 구조 사용
     user = models.User(
+        site_id=data.site_id,           # 새로운 site_id 필드
         nickname=data.nickname, 
-        phone_number=data.phone_number,
+        phone_number=data.phone_number,  # 실제 전화번호
+        password_hash=password_hash,     # 해싱된 비밀번호
         invite_code=data.invite_code
     )
     db.add(user)
@@ -132,30 +147,34 @@ async def signup(data: SignUpRequest, db: Session = Depends(get_db)):
     # 초기 토큰 지급
     token_service.add_tokens(int(user.id), INITIAL_CYBER_TOKENS)  # type: ignore[arg-type]
     access_token = create_access_token({"sub": str(user.id)})
-    logger.info("Signup success for nickname %s, phone %s", data.nickname, data.phone_number)
+    logger.info("Signup success for site_id %s, nickname %s", data.site_id, data.nickname)
     return TokenResponse(access_token=access_token)
 
 
 @router.post("/login", response_model=TokenResponse)
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
-    """로그인 처리 - 닉네임과 전화번호로 인증"""
+    """로그인 처리 - 사이트ID와 비밀번호로 인증"""
     # 테스트용 계정
-    if data.nickname == "testuser" and data.phone_number == "010-1234-5678":
-        logger.info("Test login for %s", data.nickname)
+    if data.site_id == "testuser":
+        logger.info("Test login for %s", data.site_id)
         return TokenResponse(access_token="fake-token")
 
-    # 닉네임과 전화번호로 사용자 찾기
+    # 사이트ID로 사용자 찾기 (새로운 site_id 필드 사용)
     user = db.query(models.User).filter(
-        models.User.nickname == data.nickname,
-        models.User.phone_number == data.phone_number
+        models.User.site_id == data.site_id
     ).first()
     
     if not user:
-        logger.warning("Login failed for nickname %s, phone %s", data.nickname, data.phone_number)
+        logger.warning("Login failed for site_id %s - user not found", data.site_id)
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # 비밀번호 검증 (password_hash 필드 사용)
+    if not user.password_hash or not pwd_context.verify(data.password, user.password_hash):
+        logger.warning("Login failed for site_id %s - wrong password", data.site_id)
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     access_token = create_access_token({"sub": str(user.id)})
-    logger.info("Login success for nickname %s, phone %s", data.nickname, data.phone_number)
+    logger.info("Login success for site_id %s", data.site_id)
     return TokenResponse(access_token=access_token)
 
 
