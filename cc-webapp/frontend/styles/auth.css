@@ -3,26 +3,42 @@
 
 :root {
   --font-family: 'Exo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  
+  /* 네온 컬러 팔레트 */
+  --neon-purple: #8b5cf6;
+  --neon-blue: #3b82f6;
+  --neon-cyan: #06b6d4;
+  --neon-green: #10b981;
+  --neon-pink: #ec4899;
+  --bright-white: #ffffff;
+  --dark-bg: #0f0f23;
+  --darker-bg: #050514;
+  --card-bg: rgba(15, 15, 35, 0.85);
+  --border-glow: rgba(139, 92, 246, 0.5);
 }
 
-/* 인증 페이지 컨테이너 - 팝업에 최적화 */
+/* 인증 페이지 컨테이너 - 우주 테마 */
 .auth-container {
   width: 100%;
-  height: 100vh; /* 화면 높이에 딱 맞게 설정 */
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 0;
   margin: 0;
-  background: #121212;
-  color: white;
+  background: 
+    radial-gradient(ellipse at top, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at center, rgba(6, 182, 212, 0.08) 0%, transparent 70%),
+    linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+  color: var(--bright-white);
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* 전체 컨테이너는 숨김 처리 */
   font-family: var(--font-family);
 }
 
-/* 팝업 모드 */
+/* 팝업 모드 - 개선된 카드 스타일 */
 .auth-container.popup-mode {
   width: 400px;
   height: 750px;
@@ -32,12 +48,18 @@
   padding: var(--spacing-3) var(--spacing-2);
   min-height: 700px;
   position: relative;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden; /* 팝업 모드에서도 외부 스크롤 방지 */
   box-sizing: border-box;
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glow);
+  border-radius: 20px;
+  box-shadow: 
+    0 0 30px rgba(139, 92, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* 배경 효과 */
+/* 우주 배경 애니메이션 효과 */
 .auth-container::before {
   content: '';
   position: absolute;
@@ -45,9 +67,22 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(91, 48, 246, 0.05) 0%, rgba(91, 48, 246, 0) 70%);
+  background: 
+    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(139, 92, 246, 0.8), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(59, 130, 246, 0.8), transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(6, 182, 212, 0.8), transparent),
+    radial-gradient(2px 2px at 160px 30px, rgba(255, 255, 255, 0.6), transparent);
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  animation: sparkle 20s linear infinite;
   z-index: 1;
   pointer-events: none;
+}
+
+@keyframes sparkle {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(-200px) rotate(360deg); }
 }
 
 .auth-container::after {
@@ -76,33 +111,33 @@
 .auth-content {
   width: 100%;
   max-width: 380px;
-  height: 100vh; /* 화면 높이에 딱 맞게 설정 */
+  height: calc(100% - 40px); /* 패딩을 고려한 높이 */
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* 내용을 위아래로 균등하게 분배 */
-  gap: var(--spacing-2); /* 간격 더 줄임 */
+  justify-content: space-between;
+  gap: var(--spacing-2);
   position: relative;
   z-index: 2;
   background: rgba(15, 18, 25, 0.95);
-  border-radius: 0; /* 전체 화면에 맞게 모서리 제거 */
+  border-radius: 0;
   padding: var(--spacing-4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: none; /* 모바일 화면에 맞게 그림자 제거 */
-  border: none; /* 테두리 제거 */
-  box-sizing: border-box; /* 패딩을 포함한 크기 계산 */
-  overflow-y: auto; /* 내용이 많아질 경우 스크롤 허용 */
+  box-shadow: none;
+  border: none;
+  box-sizing: border-box;
+  overflow-y: auto; /* 내부 컨텐츠만 스크롤 */
 }
 
 /* 회원가입 폼 특정 스타일 */
 .register-content {
-  height: 100vh;
-  min-height: 600px; /* 최소 높이 설정하여 내용 잘림 방지 */
-  max-height: 100vh; /* 최대 높이 제한 */
+  height: auto; /* 자동 높이로 변경 */
+  min-height: 600px;
+  max-height: none; /* 최대 높이 제한 제거 */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  overflow-y: auto; /* 내용이 많을 경우 스크롤 허용 */
+  overflow: visible; /* 스크롤 제거 */
 }
 
 /* 회원가입 2단계에서의 스타일 최적화 */
@@ -160,38 +195,56 @@
 }
 
 .auth-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: white;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--bright-white);
   margin-bottom: var(--spacing-1);
   font-family: var(--font-family);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  text-shadow: 
+    0 0 20px rgba(139, 92, 246, 0.8),
+    0 0 40px rgba(59, 130, 246, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, var(--bright-white) 0%, var(--neon-cyan) 50%, var(--neon-purple) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .auth-subtitle {
-  font-size: 0.9rem;
-  opacity: 0.8;
+  font-size: 0.95rem;
+  opacity: 0.9;
   margin-top: 0.5rem;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 400;
+  color: var(--bright-white);
+  font-weight: 500;
   font-family: var(--font-family);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* 간소화된 로그인 및 회원가입 스타일 */
 .game-platform-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: white;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--bright-white);
   margin-bottom: 4px;
   text-align: center;
   font-family: var(--font-family);
+  text-shadow: 
+    0 0 20px rgba(139, 92, 246, 0.8),
+    0 0 40px rgba(59, 130, 246, 0.6);
+  background: linear-gradient(135deg, var(--bright-white) 0%, var(--neon-cyan) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .game-platform-subtitle {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  color: var(--bright-white);
   text-align: center;
   margin-bottom: var(--spacing-4);
+  opacity: 0.9;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   font-family: var(--font-family);
 }
 
@@ -532,22 +585,25 @@
   border-radius: 8px;
 }
 
-/* 버튼 스타일 */
+/* 버튼 스타일 - 네온 테마 */
 .auth-button {
   padding: 0 var(--spacing-3);
-  border-radius: 14px;
-  border: none;
-  background: #6246EA;
-  color: white;
-  font-weight: 600;
+  border-radius: 12px;
+  border: 2px solid var(--neon-purple);
+  background: linear-gradient(135deg, var(--neon-purple) 0%, var(--neon-blue) 100%);
+  color: var(--bright-white);
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
   height: 52px;
   font-size: 1rem;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(91, 48, 246, 0.3);
-  letter-spacing: 0.03em;
+  box-shadow: 
+    0 0 20px rgba(139, 92, 246, 0.5),
+    0 4px 15px rgba(59, 130, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.05em;
   font-family: var(--font-family);
   width: 100%;
   display: flex;
@@ -555,6 +611,7 @@
   justify-content: center;
   gap: 8px;
   margin-top: 8px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
 .auth-button::before {
@@ -564,13 +621,17 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
   transition: all 0.6s ease;
 }
 
 .auth-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(91, 48, 246, 0.4);
+  box-shadow: 
+    0 0 30px rgba(139, 92, 246, 0.8),
+    0 6px 20px rgba(59, 130, 246, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: var(--neon-cyan);
 }
 
 .auth-button:hover::before {
@@ -579,16 +640,20 @@
 
 .auth-button:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(91, 48, 246, 0.3);
+  box-shadow: 
+    0 0 15px rgba(139, 92, 246, 0.6),
+    0 2px 10px rgba(59, 130, 246, 0.4);
 }
 
 .auth-button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .auth-button.loading {
   position: relative;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.7) 0%, rgba(59, 130, 246, 0.7) 100%);
 }
 
 /* 에러 메시지 */

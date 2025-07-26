@@ -20,17 +20,23 @@ export default function RegisterPage() {
     setInitialized(true);
   }, []);
 
-  const handleRegister = async (nickname: string, inviteCode: string) => {
+  const handleRegister = async (siteId: string, nickname: string, phoneNumber: string, password: string, inviteCode: string) => {
     setIsLoading(true);
     setError('');
     
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ nickname, invite_code: inviteCode }),
+        body: JSON.stringify({ 
+          site_id: siteId,
+          nickname, 
+          phone_number: phoneNumber,
+          password,
+          invite_code: inviteCode 
+        }),
       });
       
       const data = await response.json();

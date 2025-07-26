@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { User, Phone, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
+import { User, Phone, ArrowRight, ArrowLeft, Loader2, Lock, Key, IdCard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface RegisterFormProps {
-  onRegister?: (nickname: string, phoneNumber: string) => void;
+  onRegister?: (siteId: string, nickname: string, phoneNumber: string, password: string, inviteCode: string) => void;
   onSwitchToLogin?: () => void;
   isLoading?: boolean;
   error?: string;
@@ -17,12 +17,22 @@ export default function RegisterForm({
   isLoading: propIsLoading = false, 
   error: propError = '' 
 }: RegisterFormProps) {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [siteId, setSiteId] = useState('');
   const [nickname, setNickname] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [isLoading, setIsLoading] = useState(propIsLoading);
   const [error, setError] = useState(propError);
   const router = useRouter();
+
+  const validateSiteId = (id: string) => {
+    // 사이트ID: 영문+숫자, 4-20자
+    const siteIdRegex = /^[a-zA-Z0-9]{4,20}$/;
+    return siteIdRegex.test(id);
+  };
 
   const validatePhoneNumber = (phone: string) => {
     // 한국 전화번호 형식 검증 (010-0000-0000 또는 01000000000)
@@ -30,34 +40,141 @@ export default function RegisterForm({
     return phoneRegex.test(phone.replace(/[^0-9-]/g, ''));
   };
 
-  const handleNextStep = () => {
-    if (phoneNumber && validatePhoneNumber(phoneNumber)) {
-      setStep(2);
-    } else {
-      setError('유효한 전화번호를 입력해주세요 (예: 010-1234-5678)');
+  const validatePassword = (pwd: string) => {
+    // 비밀번호: 8자 이상
+    return pwd.length >= 8;
+  };
+
+  const validateInviteCode = (code: string) => {
+    // 초대코드: 6자 대문자+숫자
+    return code.length === 6;
+  };
+
+  // 초대코드 자동 생성 함수
+  const generateInviteCode = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8002';
+      const response = await fetch(`${apiUrl}/api/admin/invite-codes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ count: 1 }),
+      });
+
+      if (!response.ok) {
+        throw new Error('초대코드 생성에 실패했습니다');
+      }
+
+      const data = await response.json();
+      const newInviteCode = data.codes[0];
+      setInviteCode(newInviteCode);
+      return newInviteCode;
+    } catch (error) {
+      console.error('초대코드 생성 실패:', error);
+      setError('초대코드 생성에 실패했습니다. 다시 시도해주세요.');
+      return null;
     }
   };
 
+  const handleStep1Next = () => {
+    if (!siteId) {
+      setError('사이트ID를 입력해주세요');
+      return;
+    }
+    if (!validateSiteId(siteId)) {
+      setError('사이트ID는 영문과 숫자만 사용하여 4-20자로 입력해주세요');
+      return;
+    }
+    if (!nickname) {
+      setError('닉네임을 입력해주세요');
+      return;
+    }
+    if (nickname.length < 2 || nickname.length > 50) {
+      setError('닉네임은 2-50자로 입력해주세요');
+      return;
+    }
+    setError('');
+    setStep(2);
+  };
+
+  const handleStep2Next = () => {
+    if (!phoneNumber) {
+      setError('전화번호를 입력해주세요');
+      return;
+    }
+    if (!validatePhoneNumber(phoneNumber)) {
+      setError('유효한 전화번호를 입력해주세요 (예: 010-1234-5678)');
+      return;
+    }
+    if (!password) {
+      setError('비밀번호를 입력해주세요');
+      return;
+    }
+    if (!validatePassword(password)) {
+      setError('비밀번호는 8자 이상 입력해주세요');
+      return;
+    }
+    if (password !== passwordConfirm) {
+      setError('비밀번호가 일치하지 않습니다');
+      return;
+    }
+    setError('');
+    setStep(3);
+  };
+
   const handlePrevStep = () => {
-    setStep(1);
+    setError('');
+    if (step === 2) setStep(1);
+    else if (step === 3) setStep(2);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!validateInviteCode(inviteCode)) {
+      setError('초대코드 6자를 정확히 입력해주세요');
+      return;
+    }
+    
     if (onRegister) {
-      onRegister(nickname, phoneNumber);
+      onRegister(siteId, nickname, phoneNumber, password, inviteCode);
     } else {
       setIsLoading(true);
       try {
-        // 가입 성공 시뮬레이션 (실제로는 API 호출)
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('회원가입 성공', { phoneNumber, nickname });
+        // 백엔드 API 호출
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8002';
+        const response = await fetch(`${apiUrl}/api/auth/signup`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            site_id: siteId,
+            nickname,
+            phone_number: phoneNumber,
+            password,
+            invite_code: inviteCode
+          }),
+        });
         
-        // 회원가입 후 메인 페이지로 이동
-        router.push('/games');
-      } catch (error) {
-        setError('회원가입에 실패했습니다. 다시 시도해주세요.');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || '회원가입에 실패했습니다');
+        }
+        
+        const data = await response.json();
+        console.log('회원가입 성공', data);
+        
+        // 회원가입 후 로그인 페이지로 이동
+        alert('회원가입이 완료되었습니다! 로그인하세요.');
+        if (onSwitchToLogin) {
+          onSwitchToLogin();
+        } else {
+          router.push('/auth/login');
+        }
+      } catch (error: any) {
+        setError(error.message || '회원가입에 실패했습니다. 다시 시도해주세요.');
         console.error('회원가입 실패', error);
       } finally {
         setIsLoading(false);
@@ -88,30 +205,85 @@ export default function RegisterForm({
         <div className="progress-bar">
           <div 
             className="progress-fill" 
-            style={{ width: step === 1 ? '50%' : '100%' }}
+            style={{ width: step === 1 ? '33%' : step === 2 ? '66%' : '100%' }}
           ></div>
         </div>
         <div className="progress-step">
           <span className="progress-step-text">
-            {step === 1 ? '1/2 단계' : '2/2 단계'}
+            {step}/3 단계
           </span>
         </div>
       </div>
       
+      {/* 1단계: 사이트ID + 닉네임 */}
       {step === 1 ? (
         <>
-          <div className="signup-title">계정 만들기</div>
-          <div className="signup-subtitle">새로운 게임 여정을 시작하세요</div>
-          
-          <div className="email-icon-container">
-            <div className="email-icon">
-              <Phone size={24} />
-            </div>
-          </div>
+          <div className="signup-title">계정 정보 입력</div>
+          <div className="signup-subtitle">사이트ID와 닉네임을 입력하세요</div>
           
           <div className="simplified-form">
+            {error && <div className="auth-error">{error}</div>}
+            
             <div className="form-group">
-              <label htmlFor="phoneNumber" className="form-label">전화번호 입력 (사이트 ID)</label>
+              <label htmlFor="siteId" className="form-label">사이트ID (로그인용)</label>
+              <div className="email-input-container">
+                <IdCard className="email-icon" size={16} />
+                <input
+                  type="text"
+                  id="siteId"
+                  className="form-input email-input"
+                  value={siteId}
+                  onChange={(e) => setSiteId(e.target.value)}
+                  placeholder="영문+숫자 4-20자 (예: user123)"
+                  required
+                  disabled={isLoading}
+                  autoComplete="username"
+                />
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="nickname" className="form-label">닉네임</label>
+              <div className="email-input-container">
+                <User className="email-icon" size={16} />
+                <input
+                  type="text"
+                  id="nickname"
+                  className="form-input email-input"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="닉네임을 입력하세요"
+                  required
+                  disabled={isLoading}
+                  maxLength={50}
+                  autoComplete="name"
+                />
+              </div>
+            </div>
+            
+            <button
+              type="button"
+              className="auth-button"
+              onClick={handleStep1Next}
+              disabled={isLoading || !siteId || !nickname}
+            >
+              <span>다음</span>
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        </>
+      
+      /* 2단계: 전화번호 + 비밀번호 */
+      ) : step === 2 ? (
+        <>
+          <div className="signup-title">보안 정보 입력</div>
+          <div className="signup-subtitle">전화번호와 비밀번호를 입력하세요</div>
+          
+          <div className="simplified-form">
+            {error && <div className="auth-error">{error}</div>}
+            
+            <div className="form-group">
+              <label htmlFor="phoneNumber" className="form-label">전화번호</label>
               <div className="email-input-container">
                 <Phone className="email-icon" size={16} />
                 <input
@@ -126,45 +298,92 @@ export default function RegisterForm({
                   autoComplete="tel"
                 />
               </div>
-              {error && <div className="field-error">{error}</div>}
             </div>
             
-            <button
-              type="button"
-              className="auth-button"
-              onClick={handleNextStep}
-              disabled={isLoading || !phoneNumber}
-            >
-              <span>다음</span>
-              <ArrowRight size={16} />
-            </button>
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">비밀번호</label>
+              <div className="email-input-container">
+                <Lock className="email-icon" size={16} />
+                <input
+                  type="password"
+                  id="password"
+                  className="form-input email-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="8자 이상 입력하세요"
+                  required
+                  disabled={isLoading}
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="passwordConfirm" className="form-label">비밀번호 확인</label>
+              <div className="email-input-container">
+                <Lock className="email-icon" size={16} />
+                <input
+                  type="password"
+                  id="passwordConfirm"
+                  className="form-input email-input"
+                  value={passwordConfirm}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
+                  placeholder="비밀번호를 다시 입력하세요"
+                  required
+                  disabled={isLoading}
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
+            
+            <div className="auth-page-buttons">
+              <button
+                type="button"
+                className="auth-button auth-back-button"
+                onClick={handlePrevStep}
+                disabled={isLoading}
+              >
+                <ArrowLeft size={16} />
+                <span>이전</span>
+              </button>
+              
+              <button
+                type="button"
+                className="auth-button auth-next-button"
+                onClick={handleStep2Next}
+                disabled={isLoading || !phoneNumber || !password || !passwordConfirm}
+              >
+                <span>다음</span>
+                <ArrowRight size={16} />
+              </button>
+            </div>
           </div>
         </>
+      
+      /* 3단계: 초대코드 */
       ) : (
         <>
-          <div className="signup-title">닉네임 입력</div>
-          <div className="signup-subtitle">게임에서 사용할 닉네임을 입력하세요</div>
+          <div className="signup-title">초대코드 입력</div>
+          <div className="signup-subtitle">초대코드를 입력하여 가입을 완료하세요</div>
           
           <form className="auth-form simplified-form" onSubmit={handleSubmit}>
             {error && <div className="auth-error">{error}</div>}
             
             <div className="form-group">
-              <label htmlFor="nickname" className="form-label">
-                닉네임
-              </label>
+              <label htmlFor="inviteCode" className="form-label">초대코드</label>
               <div className="email-input-container">
-                <User className="email-icon" size={16} />
+                <Key className="email-icon" size={16} />
                 <input
                   type="text"
-                  id="nickname"
+                  id="inviteCode"
                   className="form-input email-input"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  placeholder="닉네임을 입력하세요"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                  placeholder="초대코드 6자 입력"
                   required
                   disabled={isLoading}
-                  maxLength={50}
-                  autoComplete="username"
+                  maxLength={6}
+                  style={{ textTransform: 'uppercase' }}
                 />
               </div>
             </div>
@@ -183,7 +402,7 @@ export default function RegisterForm({
               <button
                 type="submit"
                 className="auth-button auth-next-button"
-                disabled={isLoading || !nickname}
+                disabled={isLoading || !inviteCode || inviteCode.length !== 6}
               >
                 {isLoading ? (
                   <>

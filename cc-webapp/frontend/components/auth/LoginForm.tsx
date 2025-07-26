@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { User, Phone, Loader2, LogIn } from 'lucide-react';
+import { User, Phone, Loader2, LogIn, Lock } from 'lucide-react';
 
 interface LoginFormProps {
-  onLogin?: (nickname: string, phoneNumber: string) => void;
+  onLogin?: (siteId: string, password: string) => void;
   onSwitchToSignup?: () => void;
   onSwitchToResetPassword?: () => void;
   isLoading?: boolean;
@@ -21,8 +21,8 @@ export default function LoginForm({
   error: propError = '',
   autoFillTestAccount = false 
 }: LoginFormProps) {
-  const [nickname, setNickname] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [siteId, setSiteId] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(propIsLoading);
   const [error, setError] = useState(propError);
@@ -33,8 +33,8 @@ export default function LoginForm({
   useEffect(() => {
     const useTestAccount = autoFillTestAccount || searchParams?.get('test') === 'true';
     if (useTestAccount) {
-      setNickname('test001');
-      setPhoneNumber('010-1234-5678');
+      setSiteId('testuser');
+      setPassword('testpass123');
     }
   }, [autoFillTestAccount, searchParams]);
 
@@ -42,18 +42,42 @@ export default function LoginForm({
     e.preventDefault();
     
     if (onLogin) {
-      onLogin(nickname, phoneNumber);
+      onLogin(siteId, password);
     } else {
       setIsLoading(true);
       try {
-        // 로그인 성공 시뮬레이션 (실제로는 API 호출)
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('로그인 성공', { nickname, phoneNumber });
+        // 백엔드 API 호출
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8002';
+        const response = await fetch(`${apiUrl}/api/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            site_id: siteId,
+            password: password
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || '로그인에 실패했습니다');
+        }
+        
+        const data = await response.json();
+        console.log('로그인 성공', data);
+        
+        // JWT 토큰 저장 (localStorage 또는 쿠키)
+        if (data.access_token) {
+          localStorage.setItem('access_token', data.access_token);
+          localStorage.setItem('user_info', JSON.stringify(data.user));
+        }
         
         // 로그인 후 메인 페이지로 이동
+        alert(`환영합니다, ${data.user?.nickname || '사용자'}님!`);
         router.push('/games');
-      } catch (error) {
-        setError('로그인에 실패했습니다. 닉네임과 전화번호를 확인해주세요.');
+      } catch (error: any) {
+        setError(error.message || '로그인에 실패했습니다. 사이트ID와 비밀번호를 확인해주세요.');
         console.error('로그인 실패', error);
       } finally {
         setIsLoading(false);
@@ -86,18 +110,18 @@ export default function LoginForm({
         {error && <div className="auth-error">{error}</div>}
         
         <div className="form-group">
-          <label htmlFor="nickname" className="form-label">
-            닉네임
+          <label htmlFor="siteId" className="form-label">
+            사이트ID
           </label>
           <div className="email-input-container">
             <User className="email-icon" size={16} />
             <input
               type="text"
-              id="nickname"
+              id="siteId"
               className="form-input email-input"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              placeholder="닉네임을 입력하세요"
+              value={siteId}
+              onChange={(e) => setSiteId(e.target.value)}
+              placeholder="사이트ID를 입력하세요"
               required
               disabled={isLoading}
               autoComplete="username"
@@ -106,20 +130,21 @@ export default function LoginForm({
         </div>
         
         <div className="form-group">
-          <label htmlFor="phoneNumber" className="form-label">
-            전화번호 (사이트 ID)
+          <label htmlFor="password" className="form-label">
+            비밀번호
           </label>
           <div className="email-input-container">
-            <Phone className="email-icon" size={16} />
+            <Lock className="email-icon" size={16} />
             <input
-              type="tel"
-              id="phoneNumber"
+              type={showPassword ? "text" : "password"}
+              id="password"
               className="form-input email-input"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="010-1234-5678"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="비밀번호를 입력하세요"
               required
               disabled={isLoading}
+              autoComplete="current-password"
             />
           </div>
         </div>
@@ -127,7 +152,7 @@ export default function LoginForm({
         <button
           type="submit"
           className="auth-button"
-          disabled={isLoading || !nickname || !phoneNumber}
+          disabled={isLoading || !siteId || !password}
         >
           {isLoading ? (
             <>
