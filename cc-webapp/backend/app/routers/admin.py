@@ -1,3 +1,4 @@
+
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -6,9 +7,141 @@ from pydantic import BaseModel
 from typing import Optional, List
 import logging
 
+router = APIRouter(prefix="/admin", tags=["admin"])
+logger = logging.getLogger(__name__)
+
 from ..database import get_db
 from .. import models
 from .auth import get_user_from_token
+from fastapi import Body
+from fastapi.responses import JSONResponse
+ 
+
+# 시스템 설정 모델 (예시)
+class SystemSetting(BaseModel):
+    key: str
+    value: str
+
+# 시스템 설정 조회 (DB 기반)
+@router.get("/settings")
+async def get_system_settings(
+    user_id: int = Depends(get_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """관리자용 시스템 설정 조회"""
+    check_admin_permission(user_id)
+    settings = db.query(models.SystemSetting).all()
+    result = {s.key: s.value for s in settings}
+    return JSONResponse(content=result)
+
+# 시스템 설정 변경 (DB 기반)
+@router.put("/settings")
+async def update_system_settings(
+    settings: dict,
+    user_id: int = Depends(get_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """관리자용 시스템 설정 변경"""
+    check_admin_permission(user_id)
+    for k, v in settings.items():
+        setting = db.query(models.SystemSetting).filter(models.SystemSetting.key == k).first()
+        if setting:
+            setting.value = str(v)
+        else:
+            db.add(models.SystemSetting(key=k, value=str(v)))
+    db.commit()
+    updated = db.query(models.SystemSetting).all()
+    result = {s.key: s.value for s in updated}
+    return {"message": "Settings updated", "settings": result}
+ 
+# 실시간 모니터링 (샘플: 현재 접속자, 최근 1분간 활동, 토큰 지급/소비)
+import random
+from datetime import timedelta
+ 
+@router.get("/monitoring/realtime")
+async def get_realtime_monitoring(
+    user_id: int = Depends(get_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """관리자용 실시간 모니터링 데이터 조회"""
+    check_admin_permission(user_id)
+    now = datetime.utcnow()
+    one_min_ago = now - timedelta(minutes=1)
+    # 최근 1분간 활동
+    recent_actions = db.query(models.UserAction).filter(models.UserAction.timestamp >= one_min_ago).count()
+    recent_rewards = db.query(models.UserReward).filter(models.UserReward.created_at >= one_min_ago).count()
+    # 현재 접속자 (샘플: 랜덤값, 실제는 Redis/세션 기반)
+    current_online_users = random.randint(5, 50)
+    return {
+        "timestamp": now,
+        "current_online_users": current_online_users,
+        "recent_actions_last_minute": recent_actions,
+        "recent_rewards_last_minute": recent_rewards
+    }
+
+class UserUpdateRequest(BaseModel):
+    nickname: Optional[str] = None
+    phone_number: Optional[str] = None
+    rank: Optional[str] = None
+
+# 회원 삭제
+@router.delete("/users/{target_user_id}")
+async def delete_user(
+    target_user_id: int,
+    user_id: int = Depends(get_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """관리자용 회원 삭제"""
+    check_admin_permission(user_id)
+    user = db.query(models.User).filter(models.User.id == target_user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(user)
+    db.commit()
+    logger.info("Admin %s deleted user %s", user_id, target_user_id)
+    return {"message": f"User {target_user_id} deleted"}
+
+# 회원 활동 로그 확인 (별도 로그 테이블이 있을 경우)
+@router.get("/users/{target_user_id}/logs")
+async def get_user_logs(
+    target_user_id: int,
+    user_id: int = Depends(get_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """관리자용 회원 활동 로그 조회 (UserLog 테이블 기준)"""
+    check_admin_permission(user_id)
+    logs = db.query(models.UserLog).filter(models.UserLog.user_id == target_user_id).order_by(desc(models.UserLog.timestamp)).limit(100).all()
+    log_list = []
+    for log in logs:
+        log_list.append({
+            "id": log.id,
+            "event": log.event,
+            "description": log.description,
+            "timestamp": log.timestamp
+        })
+    return {"logs": log_list}
+
+@router.put("/users/{target_user_id}")
+async def update_user_info(
+    target_user_id: int,
+    update: UserUpdateRequest = Body(...),
+    user_id: int = Depends(get_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """관리자용 회원 정보 수정 (닉네임, 전화번호, 랭크 등)"""
+    check_admin_permission(user_id)
+    user = db.query(models.User).filter(models.User.id == target_user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if update.nickname:
+        user.nickname = update.nickname
+    if update.phone_number:
+        user.phone_number = update.phone_number
+    if update.rank:
+        user.rank = update.rank
+    db.commit()
+    logger.info("Admin %s updated user %s info", user_id, target_user_id)
+    return {"message": f"User {target_user_id} info updated"}
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 logger = logging.getLogger(__name__)
@@ -178,6 +311,60 @@ async def get_user_detail(
         total_actions=total_actions,
         last_activity=last_activity[0] if last_activity else None
     )
+from fastapi.responses import StreamingResponse
+import io
+import pandas as pd
+
+# 활동 로그 엑셀 다운로드
+@router.get("/users/{target_user_id}/actions/export")
+async def export_user_actions_excel(
+    target_user_id: int,
+    user_id: int = Depends(get_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """관리자용 유저 활동 로그 엑셀 다운로드"""
+    check_admin_permission(user_id)
+    actions = db.query(models.UserAction).filter(models.UserAction.user_id == target_user_id).order_by(desc(models.UserAction.timestamp)).all()
+    data = [
+        {
+            "id": a.id,
+            "action_type": a.action_type,
+            "value": a.value,
+            "timestamp": a.timestamp
+        } for a in actions
+    ]
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name="Actions")
+    output.seek(0)
+    return StreamingResponse(output, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f"attachment; filename=user_{target_user_id}_actions.xlsx"})
+
+# 보상 로그 엑셀 다운로드
+@router.get("/users/{target_user_id}/rewards/export")
+async def export_user_rewards_excel(
+    target_user_id: int,
+    user_id: int = Depends(get_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """관리자용 유저 보상 로그 엑셀 다운로드"""
+    check_admin_permission(user_id)
+    rewards = db.query(models.UserReward).filter(models.UserReward.user_id == target_user_id).order_by(desc(models.UserReward.created_at)).all()
+    data = [
+        {
+            "id": r.id,
+            "reward_type": r.reward_type,
+            "amount": r.amount,
+            "description": r.description,
+            "created_at": r.created_at
+        } for r in rewards
+    ]
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name="Rewards")
+    output.seek(0)
+    return StreamingResponse(output, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f"attachment; filename=user_{target_user_id}_rewards.xlsx"})
 
 
 @router.get("/users/{target_user_id}/rewards")

@@ -1,10 +1,71 @@
-from sqlalchemy import Column, Integer, String, DateTime, Float, ForeignKey, Boolean, Text # Added Boolean, Text
+
+# --- Unified Imports & Base ---
+from sqlalchemy import Column, Integer, String, DateTime, Float, ForeignKey, Boolean, Text, Index
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import JSON
 from datetime import datetime
 
 Base = declarative_base()
+
+# --- 관리자 계정/권한 관리 ---
+class AdminUser(Base):
+    __tablename__ = "admin_users"
+    id = Column(Integer, primary_key=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
+    password_hash = Column(String(128), nullable=False)
+    role = Column(String(20), default="admin", nullable=False, index=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    # Relationship
+    setting_logs = relationship("SystemSettingLog", back_populates="admin", cascade="all, delete-orphan")
+
+# --- 시스템 설정 변경 이력 (감사 로그) ---
+class SystemSettingLog(Base):
+    __tablename__ = "system_setting_logs"
+    id = Column(Integer, primary_key=True)
+    setting_key = Column(String(64), nullable=False, index=True)
+    old_value = Column(String(256), nullable=True)
+    new_value = Column(String(256), nullable=True)
+    changed_by = Column(Integer, ForeignKey("admin_users.id", ondelete="SET NULL"), nullable=True, index=True)
+    changed_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    admin = relationship("AdminUser", back_populates="setting_logs")
+    __table_args__ = (Index("ix_setting_key_changed_at", "setting_key", "changed_at"),)
+    # 관리 정책: 1년 이상 지난 로그는 별도 보관/삭제 (예시)
+    '''
+    # Log retention policy:
+    # - Keep last 1 year in main table
+    # - Archive/delete older logs periodically
+    '''
+
+# --- 시스템 이벤트/오류 로그 ---
+class SystemLog(Base):
+    __tablename__ = "system_logs"
+    id = Column(Integer, primary_key=True)
+    event_type = Column(String(50), nullable=False, index=True)
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    user = relationship("User")
+    __table_args__ = (Index("ix_event_type_created_at", "event_type", "created_at"),)
+    # 관리 정책: 1년 이상 지난 로그는 별도 보관/삭제 (예시)
+    '''
+    # Log retention policy:
+    # - Keep last 1 year in main table
+    # - Archive/delete older logs periodically
+    '''
+
+# --- 시스템 설정 테이블 (관리자 기능용) ---
+class SystemSetting(Base):
+    __tablename__ = "system_settings"
+    key = Column(String(64), primary_key=True, index=True)
+    value = Column(String(256), nullable=False)
+    value_type = Column(String(20), default="str", nullable=False, index=True)  # str, int, bool, float 등
+    description = Column(String(255), nullable=True)
+    is_admin_only = Column(Boolean, default=True, nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    __table_args__ = (Index("ix_system_setting_key_type", "key", "value_type"),)
 
 class User(Base):
     __tablename__ = "users"

@@ -22,27 +22,39 @@ export const useRPSGame = (isPopup = false) => {
   const [isAIThinking, setIsAIThinking] = useState(false);
   const [showPsychMessage, setShowPsychMessage] = useState(false);
 
-  const getAIChoice = useCallback((): Choice => {
-    const choices: Choice[] = ['rock', 'paper', 'scissors'];
-    return choices[Math.floor(Math.random() * choices.length)];
-  }, []);
+  // 프론트 승률/결과 결정 로직 분리
+  const WINNING_COMBINATIONS = {
+    rock: 'scissors',
+    paper: 'rock',
+    scissors: 'paper',
+  };
+  const getWinningChoice = (userChoice: Choice): Choice => {
+    if (userChoice === 'rock') return 'paper';
+    if (userChoice === 'paper') return 'scissors';
+    return 'rock';
+  };
 
-  const getGameResult = useCallback((playerChoice: Choice, aiChoice: Choice): GameResult => {
-    if (playerChoice === aiChoice) return 'draw';
-    if (
-      (playerChoice === 'rock' && aiChoice === 'scissors') ||
-      (playerChoice === 'paper' && aiChoice === 'rock') ||
-      (playerChoice === 'scissors' && aiChoice === 'paper')
-    ) {
-      return 'win';
+  // 실제 승률/표시 승률, streak 등 UX 제어
+  const getAIChoiceAndResult = (userChoice: Choice, streak: number): { aiChoice: Choice, result: GameResult } => {
+    // 예시: 3연승 시 강제 패배, 실제 승률 30%, 무승부 10%, 패배 60%
+    if (streak >= 3) {
+      return { aiChoice: getWinningChoice(userChoice), result: 'lose' };
     }
-    return 'lose';
-  }, []);
+    const rand = Math.random();
+    if (rand < 0.3) {
+      // 승리
+      return { aiChoice: WINNING_COMBINATIONS[userChoice] as Choice, result: 'win' };
+    } else if (rand < 0.4) {
+      // 무승부
+      return { aiChoice: userChoice, result: 'draw' };
+    } else {
+      // 패배
+      return { aiChoice: getWinningChoice(userChoice), result: 'lose' };
+    }
+  };
 
   const handlePlayerChoice = useCallback((choice: Choice) => {
     if (gameState.isPlaying || isAIThinking) return;
-    
-    // AI 사고 중 표시
     setIsAIThinking(true);
     setGameState(prev => ({
       ...prev,
@@ -50,44 +62,30 @@ export const useRPSGame = (isPopup = false) => {
       cjaiMessage: "🤖 AI가 전략을 분석 중..."
     }));
 
-    // 심리적 긴장감을 위한 딜레이
     setTimeout(() => {
-      // AI 선택 결정
-      const aiChoice = getAIChoice();
-      const result = getGameResult(choice, aiChoice);
-      
+      // 프론트 승률/결과 결정
+      const { aiChoice, result } = getAIChoiceAndResult(choice, gameState.playerWinStreak);
+
       // 점수 및 상태 업데이트
       const newScore = { ...gameState.score };
       const newWinStreak = result === 'win' ? gameState.playerWinStreak + 1 : 0;
       const newLossStreak = result === 'lose' ? gameState.playerLossStreak + 1 : 0;
-    
-      if (result === 'win') {
-        newScore.player++;
-      } else if (result === 'lose') {
-        newScore.ai++;
-      } else {
-        newScore.draws++;
-      }
+      if (result === 'win') newScore.player++;
+      else if (result === 'lose') newScore.ai++;
+      else newScore.draws++;
 
-      // 향상된 심리적 메시지
+      // 심리적 메시지
       let message = "좋은 게임이었어요! 🎮";
       if (result === 'win') {
-        if (newWinStreak >= 3) {
-          message = "🔥 연승 중이에요! 이 기세를 계속 이어가세요!";
-        } else {
-          message = "🎉 승리했어요! 한 번 더 도전해보세요!";
-        }
+        if (newWinStreak >= 3) message = "🔥 연승 중이에요! 이 기세를 계속 이어가세요!";
+        else message = "🎉 승리했어요! 한 번 더 도전해보세요!";
       } else if (result === 'lose') {
-        if (newLossStreak >= 3) {
-          message = "😅 패턴을 바꿔보세요! 반전의 기회가 올 거예요!";
-        } else {
-          message = "😔 아쉽네요... 다음엔 이길 수 있어요!";
-        }
+        if (newLossStreak >= 3) message = "😅 패턴을 바꿔보세요! 반전의 기회가 올 거예요!";
+        else message = "😔 아쉽네요... 다음엔 이길 수 있어요!";
       } else {
         message = "🤝 무승부! 이번엔 승부를 가려보세요!";
       }
 
-      // 한 번에 모든 상태 업데이트
       setGameState(prev => ({
         ...prev,
         playerChoice: choice,
@@ -100,10 +98,13 @@ export const useRPSGame = (isPopup = false) => {
         playerWinStreak: newWinStreak,
         playerLossStreak: newLossStreak,
       }));
-      
       setIsAIThinking(false);
-    }, 1500); // 1.5초 딜레이로 심리적 긴장감 조성
-  }, [gameState.isPlaying, gameState.score, gameState.playerWinStreak, gameState.playerLossStreak, isAIThinking, getAIChoice, getGameResult]);
+
+      // 백엔드 연동: 결과/보상 저장 (선택적)
+      // fetch('/api/games/rps/play', { method: 'POST', body: JSON.stringify({ choice, bet_amount: 0 }) ... })
+      // .then(res => res.json()).then(data => { /* 토큰, 잔고 등 상태 업데이트 */ })
+    }, 1500);
+  }, [gameState.isPlaying, gameState.score, gameState.playerWinStreak, gameState.playerLossStreak, isAIThinking]);
 
   const handlePlayAgain = useCallback(() => {
     setGameState(prev => ({

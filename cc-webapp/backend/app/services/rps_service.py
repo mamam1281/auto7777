@@ -91,20 +91,20 @@ class RPSService:
         return random.choice(self.VALID_CHOICES)
     
     def _get_computer_choice(self, user_id: int, user_choice: str, streak: int, force_result: Optional[str] = None) -> tuple[str, str]:
-        """AI 선택 및 결과 결정"""
-        
-        # 연승 제어 시스템: 3연승 후 90% 패배 확률
+        """
+        AI 선택 및 결과 결정 (프론트 승률 로직 반영)
+        - 3연승 시 강제 패배 (90% 확률)
+        - 실제 승률 30%, 무승부 10%, 패배 60%
+        """
+        # 연승 제어: 3연승 이상이면 90% 확률로 강제 패배
         if streak >= 3:
-            if random.random() < 0.90:
-                # 강제 패배
+            if random.random() < 0.9:
                 computer_choice = self._get_winning_choice(user_choice)
                 return computer_choice, "lose"
             else:
-                # 10% 확률로 승리 허용
                 computer_choice = self.WINNING_COMBINATIONS[user_choice]
                 return computer_choice, "win"
-        
-        # 강제 결과가 지정된 경우
+        # 강제 결과 지정(테스트/관리자용)
         if force_result:
             if force_result == "win":
                 computer_choice = self.WINNING_COMBINATIONS[user_choice]
@@ -114,21 +114,17 @@ class RPSService:
                 return computer_choice, "lose"
             elif force_result == "draw":
                 return user_choice, "draw"
-        
-        # 일반적인 확률 기반 결정
+        # 일반 확률 기반 결정
         rand = random.random()
-        
-        if rand < self.ACTUAL_WIN_RATE:  # 30% 승률
+        if rand < self.ACTUAL_WIN_RATE:
             computer_choice = self.WINNING_COMBINATIONS[user_choice]
-            result = "win"
-        elif rand < self.ACTUAL_WIN_RATE + self.DRAW_RATE:  # 10% 무승부 (30% + 10% = 40%)
+            return computer_choice, "win"
+        elif rand < self.ACTUAL_WIN_RATE + self.DRAW_RATE:
             computer_choice = user_choice
-            result = "draw"
-        else:  # 60% 패배 (40% 이후)
+            return computer_choice, "draw"
+        else:
             computer_choice = self._get_winning_choice(user_choice)
-            result = "lose"
-        
-        return computer_choice, result
+            return computer_choice, "lose"
 
     def play(self, user_id: int, user_choice: str, bet_amount: int, db: Session) -> RPSResult:
         """RPS 게임을 플레이하고 결과를 반환."""
