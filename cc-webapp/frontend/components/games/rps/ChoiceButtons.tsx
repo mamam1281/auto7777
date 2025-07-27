@@ -9,6 +9,7 @@ interface ChoiceButtonsProps {
   selectedChoice: Choice | null;
   disabled: boolean;
   isPopup?: boolean;
+  cooldown?: boolean;
 }
 
 const choiceConfig = {
@@ -23,7 +24,8 @@ export const ChoiceButtons: React.FC<ChoiceButtonsProps> = ({
   onChoice,
   selectedChoice,
   disabled,
-  isPopup = false
+  isPopup = false,
+  cooldown = false
 }) => {
   const containerClass = "choice-buttons-container";
   const buttonClass = isPopup ? "choice-button-popup" : "choice-button-normal";
@@ -82,11 +84,10 @@ export const ChoiceButtons: React.FC<ChoiceButtonsProps> = ({
   };
 
   return (
-    <div className={containerClass}>
+    <div className={containerClass} style={{ position: 'relative' }}>
       {choices.map((choice, index) => {
         const config = choiceConfig[choice];
         const isSelected = selectedChoice === choice;
-        
         return (
           <motion.button
             key={choice}
@@ -99,9 +100,39 @@ export const ChoiceButtons: React.FC<ChoiceButtonsProps> = ({
             className={`${buttonClass} ${isSelected ? 'selected' : ''} ${disabled ? 'disabled' : ''}`}
             onClick={() => !disabled && onChoice(choice)}
             disabled={disabled}
+            style={{ position: 'relative' }}
           >
             <div className="icon">{config.emoji}</div>
             <div className="text">{config.label}</div>
+            {cooldown && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 10,
+                pointerEvents: 'none',
+                background: 'rgba(0,0,0,0.5)',
+                borderRadius: '50%',
+                width: '48px',
+                height: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    border: '3px solid #22d3ee',
+                    borderTop: '3px solid #fff',
+                    borderRadius: '50%',
+                  }}
+                />
+              </div>
+            )}
           </motion.button>
         );
       })}
