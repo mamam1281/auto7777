@@ -56,7 +56,13 @@ def test_register_with_invite_code(client):
     """초대코드로 회원가입 테스트"""
     response = client.post(
         "/api/auth/register",
-        json={"invite_code": "5882", "nickname": "테스터1"}
+        json={
+            "invite_code": "5882",
+            "nickname": "테스터1",
+            "site_id": "tester1",
+            "phone_number": "010-1111-2222",
+            "password": "testpass123"
+        }
     )
     assert response.status_code == 200
     data = response.json()
@@ -68,7 +74,13 @@ def test_register_with_invalid_code(client):
     """잘못된 초대코드로 회원가입 테스트"""
     response = client.post(
         "/api/auth/register",
-        json={"invite_code": "1111", "nickname": "테스터2"}
+        json={
+            "invite_code": "1111",
+            "nickname": "테스터2",
+            "site_id": "tester2",
+            "phone_number": "010-3333-4444",
+            "password": "testpass123"
+        }
     )
     assert response.status_code == 400
     assert "잘못된 초대코드입니다" in response.json()["detail"]

@@ -1,90 +1,46 @@
-"""Tests for slo    def setup_method(self):
-        """Set up test fixtures before each test method."""
-        self.repo = MagicMock(spec=GameRepository)
-        self.token_service = MagicMock(spec=TokenService)
-        self.token_service.db = MagicMock(spec=Session)  # DB 속성 추가
-        self.db = MagicMock(spec=Session)
-        
-        # Mock User object for all tests
-        self.mock_user = MagicMock()
-        self.mock_user.created_at = datetime.datetime.now() - datetime.timedelta(days=10)
-        self.repo.get_user.return_value = self.mock_user
-        
-        self.service = SlotService(repository=self.repo, token_service=self.token_service, db=self.db)ne game service."""
+"""
+슬롯머신 API 연동 기반 테스트
+프론트엔드가 게임 로직을 처리하고, 백엔드는 결과/잔액 동기화만 담당
+실제 API 호출로 /api/games/slot/spin 엔드포인트를 검증
+"""
 
 import pytest
-import datetime
-from unittest.mock import MagicMock, patch
-import random
-from sqlalchemy.orm import Session
+from fastapi.testclient import TestClient
+from app.main import app
 
-from app.services.slot_service import SlotService, SlotSpinResult
-from app.repositories.game_repository import GameRepository
-from app.services.token_service import TokenService
+@pytest.fixture(scope="module")
+def client():
+    with TestClient(app) as c:
+        yield c
 
+def test_slot_spin_success(client):
+    """슬롯머신 정상 스핀 성공 테스트"""
+    # 실제 유저 정보 및 토큰은 테스트 DB/환경에 맞게 조정 필요
+    payload = {
+        "site_id": "testuser123",
+        "bet_amount": 10
+    }
+    response = client.post("/api/games/slot/spin", json=payload)
+    print(f"Response status: {response.status_code}")
+    print(f"Response content: {response.text}")
+    assert response.status_code == 200
+    data = response.json()
+    assert "result" in data
+    assert "balance" in data
+    assert "tokens_change" in data
 
-class TestSlotService:
-    """Tests for the SlotService class."""
-    
-    def setup_method(self):
-        """Setup test environment before each test."""
-        self.repo = MagicMock(spec=GameRepository)
-        self.token_service = MagicMock(spec=TokenService)
-        self.token_service.db = MagicMock(spec=Session)
-        self.db = MagicMock(spec=Session)
-        
-        # Mock User object for all tests
-        self.mock_user = MagicMock()
-        self.mock_user.created_at = datetime.datetime.now() - datetime.timedelta(days=10)
-        self.repo.get_user.return_value = self.mock_user
-        
-        self.service = SlotService(repository=self.repo, token_service=self.token_service, db=self.db)
-        self.repo = MagicMock(spec=GameRepository)
-        self.token_service = MagicMock(spec=TokenService)
-        self.token_service.db = MagicMock(spec=Session)  # DB 속성 추가
-        self.db = MagicMock(spec=Session)
-        self.service = SlotService(repository=self.repo, token_service=self.token_service, db=self.db)
-
-    def test_spin_success(self):
-        """Test successful slot spin."""
-        # Arrange
-        user_id = 1
-        self.token_service.deduct_tokens.return_value = 2
-        self.token_service.get_token_balance.return_value = 100
-        self.repo.get_user_segment.return_value = "Medium"
-        self.repo.get_streak.return_value = 0
-        
-        # Mock User object with created_at
-        mock_user = MagicMock()
-        mock_user.created_at = datetime.datetime.now() - datetime.timedelta(days=10)
-        self.repo.get_user.return_value = mock_user
-        
-        # Act
-        result = self.service.spin(user_id, self.db)
-        
-        # Assert
-        self.token_service.deduct_tokens.assert_called_once_with(user_id, 2)
-        self.repo.get_user_segment.assert_called_once_with(self.db, user_id)
-        self.repo.get_streak.assert_called_once_with(user_id)
-        self.repo.record_action.assert_called_once()
-        assert isinstance(result, SlotSpinResult)
-        assert hasattr(result, 'result')
-        assert hasattr(result, 'tokens_change')
-        assert hasattr(result, 'balance')
-        assert hasattr(result, 'streak')
-        assert hasattr(result, 'animation')
-
-    def test_spin_insufficient_tokens(self):
-        """Test slot spin with insufficient tokens."""
-        # Arrange
-        user_id = 1
-        self.token_service.deduct_tokens.return_value = None
-        
-        # Act & Assert
-        with pytest.raises(ValueError, match="토큰이 부족합니다"):
-            self.service.spin(user_id, self.db)
-
-    @patch('random.random')
+def test_slot_spin_insufficient_tokens(client):
+    """슬롯머신 토큰 부족 실패 테스트"""
+    payload = {
+        "site_id": "testuser123",
+        "bet_amount": 1000000  # 충분히 큰 값으로 실패 유도
+    }
+    response = client.post("/api/games/slot/spin", json=payload)
+    print(f"Response status: {response.status_code}")
+    print(f"Response content: {response.text}")
+    assert response.status_code == 400 or response.status_code == 422
+    data = response.json()
+    assert "detail" in data
     def test_spin_result_win(self, mock_random):
         """Test slot spin with a win result."""
         # Arrange

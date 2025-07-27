@@ -113,24 +113,28 @@ async def signup(data: SignUpRequest, db: Session = Depends(get_db)):
     if db.query(models.User).filter(models.User.nickname == data.nickname).first():
         logger.warning("Signup failed: nickname %s already taken", data.nickname)
         raise HTTPException(status_code=400, detail="Nickname already taken")
-    
+
     # 전화번호 중복 검사 (실제 phone_number 필드 사용)
     if db.query(models.User).filter(models.User.phone_number == data.phone_number).first():
         logger.warning("Signup failed: phone number %s already taken", data.phone_number)
         raise HTTPException(status_code=400, detail="Phone number already taken")
-    
-    # 초대코드 검증
+
+    # 초대코드 검증 (is_used 체크 제거, 재사용 허용)
     invite = db.query(models.InviteCode).filter(
-        models.InviteCode.code == data.invite_code,
-        models.InviteCode.is_used == False
+        models.InviteCode.code == data.invite_code
     ).first()
     if not invite:
         logger.warning("Signup failed: invalid invite code %s", data.invite_code)
         raise HTTPException(status_code=400, detail="Invalid invite code")
-    
+
+    # 비밀번호 길이 체크 (4자 이상)
+    if len(data.password) < 4:
+        logger.warning("Signup failed: password too short")
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
+
     # 비밀번호 해싱
     password_hash = pwd_context.hash(data.password)
-    
+
     # 사용자 생성 - 새로운 필드 구조 사용
     user = models.User(
         site_id=data.site_id,           # 새로운 site_id 필드
@@ -143,7 +147,7 @@ async def signup(data: SignUpRequest, db: Session = Depends(get_db)):
     invite.is_used = True  # type: ignore
     db.commit()
     db.refresh(user)
-    
+
     # 초기 토큰 지급
     token_service.add_tokens(int(user.id), INITIAL_CYBER_TOKENS)  # type: ignore[arg-type]
     access_token = create_access_token({"sub": str(user.id)})

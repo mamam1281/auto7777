@@ -8,7 +8,7 @@
 import requests
 import json
 
-BASE_URL = "http://127.0.0.1:8002"
+BASE_URL = "http://139.180.155.143:8000"
 
 def test_fixed_invite_codes():
     """고정 초대코드를 사용한 회원가입 테스트"""

@@ -104,7 +104,7 @@ def test_signup_logic():
     finally:
         db.close()
 
-def test_login_logic(site_id: str, password: str):
+def test_login_logic(site_id: str = "user123", password: str = "password123"):
     """로그인 로직 테스트"""
     print(f"\n=== 🔐 로그인 테스트 (사이트ID: {site_id}) ===")
     

@@ -9,7 +9,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.main import app
-from app.database import get_db, Base
+from app.database import get_db
+from app.models import Base
 from app.models import User, InviteCode, UserSegment
 from app.auth.simple_auth import SimpleAuth
 
@@ -53,9 +54,7 @@ def sample_invite_code():
         # 새 초대코드 생성
         invite_code = InviteCode(
             code="VIP123",
-            max_uses=10,
-            is_active=True,
-            created_by_admin=True
+            is_used=False
         )
         db.add(invite_code)
         db.commit()
@@ -82,6 +81,6 @@ class TestAuthAPI:
         print(f"Response content: {response.text}")
         assert response.status_code == 200
         data = response.json()
-        assert data["nickname"] == "테스트유저"
+        assert data.get("nickname") == "테스트유저"
         assert data["rank"] == "STANDARD"
         assert data["cyber_token_balance"] == 200

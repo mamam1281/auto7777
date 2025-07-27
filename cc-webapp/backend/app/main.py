@@ -21,10 +21,8 @@ except ImportError:  # Optional dependency in tests
     Instrumentator = None
 try:
     import sentry_sdk
-    from sentry_sdk.integrations.fastapi import FastApiIntegration
 except Exception:  # noqa: BLE001
     sentry_sdk = None
-    FastApiIntegration = None
 import os  # For Sentry DSN from env var
 from pydantic import BaseModel  # For request/response models
 from typing import Optional
@@ -60,14 +58,13 @@ from app.routers import (
 # It's good practice to initialize Sentry as early as possible.
 # The DSN should be configured via an environment variable for security and flexibility.
 SENTRY_DSN = os.getenv("SENTRY_DSN")
-if SENTRY_DSN and sentry_sdk and FastApiIntegration:
+if SENTRY_DSN and sentry_sdk:
     try:
         sentry_sdk.init(
             dsn=SENTRY_DSN,
             traces_sample_rate=1.0,
             profiles_sample_rate=1.0,
             environment=os.getenv("ENVIRONMENT", "development"),
-            integrations=[FastApiIntegration()],
         )
         print("Sentry SDK initialized successfully.")
     except Exception as e:  # noqa: BLE001

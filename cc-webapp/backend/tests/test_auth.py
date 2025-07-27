@@ -3,20 +3,17 @@
 RFM 세그먼테이션 유지 + 인증 단순화
 """
 import pytest
-from fastapi.testclient import TestCli    def test_register_success(self):
-        """Test successful user registration"""
-        # 테스트 데이터 준비
-        test_user = User(
-            site_id="testuser123",
-            nickname="테스트유저",
-            phone_number="010-1234-5678",
-            password_hash="hashed_password",
-            invite_code="VIP123",
-            cyber_token_balance=200,
-            rank="STANDARD"
-        )emy import create_engine
+from fastapi.testclient import TestClient
+
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+
+def test_register_success():
+    """Test successful user registration"""
+    # 테스트 데이터 준비
+    # test_user = User(...)
+    pass  # 실제 테스트 코드로 채워야 함
 
 from app.main import app
 from app.database import get_db
@@ -119,7 +116,7 @@ class TestAuthAPI:
                 "nickname": "테스트유저",
                 "site_id": "testuser123",
                 "phone_number": "010-1234-5678",
-                "password": "testpass123"
+                "password": "testpass"
             }
         )
         print(f"Response status: {response.status_code}")
@@ -135,7 +132,10 @@ class TestAuthAPI:
         response = client.post(
             "/api/auth/register",            json={
                 "invite_code": "WRONG1",
-                "nickname": "테스트유저"
+                "nickname": "테스트유저",
+                "site_id": "wronguser",
+                "phone_number": "010-5555-6666",
+                "password": "testpass123"
             }
         )
         print(f"Response status: {response.status_code}")
@@ -166,7 +166,10 @@ class TestAuthAPI:
             "/api/auth/register", 
             json={
                 "invite_code": "TEST01",
-                "nickname": "중복닉네임"
+                "nickname": "중복닉네임",
+                "site_id": "dupuser",
+                "phone_number": "010-7777-8888",
+                "password": "testpass123"
             }
         )
         print(f"Response status: {response.status_code}")

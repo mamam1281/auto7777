@@ -4,7 +4,7 @@ Phase D: API 엔드포인트 통합 테스트
 import requests
 import json
 
-BASE_URL = "http://127.0.0.1:8002"  # 백엔드 포트 수정
+BASE_URL = "http://139.180.155.143:8000"  # 실제 백엔드 서버 주소
 
 def test_server_health():
     """서버 상태 확인"""
@@ -21,25 +21,8 @@ def test_server_health():
         print(f"❌ 서버 연결 실패: {e}")
         return False
 
-def create_test_invite_code():
-    """테스트용 초대코드 생성"""
-    print("\n🎫 초대코드 생성")
-    try:
-        response = requests.post(f"{BASE_URL}/api/admin/invite-codes", json={"count": 1})
-        if response.status_code == 200:
-            data = response.json()
-            invite_code = data["codes"][0]
-            print(f"✅ 초대코드 생성 성공: {invite_code}")
-            return invite_code
-        else:
-            print(f"❌ 초대코드 생성 실패: {response.status_code}")
-            print(response.text)
-            return None
-    except Exception as e:
-        print(f"❌ 초대코드 생성 오류: {e}")
-        return None
 
-def test_signup_api(invite_code):
+def test_signup_api():
     """회원가입 API 테스트"""
     print("\n📝 회원가입 API 테스트")
     
@@ -48,7 +31,7 @@ def test_signup_api(invite_code):
         "nickname": "테스트유저",
         "phone_number": "010-1234-5678",
         "password": "testpass123",
-        "invite_code": invite_code
+        "invite_code": "5882"  # 실제 DB에 등록된 초대코드
     }
     
     try:
@@ -135,7 +118,7 @@ def test_invalid_login():
         print(f"❌ 테스트 오류: {e}")
         return False
 
-def test_duplicate_signup(invite_code):
+def test_duplicate_signup():
     """중복 회원가입 테스트"""
     print("\n🚫 중복 회원가입 테스트")
     
@@ -144,7 +127,7 @@ def test_duplicate_signup(invite_code):
         "nickname": "다른닉네임",
         "phone_number": "010-9999-8888",
         "password": "testpass123",
-        "invite_code": invite_code
+        "invite_code": "6969"  # 실제 DB에 등록된 초대코드
     }
     
     try:
@@ -177,10 +160,19 @@ def main():
         return
     
     # 2. 초대코드 생성
-    invite_code = create_test_invite_code()
-    if not invite_code:
-        print("\n❌ 초대코드 생성 실패!")
-        return
+    # 2. 회원가입 테스트 (등록된 초대코드 사용)
+    invite_code = "5882"  # 실제 DB에 등록된 초대코드
+    signup_success = test_signup_api(invite_code)
+
+    # 3. 로그인 테스트
+    login_success = test_login_api()
+
+    # 4. 잘못된 로그인 테스트
+    invalid_login_success = test_invalid_login()
+
+    # 5. 중복 회원가입 테스트 (다른 등록된 초대코드 사용)
+    invite_code2 = "6969"  # 실제 DB에 등록된 초대코드
+    duplicate_success = test_duplicate_signup(invite_code2)
     
     # 3. 회원가입 테스트
     signup_success = test_signup_api(invite_code)

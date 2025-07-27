@@ -41,8 +41,8 @@ export default function RegisterForm({
   };
 
   const validatePassword = (pwd: string) => {
-    // 비밀번호: 8자 이상
-    return pwd.length >= 8;
+    // 비밀번호: 6자 이상으로 완화
+    return pwd.length >= 6;
   };
 
   const validateInviteCode = (code: string) => {
@@ -50,32 +50,7 @@ export default function RegisterForm({
     return code.length === 6;
   };
 
-  // 초대코드 자동 생성 함수
-  const generateInviteCode = async () => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8002';
-      const response = await fetch(`${apiUrl}/api/admin/invite-codes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ count: 1 }),
-      });
-
-      if (!response.ok) {
-        throw new Error('초대코드 생성에 실패했습니다');
-      }
-
-      const data = await response.json();
-      const newInviteCode = data.codes[0];
-      setInviteCode(newInviteCode);
-      return newInviteCode;
-    } catch (error) {
-      console.error('초대코드 생성 실패:', error);
-      setError('초대코드 생성에 실패했습니다. 다시 시도해주세요.');
-      return null;
-    }
-  };
+  // ...existing code...
 
   const handleStep1Next = () => {
     if (!siteId) {
@@ -111,8 +86,8 @@ export default function RegisterForm({
       setError('비밀번호를 입력해주세요');
       return;
     }
-    if (!validatePassword(password)) {
-      setError('비밀번호는 8자 이상 입력해주세요');
+    if (password.length < 4) {
+      setError('비밀번호는 4자 이상 입력해주세요');
       return;
     }
     if (password !== passwordConfirm) {
@@ -133,7 +108,7 @@ export default function RegisterForm({
     e.preventDefault();
     
     if (!validateInviteCode(inviteCode)) {
-      setError('초대코드 6자를 정확히 입력해주세요');
+      setError('초대코드 4자를 정확히 입력해주세요');
       return;
     }
     
@@ -310,7 +285,7 @@ export default function RegisterForm({
                   className="form-input email-input"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="8자 이상 입력하세요"
+                  placeholder="4자 이상 입력하세요"
                   required
                   disabled={isLoading}
                   autoComplete="new-password"
@@ -379,7 +354,7 @@ export default function RegisterForm({
                   className="form-input email-input"
                   value={inviteCode}
                   onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                  placeholder="초대코드 6자 입력"
+                  placeholder="초대코드 4자 입력"
                   required
                   disabled={isLoading}
                   maxLength={6}
