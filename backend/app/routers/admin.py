@@ -106,6 +106,7 @@ def give_reward(reward_data: GiveRewardRequest, db: Session = Depends(get_db)):
         reward_type=reward_data.reward_type,
         amount=reward_data.amount,
         reason=reward_data.reason,
+    # dependencies=[Depends(get_current_admin)]  # TODO: 관리자 인증/권한 처리
         admin_id=reward_data.admin_id,
         created_at=datetime.now()
     )
