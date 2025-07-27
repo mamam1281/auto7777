@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 
 import SlotMachine from '../../../components/games/slot/SlotMachine';
 
+import '../../../styles/slot-popup.css';
+
 // Loading skeleton
 function LoadingSkeleton() {
   return (
@@ -20,8 +22,7 @@ function LoadingSkeleton() {
 // 코스믹 포츈 슬롯 게임 페이지
 function CosmicFortuneGamePage() {
   return (
-    <div className="w-full bg-gradient-to-br from-[var(--color-primary-dark-navy)] via-[var(--color-primary-charcoal)] 
-    to-[var(--color-primary-dark-navy)] relative" style={{ minHeight: 'calc(100vh + 200px)' }}>
+    <div className="slot-popup-compact w-full bg-gradient-to-br from-[var(--color-primary-dark-navy)] via-[var(--color-primary-charcoal)] to-[var(--color-primary-dark-navy)] relative" style={{ minHeight: 'calc(100vh + 240px)' }}>
       {/* Background Effects */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
         <div className="absolute top-10 left-10 w-72 h-72 bg-[var(--color-accent-purple)] 
@@ -32,23 +33,16 @@ function CosmicFortuneGamePage() {
         rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000 pointer-events-none"></div>
       </div>
 
-      {/* Page Header - 가챠 페이지와 동일한 구조 */}
+      {/* Page Header - 랜덤뽑기 페이지와 동일한 구조 */}
       <motion.header
-        className="z-20 py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-br from-[var(--color-primary-dark-navy)]/80 via-[var(--color-primary-charcoal)]/80 to-[var(--color-primary-dark-navy)]/80 backdrop-blur-md border-b border-[var(--border)]/20"
+        className="z-20 py-2 sm:py-3 px-3 sm:px-5 bg-gradient-to-br from-[var(--color-primary-dark-navy)]/80 via-[var(--color-primary-charcoal)]/80 to-[var(--color-primary-dark-navy)]/80 backdrop-blur-md border-b border-[var(--border)]/20"
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
       >
-        <div className="max-w-6xl mx-auto flex flex-col items-center justify-center gap-2 sm:gap-1">
-          <motion.h1
-            className="text-4xl sm:text-6xl font-bold bg-gradient-to-r from-[var(--color-accent-amber)] 
-            via-[var(--color-accent-yellow)] to-[var(--color-accent-amber)] bg-clip-text text-transparent text-center tracking-wide"
-            whileHover={{ scale: 1.02 }}
-          >
-            코스믹 포츈
-          </motion.h1>
+        <div className="max-w-6xl mx-auto flex flex-col items-center justify-center gap-1">
           <motion.p 
-            className="text-lg sm:text-xl text-[var(--color-text-secondary)] font-medium text-center"
+            className="text-base sm:text-lg text-[var(--color-text-secondary)] font-medium text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}

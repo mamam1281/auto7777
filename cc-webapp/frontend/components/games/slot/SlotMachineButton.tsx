@@ -38,18 +38,18 @@ export const SlotMachineButton: React.FC<SlotMachineButtonProps> = ({
 
   return (
     <>
-      <div className={`w-full bg-gradient-to-br from-[var(--color-surface-primary)] to-[var(--color-surface-secondary)] rounded-2xl border border-[var(--color-border-primary)] py-[20px] px-8 sm:px-12 mx-auto ${className}`}>
+      <div className={`w-full bg-gradient-to-br from-[var(--color-surface-primary)] via-[var(--color-surface-secondary)] to-[var(--color-surface-primary)] rounded-2xl border border-[var(--color-border-primary)] p-4 mx-auto shadow-lg shadow-black/20 ${className}`}>
       {/* Spin Button */}
-      <div className="w-full text-center" style={{ marginBottom: "30px" }}>
+      <div className="w-full text-center" style={{ marginBottom: "28px" }}>
         <Button
           onClick={handleSpinClick}
           disabled={!canSpin}
           size="lg"
           className={cn(
-            "w-full h-16 sm:h-20 text-xl sm:text-2xl font-bold rounded-xl transition-all duration-300 shadow-xl",
+            "w-full h-16 sm:h-18 text-xl sm:text-2xl font-bold rounded-xl transition-all duration-300 shadow-xl",
             !canSpin 
               ? "opacity-50 cursor-not-allowed shadow-none" 
-              : "bg-gradient-to-r from-[var(--color-accent-amber)] to-[var(--color-accent-yellow)] hover:from-[var(--color-accent-yellow)] hover:to-[var(--color-accent-amber)] text-[var(--color-surface-primary)] transform hover:scale-105 shadow-[var(--color-accent-amber)]/30"
+              : "bg-gradient-to-r from-[var(--color-accent-amber)] via-[var(--color-accent-yellow)] to-[var(--color-accent-amber)] hover:from-[var(--color-accent-yellow)] hover:to-[var(--color-accent-amber)] hover:via-[var(--color-accent-amber)] text-[var(--color-surface-primary)] transform hover:scale-105 shadow-xl shadow-[var(--color-accent-amber)]/30"
           )}
         >
           <motion.div
@@ -68,20 +68,27 @@ export const SlotMachineButton: React.FC<SlotMachineButtonProps> = ({
         )}
       </div>
 
-      {/* Game State Indicator */}
-      <div className="w-full text-center" style={{ marginBottom: "20px" }}>
-        <div className={cn(
-          "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium",
-          gameState === 'idle' && "bg-[var(--color-surface-tertiary)] text-[var(--color-text-secondary)]",
-          gameState === 'spinning' && "bg-[var(--color-accent-blue)]/20 text-[var(--color-accent-blue)]",
-          gameState === 'result' && winResult?.isWin && "bg-[var(--color-status-success)]/20 text-[var(--color-status-success)]",
-          gameState === 'result' && !winResult?.isWin && "bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)]"
-        )}>
-          {gameState === 'spinning' && 'Spinning...'}
-          {gameState === 'result' && (winResult?.isWin ? 'You Win!' : 'Try Again')}
-          {gameState === 'idle' && 'Ready to Spin'}
+      {/* 🎰 결과 표시 영역 */}
+      {winResult && gameState === 'result' && (
+        <div className="w-full text-center mb-4">
+          <div className={cn(
+            "inline-flex items-center gap-2 px-6 py-3 rounded-xl text-lg font-bold shadow-lg",
+            winResult.isWin 
+              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white animate-pulse" 
+              : "bg-gradient-to-r from-red-500 to-rose-500 text-white"
+          )}>
+            {winResult.isWin ? (
+              <>
+                🎉 승리! +{winResult.payout} 코인 ({winResult.multiplier}x)
+              </>
+            ) : (
+              <>
+                💸 실패! 다시 도전하세요!
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Game Rules & Help Buttons */}
       <div className="w-full flex gap-3 justify-center">

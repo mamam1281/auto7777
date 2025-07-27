@@ -12,7 +12,7 @@ import type {
   SlotSpinResponse
 } from '../types/api';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://139.180.155.143:8000';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -63,7 +63,11 @@ export const gameAPI = {
     
   // 슬롯 머신 스핀 API
   spinSlot: (betAmount: number = 2) => 
-    apiClient.post<SlotSpinResponse>('/api/games/slot/spin', { bet_amount: betAmount }),
+    apiClient.post<SlotSpinResponse>('/games/slot/spin', { bet_amount: betAmount }),
+  
+  // 잔액 동기화 API (프론트엔드 → 백엔드)
+  syncBalance: (balance: number) => 
+    apiClient.post('/user/sync-balance', { balance }),
     
   // 슬롯 머신 임의 스핀 API (프론트엔드 로직 사용)
   mockSpinSlot: (betAmount: number, reels: string[], result: any) => {

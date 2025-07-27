@@ -13,15 +13,6 @@ import { gameAPI } from '../../../utils/api';
 // SYMBOLS은 실제 게임에서 사용할 심볼입니다
 const SYMBOLS = ['🍒', '🔔', '💎', '7️⃣', '⭐'];
 
-// 승리 결과 타입 정의
-interface WinResult {
-  isWin: boolean;
-  payout: number;
-  multiplier: number;
-  winningPositions: number[];
-  type: string;
-}
-
 // 스핀 결과 생성
 const generateSpinResult = (): string[] => {
   return [
@@ -31,7 +22,16 @@ const generateSpinResult = (): string[] => {
   ];
 };
 
-// 승리 조건 확인 및 배당 계산
+// 승리 결과 타입 정의
+interface WinResult {
+  isWin: boolean;
+  payout: number;
+  multiplier: number;
+  winningPositions: number[];
+  type: string;
+}
+
+// 승리 조건 확인 및 배당 계산 (게임 앱 수준 배당!)
 const checkWinCondition = (reels: string[], betAmount: number): WinResult => {
   const symbolMap: { [key: string]: number } = {};
   let allSame = true;
@@ -44,56 +44,91 @@ const checkWinCondition = (reels: string[], betAmount: number): WinResult => {
     }
   }
 
-  // 승리 조건 확인
+  // 🎰 승리 조건 확인 (더 재미있는 배당!)
   if (allSame) {
-    // 잭팟 - 3개의 별
+    // 🌟 잭팟 - 3개의 별 (200배 배당!)
     if (reels[0] === '⭐') {
       return {
         isWin: true,
-        payout: betAmount * 100,
-        multiplier: 100,
+        payout: betAmount * 200,
+        multiplier: 200,
         winningPositions: [0, 1, 2],
         type: "jackpot"
       };
     }
-    // 일반 3개 매치
-    const multipliers: { [key: string]: number } = {
-      '7️⃣': 50,
-      '💎': 20,
-      '🔔': 10,
-      '🍒': 5
-    };
-    const multiplier = multipliers[reels[0]] || 5;
-    return {
-      isWin: true,
-      payout: betAmount * multiplier,
-      multiplier: multiplier,
-      winningPositions: [0, 1, 2],
-      type: "triple"
-    };
-  } 
-  else {
-    // 2개 매칭 확인
-    for (const symbol in symbolMap) {
-      if (symbolMap[symbol] === 2) {
-        const winningPositions: number[] = [];
-        for (let i = 0; i < reels.length; i++) {
-          if (reels[i] === symbol) {
-            winningPositions.push(i);
-          }
-        }
-        return {
-          isWin: true,
-          payout: Math.floor(betAmount * 1.5),
-          multiplier: 1.5,
-          winningPositions,
-          type: "double"
-        };
-      }
+    
+    // 💎 다이아몬드 3개 (50배 배당)
+    if (reels[0] === '💎') {
+      return {
+        isWin: true,
+        payout: betAmount * 50,
+        multiplier: 50,
+        winningPositions: [0, 1, 2],
+        type: "diamond_win"
+      };
+    }
+    
+    // 7️⃣ 세븐 3개 (30배 배당)
+    if (reels[0] === '7️⃣') {
+      return {
+        isWin: true,
+        payout: betAmount * 30,
+        multiplier: 30,
+        winningPositions: [0, 1, 2],
+        type: "seven_win"
+      };
+    }
+    
+    // 🔔 벨 3개 (15배 배당)
+    if (reels[0] === '🔔') {
+      return {
+        isWin: true,
+        payout: betAmount * 15,
+        multiplier: 15,
+        winningPositions: [0, 1, 2],
+        type: "bell_win"
+      };
+    }
+    
+    // 🍒 체리 3개 (5배 배당)
+    if (reels[0] === '🍒') {
+      return {
+        isWin: true,
+        payout: betAmount * 5,
+        multiplier: 5,
+        winningPositions: [0, 1, 2],
+        type: "cherry_win"
+      };
     }
   }
 
-  // 패배
+  // 🎯 2개 매치 보너스 (작은 승리)
+  for (const symbol of Object.keys(symbolMap)) {
+    if (symbolMap[symbol] === 2) {
+      const winningPositions: number[] = [];
+      for (let i = 0; i < reels.length; i++) {
+        if (reels[i] === symbol) {
+          winningPositions.push(i);
+        }
+      }
+      
+      let multiplier = 1.5;
+      if (symbol === '⭐') multiplier = 5;      // 별 2개
+      else if (symbol === '💎') multiplier = 3; // 다이아 2개
+      else if (symbol === '7️⃣') multiplier = 2.5; // 세븐 2개
+      
+      return {
+        isWin: true,
+        payout: Math.floor(betAmount * multiplier),
+        multiplier,
+        winningPositions,
+        type: "double_match"
+      };
+    }
+  }
+
+  // 💸 패배
+  // 💸 패배
   return {
     isWin: false,
     payout: 0,
@@ -117,10 +152,8 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [jackpot, setJackpot] = useState(125780);
   const [balance, setBalance] = useState(1000);
-  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [shake, setShake] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   
   // 근접 실패 및 심리적 효과 상태
   const [nearMiss, setNearMiss] = useState(false);
@@ -155,73 +188,66 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
 
     setIsSpinning(true);
     setGameState('spinning');
-    setBalance(prev => prev - betAmount); // 즉시 UI에 반영
     setWinResult(null);
     setShake(false);
     setNearMiss(false);
     setError(null);
-    setIsLoading(true);
 
-    // 스핀 결과 생성 
-    const newReels = generateSpinResult();
-    const localResult = checkWinCondition(newReels, betAmount);
+    // 프론트엔드에서 스핀 결과 생성
+    const spinResults = generateSpinResult();
+    const winCheck = checkWinCondition(spinResults, betAmount);
     
-    // 프론트엔드 로직으로 게임 진행하면서도 API 호출 형식 유지
-    gameAPI.mockSpinSlot(betAmount, newReels, localResult)
-      .then(response => {
-        const apiResult = response.data;
-        
-        // 근접 실패 체크 (2개 일치 시)
-        const isNearMiss = !localResult.isWin && (
-          (newReels[0] === newReels[1] && newReels[0] === '⭐') ||
-          (newReels[1] === newReels[2] && newReels[1] === '⭐') ||
-          (newReels[0] === newReels[1] && newReels[0] === '💎')
-        );
-        
-        if (isNearMiss || apiResult.animation === 'near_miss') {
-          setNearMiss(true);
+    // 근접 실패 감지 (2개 매치하지만 3개 아닌 경우)
+    const isNearMiss = !winCheck.isWin && (
+      (spinResults[0] === spinResults[1] && spinResults[0] !== spinResults[2]) ||
+      (spinResults[0] === spinResults[2] && spinResults[0] !== spinResults[1]) ||
+      (spinResults[1] === spinResults[2] && spinResults[1] !== spinResults[0])
+    );
+
+    if (isNearMiss) {
+      setNearMiss(true);
+    }
+
+    // 먼저 잔액 차감 (즉시 UI 반영)
+    setBalance(prev => prev - betAmount);
+    
+    // 스핀 애니메이션
+    setTimeout(() => {
+      setReels(spinResults);
+      setWinResult(winCheck);
+      
+      // 승리 시 잔액 증가
+      if (winCheck.isWin) {
+        setBalance(prev => prev + winCheck.payout);
+        setDisplayBalance(prev => prev + winCheck.payout);
+        if (winCheck.type === "jackpot") {
+          setShake(true);
         }
+      } else {
+        // 패배 시 잔액 업데이트 지연 효과
+        setBalanceUpdateDelay(true);
+      }
+      
+      setIsSpinning(false);
+      setGameState('result');
+      
+      // 백엔드에 결과만 전송 (코인 동기화용)
+      const finalBalance = winCheck.isWin ? 
+        balance - betAmount + winCheck.payout : 
+        balance - betAmount;
         
-        setTimeout(() => {
-          setReels(newReels);
-          setWinResult(localResult);
-          
-          if (localResult.isWin) {
-            setBalance(prev => prev + localResult.payout);
-            setDisplayBalance(prev => prev + localResult.payout); // 승리 시 즉시 업데이트
-            if (localResult.type === "jackpot") {
-              setShake(true);
-            }
-          } else {
-            setBalanceUpdateDelay(true); // 패배 시 지연 업데이트
-            // 패배 시 잔액 업데이트 지연
-            setTimeout(() => {
-              setDisplayBalance(prev => prev - betAmount);
-              setBalanceUpdateDelay(false);
-            }, 1500);
-          }
-          
-          setIsSpinning(false);
-          setGameState('result');
-          setIsLoading(false);
-          
-          // 일정 시간 후 대기 상태로 되돌리기
-          setTimeout(() => {
-            setGameState('idle');
-            setNearMiss(false);
-          }, 3000);
-        }, 2000);
-      })
-      .catch(err => {
-        console.error('슬롯 스핀 에러:', err);
-        setError('슬롯 머신 스핀 중 오류가 발생했습니다.');
-        setIsSpinning(false);
+      gameAPI.syncBalance(finalBalance)
+        .catch(err => {
+          console.warn('잔액 동기화 실패:', err);
+          // 실패해도 게임 계속 진행 (프론트엔드 우선)
+        });
+      
+      // 일정 시간 후 대기 상태로 되돌리기
+      setTimeout(() => {
         setGameState('idle');
-        setIsLoading(false);
-        // 에러 시 차감된 잔액 복구
-        setBalance(prev => prev + betAmount);
-        setDisplayBalance(prev => prev + betAmount);
-      });
+        setNearMiss(false);
+      }, 3000);
+    }, 2000);
   }, [betAmount, balance, isSpinning]);
 
   const canSpin = balance >= betAmount && !isSpinning;
@@ -235,15 +261,8 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
     >
       {/* 에러 메시지 표시 */}
       {error && (
-        <div className="w-full bg-red-600 text-white p-2 mb-2 rounded text-center">
+        <div className="w-full bg-red-600 text-white p-4 mb-2 rounded text-center">
           {error}
-        </div>
-      )}
-      
-      {/* 로딩 인디케이터 */}
-      {isLoading && (
-        <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-sm z-10">
-          로딩 중...
         </div>
       )}
       
@@ -280,12 +299,10 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
         className="w-full"
       />
 
-      {/* Header 2 - Balance & Sound (압축된 여백) */}
+      {/* Header 2 - Balance (압축된 여백) */}
       <div className="w-full" style={{ marginTop: '8px' }}>
         <SlotMachineHeader2 
-          balance={balance}
-          isSoundEnabled={isSoundEnabled}
-          setIsSoundEnabled={setIsSoundEnabled}
+          balance={displayBalance}
           className="w-full"
         />
       </div>
@@ -329,7 +346,7 @@ export const SlotMachine = ({ className }: SlotMachineProps) => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute top-4 right-4 bg-red-500/80 text-white px-3 py-1 rounded text-sm"
+          className="fixed top-4 right-4 bg-gradient-to-r from-[var(--color-accent-amber)]/90 to-[var(--color-accent-yellow)]/90 text-[var(--color-surface-primary)] px-3 py-1 rounded-lg text-sm font-medium shadow-md z-50"
         >
           💰 계산 중...
         </motion.div>

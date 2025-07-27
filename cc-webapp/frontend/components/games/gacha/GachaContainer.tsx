@@ -14,10 +14,7 @@ export function GachaContainer() {
   const [result, setResult] = useState<GachaResult | null>(null);
   const [isPopup, setIsPopup] = useState(false);
   
-  // 심리적 효과를 위한 상태
-  const [nearMiss, setNearMiss] = useState(false);
-  const [psychMessage, setPsychMessage] = useState('');
-  const [showPsychMessage, setShowPsychMessage] = useState(false);
+  // 뽑기 카운트만 유지
   const [pullCount, setPullCount] = useState(0);
   
   // 팝업 모드 감지
@@ -26,7 +23,7 @@ export function GachaContainer() {
     
     // 팝업 크기 로그 및 최적화
     if (isPopupWindow()) {
-      console.log(`🎮 가챠 팝업 크기: 가로 ${window.innerWidth}px × 세로 ${window.innerHeight}px`);
+      console.log(`🎮 랜덤뽑기 팝업 크기: 가로 ${window.innerWidth}px × 세로 ${window.innerHeight}px`);
       
       // 컨텐츠 높이에 따른 스타일 조정
       const resizeObserver = new ResizeObserver((entries) => {
@@ -48,7 +45,7 @@ export function GachaContainer() {
         }
       });
       
-      // body와 실제 가챠 컨테이너 모두 관찰
+      // body와 실제 랜덤뽑기 컨테이너 모두 관찰
       resizeObserver.observe(document.body);
       const gachaContainer = document.querySelector('.gacha-container');
       if (gachaContainer) resizeObserver.observe(gachaContainer);
@@ -77,10 +74,8 @@ export function GachaContainer() {
     setIsPlaying(true);
     setTickets(prev => prev - 1);
     setPullCount(prev => prev + 1);
-    setNearMiss(false);
-    setShowPsychMessage(false);
 
-    // 심리적 긴장감을 위한 연장된 애니메이션
+    // 뽑기 애니메이션을 위한 지연
     await new Promise(resolve => setTimeout(resolve, 2500));
 
     const item = performGacha();
@@ -89,44 +84,9 @@ export function GachaContainer() {
       isNew: Math.random() > 0.7 // 30% chance for new
     };
 
-    // 근접 실패 감지 (레어 아이템을 거의 뽑을 뻔한 상황)
-    const random = Math.random() * 100;
-    const isNearMissDetected = item.tier !== 'legendary' && 
-                              item.tier !== 'epic' && 
-                              random < 15; // 15% 확률로 근접 실패 연출
-
-    if (isNearMissDetected) {
-      setNearMiss(true);
-      setPsychMessage('💫 아쉬워! 레어 아이템이 코앞이었는데!');
-      setShowPsychMessage(true);
-    } else {
-      // 심리적 메시지 설정
-      let message = '';
-      if (item.tier === 'legendary') {
-        message = '🎉 대박! 전설 등급 획득!';
-      } else if (item.tier === 'epic') {
-        message = '⭐ 에픽 등급! 운이 좋네요!';
-      } else if (pullCount % 5 === 0) {
-        message = '🔥 연속 도전! 다음엔 더 좋은 결과가!';
-      } else if (tickets === 0) {
-        message = '💰 티켓을 충전하고 더 큰 행운을!';
-      }
-      
-      if (message) {
-        setPsychMessage(message);
-        setShowPsychMessage(true);
-      }
-    }
-
     setResult(gachaResult);
     setShowModal(true);
     setIsPlaying(false);
-
-    // 심리적 메시지 자동 숨기기
-    setTimeout(() => {
-      setShowPsychMessage(false);
-      setNearMiss(false);
-    }, 3000);
   };
 
   const handleCloseModal = () => {
@@ -144,7 +104,7 @@ export function GachaContainer() {
       {isPopup && (
         <div className="gacha-popup-title mb-3">
           <h1 className="text-2xl font-bold text-center text-white drop-shadow-md mb-1">
-            럭키 가챠
+            럭키 랜덤뽑기
           </h1>
         </div>
       )}
@@ -163,20 +123,20 @@ export function GachaContainer() {
         <div className={`gacha-icon ${isPlaying ? 'playing' : ''}`}>
           📦
         </div>
-        <h2 className="gacha-title">가챠 상자</h2>
+        <h2 className="gacha-title">랜덤뽑기 상자</h2>
         <p className="gacha-description">신비로운 아이템을 획득하세요!</p>
       </div>
       
       {/* 상자 설명 - 가이드 텍스트 */}
       <div className="text-center max-w-[280px] px-2 mt-2 mb-4">
         <p className="text-white/80 text-sm">
-          행운의 가챠 상자에서 다양한 등급의 아이템을 획득할 수 있습니다.
+          행운의 랜덤뽑기 상자에서 다양한 등급의 아이템을 획득할 수 있습니다.
         </p>
       </div>
 
       {/* Buttons - 하단 영역 */}
       <div className={`flex flex-col gap-3 w-full ${isPopup ? 'mt-2 mb-3' : 'max-w-xs mx-auto'}`}>
-        {/* 주요 액션 버튼 - 가챠 뽑기 */}
+        {/* 주요 액션 버튼 - 랜덤뽑기 */}
         <div className="text-center text-sm text-white/70 mb-1">
           {tickets > 0 ? `티켓 1장으로 아이템을 뽑을 수 있습니다` : `티켓이 부족합니다`}
         </div>
@@ -194,7 +154,7 @@ export function GachaContainer() {
           ) : (
             <div className="flex items-center justify-center gap-2">
               <span className="text-xl drop-shadow-lg">🎰</span>
-              가챠 뽑기
+              랜덤뽑기
             </div>
           )}
         </button>
@@ -219,59 +179,6 @@ export function GachaContainer() {
         result={result}
         onClose={handleCloseModal}
       />
-
-      {/* 근접 실패 효과 */}
-      <AnimatePresence>
-        {nearMiss && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute inset-0 flex items-center justify-center bg-black/60 pointer-events-none z-50"
-          >
-            <motion.div
-              animate={{ 
-                y: [0, -10, 0],
-                scale: [1, 1.1, 1]
-              }}
-              transition={{ 
-                duration: 0.8,
-                repeat: 2,
-                ease: "easeInOut"
-              }}
-              className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-4 rounded-lg font-bold text-lg shadow-xl max-w-xs text-center"
-            >
-              💫 아쉬워! 레어 아이템이 코앞이었는데! 💫
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 심리적 메시지 표시 */}
-      <AnimatePresence>
-        {showPsychMessage && psychMessage && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40"
-          >
-            <motion.div
-              animate={{ 
-                scale: [1, 1.05, 1]
-              }}
-              transition={{ 
-                duration: 1,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg"
-            >
-              {psychMessage}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* 뽑기 횟수 표시 */}
       {pullCount > 0 && (

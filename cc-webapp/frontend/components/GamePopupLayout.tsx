@@ -27,9 +27,9 @@ export default function GamePopupLayout({
       
       try {
         if (path.includes('/games/gacha/popup')) {
-          // 가챠 팝업: 420x850
+          // 랜덤뽑기 팝업: 420x850
           window.resizeTo(420, 850 + extraHeight);
-          console.log('가챠 팝업 크기 설정: 420x930');
+          console.log('랜덤뽑기 팝업 크기 설정: 420x930');
         } else if (path.includes('/games/rps/popup')) {
           // RPS 팝업: 420x650 (컴팩트)
           window.resizeTo(420, 650 + extraHeight);

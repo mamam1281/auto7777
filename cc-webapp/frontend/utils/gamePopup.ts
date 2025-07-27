@@ -37,7 +37,7 @@ export const POPUP_CONFIGS = {
   gacha: {
     width: 420,
     height: 850,
-    title: '가챠',
+    title: '랜덤뽑기',
     resizable: false,
     scrollable: false
   },
@@ -340,7 +340,7 @@ function getGameConfig(type: string): PopupConfig {
     'gacha': {
       width: 420,
       height: 850,
-      title: '가챠 게임',
+      title: '랜덤뽑기 게임',
       resizable: false,
       scrollable: false
     },

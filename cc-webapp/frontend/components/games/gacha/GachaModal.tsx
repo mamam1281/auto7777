@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GachaResult, TIER_COLORS } from './types';
+import './gacha-premium-theme.css';
 
 interface GachaModalProps {
   isOpen: boolean;

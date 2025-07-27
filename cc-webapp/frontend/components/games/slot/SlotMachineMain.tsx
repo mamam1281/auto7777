@@ -41,24 +41,40 @@ export const SlotMachineMain: React.FC<SlotMachineMainProps> = ({
           ))}
         </div>
         
-        {/* Win Display */}
+        {/* Result Display - Shows both wins and losses */}
         <AnimatePresence>
-          {winResult?.isWin && (
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.8 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.8 }}
-              className="text-center mt-16 sm:mt-20 p-10 sm:p-14 bg-gradient-to-r from-[var(--color-accent-amber)]/30 to-[var(--color-accent-yellow)]/30 border-2 border-[var(--color-accent-amber)]/50 rounded-xl"
-            >
-              <div className="flex items-center justify-center gap-6 text-[var(--color-accent-amber)] text-2xl sm:text-3xl font-bold mb-14 sm:mb-16">
-                <Star className="w-8 h-8" />
-                WIN! +{winResult.payout}
-                <Star className="w-8 h-8" />
-              </div>
-              <div className="text-[var(--color-text-secondary)] text-lg sm:text-xl">
-                {winResult.multiplier}x multiplier
-              </div>
-            </motion.div>
+          {winResult && (
+            winResult.isWin ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.8 }}
+                className="text-center mt-16 sm:mt-20 p-10 sm:p-14 bg-gradient-to-r from-[var(--color-accent-amber)]/30 to-[var(--color-accent-yellow)]/30 border-2 border-[var(--color-accent-amber)]/50 rounded-xl"
+              >
+                <div className="flex items-center justify-center gap-6 text-[var(--color-accent-amber)] text-2xl sm:text-3xl font-bold mb-14 sm:mb-16">
+                  <Star className="w-8 h-8" />
+                  WIN! +{winResult.payout}
+                  <Star className="w-8 h-8" />
+                </div>
+                <div className="text-[var(--color-text-secondary)] text-lg sm:text-xl">
+                  {winResult.multiplier}x multiplier
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.8 }}
+                className="text-center mt-16 sm:mt-20 p-10 sm:p-14 bg-gradient-to-r from-[var(--color-surface-tertiary)]/30 to-[var(--color-surface-tertiary)]/30 border-2 border-[var(--color-border-secondary)]/50 rounded-xl"
+              >
+                <div className="flex items-center justify-center gap-6 text-[var(--color-text-secondary)] text-2xl sm:text-3xl font-bold mb-14 sm:mb-16">
+                  NO MATCH
+                </div>
+                <div className="text-[var(--color-text-tertiary)] text-lg sm:text-xl">
+                  Better luck next time
+                </div>
+              </motion.div>
+            )
           )}
         </AnimatePresence>
       </div>

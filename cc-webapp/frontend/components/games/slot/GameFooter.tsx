@@ -52,7 +52,7 @@ export function GameFooter({ className }: GameFooterProps) {
 
 
   return (
-    <div className={`bg-gradient-to-br from-[var(--color-surface-primary)] to-[var(--color-surface-secondary)] rounded-2xl border border-[var(--color-border-primary)] shadow-2xl p-10 sm:p-14 ${className || ''}`}>
+    <div className={`bg-gradient-to-br from-[var(--color-surface-primary)] to-[var(--color-surface-secondary)] rounded-2xl border border-[var(--color-border-primary)] shadow-2xl p-4 ${className || ''}`}>
       <div className="max-w-md mx-auto space-y-3">
 
         <div className="flex gap-3 justify-center">

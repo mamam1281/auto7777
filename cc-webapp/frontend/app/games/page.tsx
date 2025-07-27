@@ -49,20 +49,34 @@ function GameCard({
   const router = useRouter();
 
   const handleClick = () => {
-    // 실제 게임 페이지로 라우팅
+    // 실제 브라우저 팝업 창으로 게임 열기
+    const popupConfig = {
+      width: 420,
+      height: 850,
+      resizable: 'no',
+      scrollbars: 'no',
+      status: 'no',
+      toolbar: 'no',
+      menubar: 'no',
+      location: 'no'
+    };
+    
+    const configString = Object.entries(popupConfig)
+      .map(([key, value]) => `${key}=${value}`)
+      .join(',');
+    
     switch (gameType) {
       case 'slots':
-        router.push('/games/slots/popup');
+        window.open('/games/slots/popup', 'slots_game', configString);
         break;
       case 'roulette':
-        router.push('/games/roulette/popup');
+        window.open('/games/roulette/popup', 'roulette_game', configString);
         break;
       case 'rps':
-        // RPS 게임은 별도 컴포넌트 경로로
-        router.push('/games/rps');
+        window.open('/games/rps/popup', 'rps_game', configString);
         break;
       case 'gacha':
-        router.push('/games/gacha/popup');
+        window.open('/games/gacha/popup', 'gacha_game', configString);
         break;
       default:
         break;
@@ -188,8 +202,8 @@ function HomePage() {
       maxWin: 80000
     },
     {
-      title: "스텔라 가챠",
-      description: "신비로운 우주 아이템 수집",
+      title: "스텔라 랜덤뽑기",
+      description: "행운의 랜덤뽑기로 특별한 보상을 획득하세요!",
       icon: <Star className="w-5 h-5 text-orange-400" />,
       gameType: "gacha",
       accent: "orange-400",

@@ -7,12 +7,12 @@
 }
 
 .slot-popup-compact .bg-gradient-to-br.rounded-2xl {
-  padding: 8px 16px !important; /* 기존 20px 32px에서 압축 */
+  padding: 16px !important; /* 통일된 16px 패딩 */
   margin-bottom: 12px !important; /* 기존 16px에서 압축 */
 }
 
 .slot-popup-compact .bg-gradient-to-br.rounded-2xl.border.border-\[var\(--color-border-primary\)\] {
-  padding: 6px 16px !important; /* 기존 10px 32px에서 압축 */
+  padding: 16px !important; /* 통일된 16px 패딩 */
   margin-bottom: 12px !important; /* 기존 24px에서 압축 */
 }
 
@@ -21,17 +21,17 @@
 }
 
 .slot-popup-compact .text-center.px-3.py-1 {
-  padding: 2px 8px !important; /* 기존 4px 12px에서 압축 */
+  padding: 16px !important; /* 통일된 16px 패딩 */
   min-width: 120px !important; /* 기존 160px에서 압축 */
 }
 
 .slot-popup-compact .bg-gradient-to-br.from-\[var\(--color-surface-primary\)\].to-\[var\(--color-surface-secondary\)\].rounded-2xl.border.border-\[var\(--color-border-primary\)\].px-3 {
-  padding: 2px 8px !important; /* 기존 4px 12px에서 압축 */
+  padding: 16px !important; /* 통일된 16px 패딩 */
 }
 
 .slot-popup-compact .grid .relative.h-full.w-full {
   min-width: 80px !important; /* 기존 100px에서 압축 */
-  padding: 4px !important; /* 기존 8px에서 압축 */
+  padding: 16px !important; /* 통일된 16px 패딩 */
   border-width: 1px !important; /* 기존 2px에서 압축 */
 }
 
@@ -67,7 +67,7 @@
 
 /* 전체 슬롯머신 컨테이너 패딩 압축 */
 .slot-popup-compact .bg-gradient-to-br.p-1 {
-  padding: 2px !important; /* 기존 4px에서 압축 */
+  padding: 16px !important; /* 통일된 16px 패딩 */
 }
 
 /* =============== 고급스러운 카지노 테마 스타일 =============== */
@@ -163,7 +163,7 @@
   min-width: 200px !important; /* 기존보다 넓게 */
   font-size: 18px !important; /* 텍스트 크기 증가 */
   border-radius: 12px !important; /* 둥근 모서리 */
-  padding: 16px 32px !important; /* 넉넉한 패딩 */
+  padding: 16px !important; /* 통일된 16px 패딩 */
 }
 
 /* 숫자 버튼들 - 깔끔하고 단순한 스타일 */

@@ -33,7 +33,7 @@ export default function WalletPage() {
       { id: 2, type: 'bet', amount: -50, game: '가위바위보', time: '25분 전', status: 'completed' },
       { id: 3, type: 'bonus', amount: 100, game: '출석보상', time: '1시간 전', status: 'completed' },
       { id: 4, type: 'win', amount: 200, game: '룰렛', time: '2시간 전', status: 'completed' },
-      { id: 5, type: 'bet', amount: -25, game: '가챠', time: '3시간 전', status: 'completed' }
+      { id: 5, type: 'bet', amount: -25, game: '랜덤뽑기', time: '3시간 전', status: 'completed' }
     ],
     activeBonuses: [
       { id: 1, title: '신규 가입 보너스', amount: 300, progress: 75, requirement: '게임 10회 플레이', remaining: '3일' },
