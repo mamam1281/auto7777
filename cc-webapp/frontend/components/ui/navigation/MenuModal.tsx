@@ -32,7 +32,7 @@ const MenuModal: React.FC<MenuModalProps> = ({ isOpen, onClose }) => {
   const menuItems = [
     { icon: Home, label: '홈', path: '/', color: 'text-blue-400' },
     { icon: Gamepad2, label: '게임', path: '/games', color: 'text-green-400' },
-    { icon: MessageCircle, label: '내역', path: '/history', color: 'text-yellow-400' },
+    { icon: MessageCircle, label: '내역', path: '/wallet', color: 'text-yellow-400' },
     { icon: User, label: '프로필', path: '/profile', color: 'text-purple-400' },
     { icon: Bell, label: '알림', path: '/notifications', color: 'text-amber-400' },
     { icon: Gift, label: '프로모션', path: '/promotions', color: 'text-pink-400' },

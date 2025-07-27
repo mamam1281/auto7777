@@ -36,7 +36,7 @@ function GachaMainContent() {
             via-[var(--color-accent-blue)] to-[var(--color-accent-cyan)] bg-clip-text text-transparent text-center tracking-wide"
             whileHover={{ scale: 1.02 }}
           >
-            럭키 가챠
+            랜덤 뽑기
           </motion.h1>
         </div>
       </motion.header>
@@ -55,7 +55,7 @@ function GachaMainContent() {
               isPopupOpen ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
             }`}
           >
-            {isPopupOpen ? '게임 진행 중...' : '가챠 게임 시작'}
+            {isPopupOpen ? '게임 진행 중...' : '랜덤 뽑기 시작'}
           </button>
         </motion.div>
       </div>

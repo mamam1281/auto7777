@@ -61,7 +61,7 @@ const SimpleGamesPage: React.FC = () => {
     },
     {
       id: 'gacha',
-      name: '가챠',
+      name: '랜덤뽑기',
       emoji: '🎁',
       category: '특별',
       rtp: 94.8,
