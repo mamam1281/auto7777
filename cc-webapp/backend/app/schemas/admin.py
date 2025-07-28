@@ -1,6 +1,53 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict
 from datetime import datetime
-from typing import List, Optional
+
+# User Activity schemas
+class UserActivityBase(BaseModel):
+    user_id: int
+    activity_type: str
+    description: Optional[str] = None
+
+class UserActivityCreate(UserActivityBase):
+    pass
+
+class UserActivity(UserActivityBase):
+    id: int
+    timestamp: datetime
+
+    class Config:
+        orm_mode = True
+
+# Reward schemas
+class RewardBase(BaseModel):
+    user_id: int
+    reward_type: str
+    amount: float
+    description: Optional[str] = None
+
+class RewardCreate(RewardBase):
+    pass
+
+class Reward(RewardBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+# Admin dashboard schemas
+class UserActivitySummary(BaseModel):
+    total_activities: int
+    activities_by_type: Dict[str, int]
+
+class RewardSummary(BaseModel):
+    total_rewards: int
+    total_amount: float
+    rewards_by_type: Dict[str, float]
+
+class AdminDashboardData(BaseModel):
+    user_activity: UserActivitySummary
+    rewards: RewardSummary
 
 class UserAdminResponse(BaseModel):
     id: int
