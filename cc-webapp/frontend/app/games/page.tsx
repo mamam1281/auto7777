@@ -65,21 +65,26 @@ function GameCard({
       .map(([key, value]) => `${key}=${value}`)
       .join(',');
     
+    let popupUrl = '';
     switch (gameType) {
       case 'slots':
-        window.open('/games/slots/popup', 'slots_game', configString);
+        popupUrl = `${window.location.origin}/games/slots/popup`;
         break;
       case 'roulette':
-        window.open('/games/roulette/popup', 'roulette_game', configString);
+        popupUrl = `${window.location.origin}/games/roulette/popup`;
         break;
       case 'rps':
-        window.open('/games/rps/popup', 'rps_game', configString);
+        popupUrl = `${window.location.origin}/games/rps/popup`;
         break;
       case 'gacha':
-        window.open('/games/gacha/popup', 'gacha_game', configString);
+        popupUrl = `${window.location.origin}/games/gacha/popup`;
         break;
       default:
-        break;
+        return;
+    }
+    const popup = window.open(popupUrl, '_blank', configString);
+    if (!popup) {
+      alert('팝업이 차단되었습니다. 브라우저 팝업 차단을 해제해 주세요.');
     }
   };
 
@@ -88,79 +93,15 @@ function GameCard({
       className="relative group cursor-pointer"
       whileHover={{ y: -4, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
-      onClick={handleClick}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      {/* 깔끔하고 선명한 카드 디자인 */}
-      <div className="relative rounded-xl overflow-hidden
-                      transition-all duration-500"
-           style={{
-             background: 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
-             border: '1px solid rgba(255,255,255,0.15)',
-             boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-           }}>
-
-        {/* 전문적으로 재설계된 콘텐츠 */}
-        <div className="p-4 space-y-5">
-          {/* 상단: 제목 */}
-          <div className="text-center">
-            <h3 className="text-2xl font-black text-white mb-3"
-                style={{ 
-                  fontFamily: "'Inter', sans-serif",
-                  letterSpacing: '-0.02em',
-                  fontSize: '22px'
-                }}>
-              {title}
-            </h3>
-            
-            {/* 난이도 태그 */}
-            <span className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${
-              difficulty === 'Easy' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-              difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-              'bg-red-500/20 text-red-400 border border-red-500/30'
-            }`}>
-              {difficulty}
-            </span>
-          </div>
-
-          {/* 중간: 게임 정보 */}
-          <div className="flex justify-center gap-8">
-            <div className="text-center">
-              <Coins className="w-7 h-7 text-yellow-400 mx-auto mb-1.5" />
-              <div className="text-white font-bold text-lg">{minBet}💎</div>
-              <div className="text-gray-300 text-xs font-medium">MIN BET</div>
-            </div>
-            <div className="text-center">
-              <Trophy className="w-7 h-7 text-orange-400 mx-auto mb-1.5" />
-              <div className="text-white font-bold text-lg">{maxWin.toLocaleString()}</div>
-              <div className="text-gray-300 text-xs font-medium">MAX WIN</div>
-            </div>
-          </div>
-
-          {/* 하단: 선명한 버튼 */}
-          <div className="pt-2">
-            <motion.button
-              className="w-full py-4 px-6 rounded-lg 
-                         bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400
-                         border border-emerald-400/40 hover:border-emerald-300/60
-                         transition-all duration-300 
-                         flex items-center justify-center gap-3 
-                         text-white font-bold text-xl
-                         transform hover:scale-105 active:scale-95"
-              style={{
-                background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Play className="w-7 h-7" />
-              <span className="tracking-wide">PLAY NOW</span>
-            </motion.button>
-          </div>
-        </div>
+      {/* 게임 타이틀 영역 복원 */}
+      <div className="w-full flex items-center justify-center py-3">
+        <span className="text-lg font-bold text-white drop-shadow-md tracking-wide">
+          {title}
+        </span>
       </div>
     </motion.div>
   );
@@ -256,41 +197,18 @@ function HomePage() {
           transition={{ duration: 1, ease: "easeOut" }}
         >
           <motion.h1
-            className="text-6xl font-black tracking-tight mb-4 leading-tight"
             style={{
+              fontSize: '16px',
+              color: '#FF1493',
               fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
-              textShadow: '0 12px 40px rgba(0,0,0,0.6), 0 6px 20px rgba(168,85,247,0.4), 0 4px 12px rgba(255,255,255,0.1)'
+              textShadow: '0 12px 40px rgba(0,0,0,0.6), 0 6px 20px rgba(168,85,247,0.4), 0 4px 12px rgba(255,255,255,0.1)',
+              whiteSpace: 'nowrap'
             }}
             whileHover={{ scale: 1.02, y: -2 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <span className="cosmic-gradient-text font-black tracking-tight"
-                  style={{
-                    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 20%, #e2e8f0 40%, #cbd5e1 60%, #94a3b8 80%, #64748b 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    color: 'transparent',
-                    textShadow: 'none'
-                  }}>
-              COSMIC CASINO
-            </span>
+            MODEL CASINO
           </motion.h1>
-          <motion.p
-            className="text-lg font-semibold mb-8 tracking-wide"
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              color: 'rgba(255, 255, 255, 0.85)',
-              textShadow: '0 4px 16px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)',
-              letterSpacing: '0.03em',
-              fontWeight: '600'
-            }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            Premium Cosmic Gaming Experience
-          </motion.p>
           
           {/* 프리미엄 통계 */}
           <motion.div
@@ -299,29 +217,31 @@ function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
           >
-            <div className="flex items-center gap-2 px-4 py-3 rounded-xl 
-                            bg-white/5 backdrop-blur-md
-                            border border-white/10 hover:border-white/20
-                            transition-all duration-300">
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              transition: 'all 0.3s ease'
+            }}>
               <TrendingUp className="w-4 h-4 text-emerald-300" />
-              <span style={{ 
-                fontFamily: "'Inter', sans-serif",
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontWeight: '500',
-                letterSpacing: '0.02em'
-              }}>99.2% RTP</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-3 rounded-xl 
-                            bg-white/5 backdrop-blur-md
-                            border border-white/10 hover:border-white/20
-                            transition-all duration-300">
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              transition: 'all 0.3s ease'
+            }}>
               <Zap className="w-4 h-4 text-amber-300" />
-              <span style={{ 
-                fontFamily: "'Inter', sans-serif",
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontWeight: '500',
-                letterSpacing: '0.02em'
-              }}>Instant Payout</span>
             </div>
           </motion.div>
         </motion.header>
@@ -380,39 +300,6 @@ function HomePage() {
 export default function App() {
   useEffect(() => {
     document.title = '🎰 COSMIC CASINO - 프리미엄 우주 카지노';
-    
-    // 프리미엄 그라디언트 텍스트 스타일을 동적으로 추가
-    const style = document.createElement('style');
-    style.textContent = `
-      .cosmic-gradient-text {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 20%, #e2e8f0 40%, #cbd5e1 60%, #94a3b8 80%, #64748b 100%) !important;
-        -webkit-background-clip: text !important;
-        -webkit-text-fill-color: transparent !important;
-        background-clip: text !important;
-        color: transparent !important;
-        display: inline-block !important;
-        background-size: 200% 200% !important;
-        animation: premium-gradient 3s ease-in-out infinite !important;
-        font-weight: 900 !important;
-        letter-spacing: -0.02em !important;
-      }
-      
-      @keyframes premium-gradient {
-        0%, 100% { 
-          background-position: 0% 50%; 
-          filter: drop-shadow(0 4px 12px rgba(255,255,255,0.2));
-        }
-        50% { 
-          background-position: 100% 50%; 
-          filter: drop-shadow(0 6px 16px rgba(255,255,255,0.3));
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
   }, []);
 
   return <HomePage />;
