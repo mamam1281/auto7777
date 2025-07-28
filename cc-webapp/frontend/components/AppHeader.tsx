@@ -3,7 +3,7 @@ import { ArrowLeft, Bell, Settings, Home, Menu, Shield } from 'lucide-react';
 import Button from './Button';
 import { useRouter, usePathname } from 'next/navigation';
 import MenuModal from './ui/navigation/MenuModal';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../lib/auth';
 
 export interface AppHeaderProps {
   appName: string;

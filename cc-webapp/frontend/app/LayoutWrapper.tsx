@@ -6,7 +6,7 @@ import { Provider } from 'react-redux';
 import { store } from '../store/store';
 import AppHeader from '../components/AppHeader';
 import BottomNavigationBar from '../components/BottomNavigationBar';
-import { AuthProvider } from '../contexts/AuthContext';
+import { AuthProvider } from '../lib/auth';
 
 export interface LayoutWrapperProps {
   children: React.ReactNode;

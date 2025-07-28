@@ -89,7 +89,7 @@ const UsersPage = () => {
     }
   };
 
-  const uniqueRanks = [...new Set(users.map(user => user.current_rank))];
+  const uniqueRanks = [...new Set(users.map(user => user.current_rank))] as string[];
 
   if (loading) {
     return (

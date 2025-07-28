@@ -1,38 +1,31 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronLeft, User, Phone, Calendar, Award, Activity, Gift, CreditCard } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
-interface UserDetail {
+interface User {
   id: number;
-  site_id: string;
   nickname: string;
-  phone_number: string;
+  email: string;
   cyber_token_balance: number;
-  rank: string;
+  current_rank: string;
+  is_verified: boolean;
+  is_active: boolean;
   created_at: string;
-  recent_activities: Array<{
-    id: number;
-    activity_type: string;
-    details: string;
-    timestamp: string;
-  }>;
-  recent_rewards: Array<{
-    id: number;
-    reward_type: string;
-    amount: number;
-    reason: string;
-    created_at: string;
-  }>;
+  last_login: string;
 }
 
-const UserDetailPage: React.FC = () => {
+interface UserActivity {
+  id: number;
+  activity_type: string;
+  details: string;
+  timestamp: string;
+}
+
+const UserDetailPage = () => {
   const params = useParams();
-  const router = useRouter();
-  const userId = params.id as string;
+  const userId = params?.id as string;
   
   const [user, setUser] = useState<UserDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -389,6 +382,307 @@ const UserDetailPage: React.FC = () => {
               </button>
             </div>
           </motion.div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+
+interface User {
+  id: number;
+  nickname: string;
+  email: string;
+  cyber_token_balance: number;
+  current_rank: string;
+  is_verified: boolean;
+  is_active: boolean;
+  created_at: string;
+  last_login: string;
+}
+
+interface UserActivity {
+  id: number;
+  activity_type: string;
+  details: string;
+  timestamp: string;
+}
+
+const UserDetailPage = () => {
+  const params = useParams();
+  const userId = params?.id as string;
+  
+  const [user, setUser] = useState<User | null>(null);
+  const [activities, setActivities] = useState<UserActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showRewardModal, setShowRewardModal] = useState(false);
+  const [rewardAmount, setRewardAmount] = useState<number>(0);
+
+  useEffect(() => {
+    if (userId) {
+      fetchUserData();
+      fetchUserActivities();
+    }
+  }, [userId]);
+
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`http://localhost:8000/api/admin/users/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+    } catch (err) {
+      console.error('Error fetching user data:', err);
+      setError('Failed to load user data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserActivities = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/admin/users/${userId}/activities`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (response.ok) {
+        const activitiesData = await response.json();
+        setActivities(activitiesData);
+      }
+    } catch (err) {
+      console.error('Error fetching user activities:', err);
+    }
+  };
+
+  const handleGiveReward = async () => {
+    if (!rewardAmount || rewardAmount <= 0) {
+      alert('올바른 보상 수량을 입력해주세요.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8000/api/admin/users/${userId}/give-reward`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          token_amount: rewardAmount,
+          reason: `관리자 지급 - ${rewardAmount} 토큰`,
+        }),
+      });
+
+      if (response.ok) {
+        alert('보상이 성공적으로 지급되었습니다.');
+        setShowRewardModal(false);
+        setRewardAmount(0);
+        fetchUserData();
+        fetchUserActivities();
+      } else {
+        throw new Error('Failed to give reward');
+      }
+    } catch (err) {
+      console.error('Error giving reward:', err);
+      alert('보상 지급에 실패했습니다.');
+    }
+  };
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  };
+
+  const getRankColor = (rank: string) => {
+    switch (rank) {
+      case 'SUPER_ADMIN': return 'bg-red-600';
+      case 'ADMIN': return 'bg-purple-600';
+      case 'VIP': return 'bg-yellow-600';
+      case 'PREMIUM': return 'bg-blue-600';
+      case 'BASIC': return 'bg-green-600';
+      default: return 'bg-gray-600';
+    }
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'LOGIN': return '🔐';
+      case 'GAME_PLAY': return '🎮';
+      case 'REWARD_RECEIVED': return '🎁';
+      case 'SIGNUP': return '👤';
+      case 'PURCHASE': return '💳';
+      default: return '📋';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading user...</div>
+      </div>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-red-500 text-xl">{error || 'User not found'}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <div className="bg-gray-800 border-b border-gray-700 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Link href="/admin/users" className="text-blue-400 hover:text-blue-300">
+              ← 뒤로가기
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold">{user.nickname} 상세정보</h1>
+              <p className="text-gray-400 mt-2">사용자 ID: {user.id}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowRewardModal(true)}
+            className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg transition-colors"
+          >
+            🎁 보상 지급
+          </button>
+        </div>
+      </div>
+
+      {/* User Info Cards */}
+      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 className="text-sm font-medium text-gray-400 mb-2">이메일</h3>
+          <p className="text-lg font-semibold">{user.email}</p>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 className="text-sm font-medium text-gray-400 mb-2">등급</h3>
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white ${getRankColor(user.current_rank)}`}>
+            {user.current_rank}
+          </span>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 className="text-sm font-medium text-gray-400 mb-2">토큰 잔액</h3>
+          <p className="text-2xl font-bold text-yellow-400">{user.cyber_token_balance.toLocaleString()}</p>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 className="text-sm font-medium text-gray-400 mb-2">상태</h3>
+          <div className="flex flex-col space-y-2">
+            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+              user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              {user.is_active ? '활성' : '비활성'}
+            </span>
+            {user.is_verified && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                인증됨
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* User Details */}
+      <div className="px-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Account Information */}
+        <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+          <h2 className="text-xl font-bold mb-4">계정 정보</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-400">가입일</label>
+              <p className="text-white">{formatDateTime(user.created_at)}</p>
+            </div>
+            <div>
+              <label className="text-sm text-gray-400">마지막 로그인</label>
+              <p className="text-white">{user.last_login ? formatDateTime(user.last_login) : '로그인 기록 없음'}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activities */}
+        <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+          <h2 className="text-xl font-bold mb-4">최근 활동</h2>
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {activities.length > 0 ? (
+              activities.map((activity) => (
+                <div key={activity.id} className="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg">
+                  <span className="text-2xl">{getActivityIcon(activity.activity_type)}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{activity.activity_type}</p>
+                    <p className="text-xs text-gray-400">{activity.details}</p>
+                    <p className="text-xs text-gray-500">{formatDateTime(activity.timestamp)}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-400">활동 기록이 없습니다.</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Reward Modal */}
+      {showRewardModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 w-96 border border-gray-700">
+            <h3 className="text-xl font-bold mb-4">보상 지급</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-400 mb-2">
+                지급할 토큰 수량
+              </label>
+              <input
+                type="number"
+                value={rewardAmount}
+                onChange={(e) => setRewardAmount(Number(e.target.value))}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                placeholder="토큰 수량을 입력하세요"
+              />
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={handleGiveReward}
+                className="flex-1 bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg transition-colors"
+              >
+                지급하기
+              </button>
+              <button
+                onClick={() => {
+                  setShowRewardModal(false);
+                  setRewardAmount(0);
+                }}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg transition-colors"
+              >
+                취소
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
