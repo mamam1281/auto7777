@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useAuth } from '../../../../lib/auth';
+import { adminApi } from '../../../../lib/api-client';
 import {
     ChevronLeft,
     Gift,
@@ -16,38 +18,34 @@ import {
     Coins,
     Clock,
     RefreshCw,
-    X
+    X,
+    Phone,
+    UserCheck,
+    TrendingUp,
+    BarChart3,
+    Gamepad2,
+    Eye,
+    Ban,
+    Settings,
+    AlertTriangle
 } from 'lucide-react';
 
-interface User {
+interface UserDetail {
     id: number;
+    site_id: string;
     nickname: string;
-    email: string;
-    cyber_token_balance?: number;
-    current_rank?: string;
-    vip_tier?: string;
-    battlepass_level?: number;
-    total_spent?: number;
-    is_verified?: boolean;
-    is_active?: boolean;
+    phone_number: string;
+    cyber_token_balance: number;
+    rank: string;
     created_at: string;
-    last_login?: string;
-    tokens?: {
-        coins: number;
-        gems: number;
-        cyber_tokens: number;
-        streak: number;
-    };
-    total_games?: number;
-    win_rate?: number;
+    recent_activities?: ActivityLog[];
+    recent_rewards?: any[];
 }
 
 interface ActivityLog {
     id: number;
-    user_id: number;
     activity_type: string;
     details: string;
-    ip_address: string;
     timestamp: string;
 }
 
