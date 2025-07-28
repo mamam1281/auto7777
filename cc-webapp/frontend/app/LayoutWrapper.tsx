@@ -36,7 +36,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   // pathname이 변경될 때마다 activeTab 업데이트
   React.useEffect(() => {
     setActiveTab(getActiveTab());
-    
+
     // 관리자 페이지일 때 body에 특별한 클래스 추가
     if (isAdminPage) {
       document.body.classList.add('admin-page');
@@ -64,7 +64,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   return (
     <Provider store={store}>
       <AuthProvider>
-        <div 
+        <div
           className={isAdminPage ? "admin-container" : "miniapp-container"}
           style={isAdminPage ? { width: '100vw', maxWidth: 'none', margin: 0 } : {}}
         >
@@ -79,7 +79,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
           )}
 
           {/* 메인 콘텐츠 영역 */}
-          <div 
+          <div
             className={isAdminPage ? "admin-content" : "miniapp-content"}
             style={isAdminPage ? { width: '100%', maxWidth: 'none' } : {}}
           >

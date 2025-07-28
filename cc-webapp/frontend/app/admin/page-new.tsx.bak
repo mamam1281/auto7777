@@ -37,26 +37,12 @@ const AdminDashboard = () => {
     useEffect(() => {
         if (authLoading) return;
 
-        // 관리자 권한 체크 - 로그인 페이지로 리다이렉트하기 전에 콘솔에 디버그 정보 출력
+        // 관리자 권한 체크
         if (!user || !isAdmin) {
-            console.log('Access denied to admin page:', { 
-                user: user ? 'exists' : 'null', 
-                userRank: user?.rank, 
-                isAdmin: isAdmin 
-            });
-            
-            // 로그인하지 않은 경우에만 로그인 페이지로 리다이렉트
-            if (!user) {
-                router.push('/auth/login');
-            } else {
-                // 로그인은 했지만 관리자가 아닌 경우 권한 없음 메시지 표시 (페이지는 그대로 유지)
-                setError('관리자 권한이 없습니다. 관리자로 로그인해주세요.');
-            }
+            router.push('/auth');
             return;
         }
 
-        // 관리자 권한이 있으면 데이터 로드
-        console.log('Admin access granted:', { userRank: user.rank, isAdmin });
         fetchDashboardData();
     }, [user, isAdmin, authLoading, router]);
 
