@@ -10,7 +10,9 @@ const AuthPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
+    site_id: '',
     nickname: '',
+    phone_number: '',
     password: '',
     invite_code: '',
   });
@@ -35,7 +37,7 @@ const AuthPage = () => {
       if (isLogin) {
         // 로그인 요청
         const loginData: LoginRequest = {
-          nickname: formData.nickname,
+          site_id: formData.site_id,
           password: formData.password,
         };
         
@@ -53,7 +55,9 @@ const AuthPage = () => {
       } else {
         // 회원가입 요청
         const signupData: SignupRequest = {
+          site_id: formData.site_id,
           nickname: formData.nickname,
+          phone_number: formData.phone_number,
           password: formData.password,
           invite_code: formData.invite_code,
         };
@@ -84,7 +88,7 @@ const AuthPage = () => {
     try {
       // 테스트용 관리자 계정으로 로그인
       const loginData: LoginRequest = {
-        nickname: 'admin',
+        site_id: 'admin',
         password: 'admin123',
       };
       
@@ -118,17 +122,52 @@ const AuthPage = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-white text-sm font-medium mb-2">
-              닉네임
+              {isLogin ? '사이트 ID' : '사이트 ID (로그인용)'}
             </label>
             <input
               type="text"
-              name="nickname"
-              value={formData.nickname}
+              name="site_id"
+              value={formData.site_id}
               onChange={handleInputChange}
               className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+              placeholder={isLogin ? "사이트 ID를 입력하세요" : "로그인에 사용할 사이트 ID"}
               required
             />
           </div>
+
+          {!isLogin && (
+            <>
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">
+                  닉네임
+                </label>
+                <input
+                  type="text"
+                  name="nickname"
+                  value={formData.nickname}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                  placeholder="표시될 닉네임"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">
+                  전화번호
+                </label>
+                <input
+                  type="tel"
+                  name="phone_number"
+                  value={formData.phone_number}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                  placeholder="010-1234-5678"
+                  required
+                />
+              </div>
+            </>
+          )}
 
           <div>
             <label className="block text-white text-sm font-medium mb-2">
@@ -140,6 +179,7 @@ const AuthPage = () => {
               value={formData.password}
               onChange={handleInputChange}
               className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+              placeholder="비밀번호 (4자 이상)"
               required
             />
           </div>
@@ -155,6 +195,7 @@ const AuthPage = () => {
                 value={formData.invite_code}
                 onChange={handleInputChange}
                 className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                placeholder="초대 코드를 입력하세요"
                 required
               />
             </div>
@@ -187,7 +228,7 @@ const AuthPage = () => {
             {isLoading ? '로그인 중...' : '테스트 관리자 로그인'}
           </button>
           <p className="text-gray-400 text-xs mt-2 text-center">
-            개발용 테스트 계정 (admin/admin123)
+            개발용 테스트 계정 (site_id: admin, password: admin123)
           </p>
         </div>
       </div>

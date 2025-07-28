@@ -16,7 +16,7 @@ class UserActivity(UserActivityBase):
     timestamp: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Reward schemas
 class RewardBase(BaseModel):
@@ -33,7 +33,7 @@ class Reward(RewardBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Admin dashboard schemas
 class UserActivitySummary(BaseModel):
@@ -59,7 +59,7 @@ class UserAdminResponse(BaseModel):
     rank: str
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ActivityResponse(BaseModel):
     id: int
@@ -68,22 +68,26 @@ class ActivityResponse(BaseModel):
     details: Optional[str] = None
     
     class Config:
-        orm_mode = True
-
-class UserDetailResponse(UserAdminResponse):
-    activities: List[ActivityResponse]
-
-class GiveRewardRequest(BaseModel):
-    user_id: int
-    amount: int
-    reason: str
+        from_attributes = True
 
 class RewardResponse(BaseModel):
     id: int
     user_id: int
-    type: str
+    reward_type: str
     amount: int
+    reason: Optional[str] = None
     created_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class UserDetailResponse(UserAdminResponse):
+    recent_activities: List[ActivityResponse] = []
+    recent_rewards: List[RewardResponse] = []
+
+class GiveRewardRequest(BaseModel):
+    user_id: int
+    reward_type: str = "CYBER_TOKEN"
+    amount: int
+    reason: str
+    admin_id: int = 1
