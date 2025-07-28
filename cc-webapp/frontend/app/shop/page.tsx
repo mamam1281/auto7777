@@ -3,7 +3,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Coins, Gem, Gift, ShoppingCart } from "lucide-react";
+import { Coins, Gem, Gift, ShoppingCart, Shield } from "lucide-react";
 
 const shopItems = [
   {
@@ -31,6 +31,14 @@ const shopItems = [
     currency: "KRW",
     icon: <Gift className="w-7 h-7 text-emerald-400" />,
     isHot: true
+  {
+    id: 4,
+    name: "한폴방지 아이템",
+    description: "한폴방지 아이템으로 안전하게 플레이하세요!",
+    price: 20000,
+    currency: "KRW",
+    icon: <Shield className="w-7 h-7 text-blue-400" />
+  },
   }
 ];
 
