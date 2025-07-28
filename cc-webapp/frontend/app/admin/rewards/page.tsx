@@ -66,37 +66,32 @@ const AdminRewardsPage = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-
-            // 테스트 데이터
-            const testUsers: User[] = [
-                {
-                    id: 1,
-                    nickname: '플레이어123',
-                    email: 'player123@example.com',
-                    cyber_token_balance: 1250,
-                    current_rank: 'VIP'
-                },
-                {
-                    id: 2,
-                    nickname: '게이머456',
-                    email: 'gamer456@example.com',
-                    cyber_token_balance: 850,
-                    current_rank: 'PREMIUM'
-                },
-                {
-                    id: 3,
-                    nickname: '카지노킹',
-                    email: 'casinoking@example.com',
-                    cyber_token_balance: 2100,
-                    current_rank: 'VIP'
-                },
-                {
-                    id: 4,
-                    nickname: '럭키777',
-                    email: 'lucky777@example.com',
-                    cyber_token_balance: 320,
-                    current_rank: 'BASIC'
+            
+            // API에서 실제 사용자 데이터 가져오기
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/admin/users`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const usersData = Array.isArray(data.items) ? data.items : [];
+                    
+                    // 사용자 데이터 포맷 변환
+                    const formattedUsers: User[] = usersData.map((u: any) => ({
+                        id: u.id,
+                        nickname: u.nickname || u.site_id,
+                        email: u.email || '',
+                        cyber_token_balance: u.cyber_token_balance || 0,
+                        current_rank: u.rank || 'BASIC'
+                    }));
+                    
+                    setUsers(formattedUsers);
+                } else {
+                    console.error('사용자 목록을 불러오는데 실패했습니다:', response.status);
+                    setUsers([]);
                 }
+            } catch (error) {
+                console.error('사용자 API 호출 오류:', error);
+                setUsers([]);
+            }
             ];
 
             const testRewardHistory: RewardHistory[] = [

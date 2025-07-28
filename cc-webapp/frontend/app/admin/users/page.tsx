@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../../lib/auth';
-import { adminApi } from '../../../lib/api-client';
+import { adminApi, UserResponse } from '../../../lib/api-client';
 import {
     ChevronLeft,
     Search,
-    User,
+    User as UserIcon,
     Shield,
     Calendar,
     Coins,
@@ -20,19 +20,12 @@ import {
     Award
 } from 'lucide-react';
 
-interface User {
-    id: number;
-    site_id: string;
-    nickname: string;
-    phone_number: string;
-    cyber_token_balance: number;
-    rank: string;
-    created_at: string;
-}
+import type { User } from '../../../lib/types/user';
+import type { PaginatedResponse } from '../../../lib/types/api';
 
 const AdminUsersPage = () => {
     const { user: currentUser, isAdmin } = useAuth();
-    const [users, setUsers] = useState<User[]>([]);
+    const [users, setUsers] = useState<UserResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRank, setFilterRank] = useState('ALL');
@@ -50,55 +43,56 @@ const AdminUsersPage = () => {
         try {
             setLoading(true);
 
-            // API 호출
-            const usersData = await adminApi.getUsers();
+            // 백엔드 API 호출 (페이지네이션과 필터링을 서버에서 처리)
+            const response: PaginatedResponse<UserResponse> = await adminApi.getUsers(currentPage, usersPerPage, {
+                rank: filterRank,
+                search: searchTerm
+            });
 
-            // 필터링 로직
-            let filteredUsers = usersData;
+            // 응답 데이터 처리 (데이터가 없는 경우도 정상적으로 처리)
+            const items = response?.items || [];
+            const totalItems = response?.totalItems || 0;
+            
+            setUsers(items);
+            setTotalUsers(totalItems);
 
-            if (searchTerm) {
-                filteredUsers = filteredUsers.filter(user =>
-                    user.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    user.site_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    user.phone_number.includes(searchTerm)
-                );
+            // 현재 페이지가 마지막 페이지보다 크면 첫 페이지로 이동
+            const totalPages = Math.max(1, Math.ceil(totalItems / usersPerPage));
+            if (currentPage > totalPages && totalPages > 1) {
+                setCurrentPage(1);
             }
-
-            if (filterRank !== 'ALL') {
-                filteredUsers = filteredUsers.filter(user => user.rank === filterRank);
-            }
-
-            setTotalUsers(filteredUsers.length);
-
-            // 페이지네이션
-            const startIndex = (currentPage - 1) * usersPerPage;
-            const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
-
-            setUsers(paginatedUsers);
         } catch (error) {
             console.error('사용자 목록 로드 실패:', error);
-            // 임시 데이터로 대체
-            setUsers([
-                {
-                    id: 1,
-                    site_id: 'user001',
-                    nickname: '테스트유저1',
-                    phone_number: '010-1234-5678',
-                    cyber_token_balance: 1500,
-                    rank: 'STANDARD',
-                    created_at: '2025-01-15T10:30:00Z'
-                },
-                {
-                    id: 2,
-                    site_id: 'admin001',
-                    nickname: '관리자',
-                    phone_number: '010-9999-0000',
-                    cyber_token_balance: 999999,
-                    rank: 'ADMIN',
-                    created_at: '2025-01-01T00:00:00Z'
+
+            // 에러 처리 개선
+            if (error instanceof Error) {
+                // 타임아웃 에러
+                if (error.message === 'Request timeout' || error.message.includes('network')) {
+                    alert('서버 연결에 실패했습니다. 네트워크 상태를 확인하고 다시 시도해주세요.');
                 }
-            ]);
-            setTotalUsers(2);
+                // 인증 에러
+                else if (error.message.includes('401')) {
+                    alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+                    window.location.href = '/auth/login';
+                }
+                // 권한 에러
+                else if (error.message.includes('403')) {
+                    alert('관리자 권한이 필요한 페이지입니다.');
+                    window.location.href = '/';
+                }
+                // 기타 에러
+                else {
+                    alert(`사용자 목록을 불러오는데 실패했습니다: ${error.message}`);
+                }
+            } else {
+                alert('알 수 없는 오류가 발생했습니다.');
+            }
+
+            // 에러 발생 시 빈 배열 설정
+            if (!users || !Array.isArray(users)) {
+                setUsers([]);
+            }
+            setTotalUsers(0);
         } finally {
             setLoading(false);
         }
@@ -228,7 +222,7 @@ const AdminUsersPage = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-700">
-                                    {users.map((user, index) => (
+                                    {users && users.length > 0 ? users.map((user: UserResponse, index) => (
                                         <motion.tr
                                             key={user.id}
                                             initial={{ opacity: 0, y: 20 }}
@@ -240,7 +234,7 @@ const AdminUsersPage = () => {
                                                 <div className="flex items-center">
                                                     <div className="flex-shrink-0 h-10 w-10">
                                                         <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
-                                                            <User className="w-5 h-5 text-white" />
+                                                            <UserIcon className="w-5 h-5 text-white" />
                                                         </div>
                                                     </div>
                                                     <div className="ml-4">
@@ -278,7 +272,13 @@ const AdminUsersPage = () => {
                                                 </Link>
                                             </td>
                                         </motion.tr>
-                                    ))}
+                                    )) : (
+                                        <tr>
+                                            <td colSpan={6} className="px-6 py-4 text-center text-gray-400">
+                                                {loading ? '데이터를 불러오는 중...' : '조건에 맞는 사용자가 없습니다.'}
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
