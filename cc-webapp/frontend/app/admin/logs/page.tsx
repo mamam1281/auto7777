@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { adminApi } from '../../../lib/api-client';
 import {
     ChevronLeft,
     Activity,
@@ -32,6 +33,7 @@ interface ActivityLog {
     metadata?: any;
 }
 
+
 const AdminLogsPage = () => {
     const [logs, setLogs] = useState<ActivityLog[]>([]);
     const [loading, setLoading] = useState(true);
@@ -42,216 +44,42 @@ const AdminLogsPage = () => {
     const [totalPages, setTotalPages] = useState(1);
     const logsPerPage = 20;
 
-    useEffect(() => {
-        fetchLogs();
-    }, [currentPage, searchTerm, filterType, filterDate]);
-
     const fetchLogs = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-
-            // 테스트 데이터
-            const testLogs: ActivityLog[] = [
-                {
-                    id: 1,
-                    user_id: 1,
-                    user_nickname: '플레이어123',
-                    activity_type: 'LOGIN',
-                    details: '사용자 로그인',
-                    ip_address: '192.168.1.100',
-                    timestamp: '2024-07-28T14:30:00Z',
-                    metadata: { device: 'Chrome Browser' }
-                },
-                {
-                    id: 2,
-                    user_id: 2,
-                    user_nickname: '게이머456',
-                    activity_type: 'GAME_PLAY',
-                    details: '슬롯머신 게임 시작 - 베팅: 50 토큰',
-                    ip_address: '192.168.1.101',
-                    timestamp: '2024-07-28T14:25:00Z',
-                    metadata: { game_id: 'slot_001', bet_amount: 50 }
-                },
-                {
-                    id: 3,
-                    user_id: 1,
-                    user_nickname: '플레이어123',
-                    activity_type: 'REWARD_RECEIVED',
-                    details: '일일 로그인 보너스 500 토큰 획득',
-                    ip_address: '192.168.1.100',
-                    timestamp: '2024-07-28T14:20:00Z',
-                    metadata: { reward_type: 'DAILY_BONUS', amount: 500 }
-                },
-                {
-                    id: 4,
-                    user_id: 3,
-                    user_nickname: '카지노킹',
-                    activity_type: 'GAME_WIN',
-                    details: '슬롯머신 게임 승리 - 상금: 150 토큰',
-                    ip_address: '192.168.1.102',
-                    timestamp: '2024-07-28T14:15:00Z',
-                    metadata: { game_id: 'slot_001', win_amount: 150 }
-                },
-                {
-                    id: 5,
-                    user_id: 4,
-                    user_nickname: '럭키777',
-                    activity_type: 'SIGNUP',
-                    details: '새 사용자 회원가입',
-                    ip_address: '192.168.1.103',
-                    timestamp: '2024-07-28T14:10:00Z',
-                    metadata: { referral_code: null }
-                },
-                {
-                    id: 6,
-                    user_id: 2,
-                    user_nickname: '게이머456',
-                    activity_type: 'PURCHASE',
-                    details: '토큰 구매 - 1000 토큰',
-                    ip_address: '192.168.1.101',
-                    timestamp: '2024-07-28T14:05:00Z',
-                    metadata: { payment_method: 'credit_card', amount: 1000 }
-                },
-                {
-                    id: 7,
-                    user_id: 1,
-                    user_nickname: '플레이어123',
-                    activity_type: 'PROFILE_UPDATE',
-                    details: '프로필 정보 업데이트',
-                    ip_address: '192.168.1.100',
-                    timestamp: '2024-07-28T14:00:00Z',
-                    metadata: { fields_updated: ['nickname', 'email'] }
-                },
-                {
-                    id: 8,
-                    user_id: 3,
-                    user_nickname: '카지노킹',
-                    activity_type: 'LOGOUT',
-                    details: '사용자 로그아웃',
-                    ip_address: '192.168.1.102',
-                    timestamp: '2024-07-28T13:55:00Z',
-                    metadata: { session_duration: 3600 }
-                },
-                {
-                    id: 9,
-                    user_id: 5,
-                    user_nickname: '스핀마스터',
-                    activity_type: 'PASSWORD_CHANGE',
-                    details: '비밀번호 변경',
-                    ip_address: '192.168.1.104',
-                    timestamp: '2024-07-28T13:50:00Z',
-                    metadata: { security_level: 'high' }
-                },
-                {
-                    id: 10,
-                    user_id: 2,
-                    user_nickname: '게이머456',
-                    activity_type: 'GAME_LOSS',
-                    details: '슬롯머신 게임 패배 - 손실: 75 토큰',
-                    ip_address: '192.168.1.101',
-                    timestamp: '2024-07-28T13:45:00Z',
-                    metadata: { game_id: 'slot_001', loss_amount: 75 }
-                }
-            ];
-
-            // 필터링 적용
-            let filteredLogs = testLogs;
-
-            if (searchTerm) {
-                filteredLogs = filteredLogs.filter(log =>
-                    log.user_nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    log.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    log.ip_address.includes(searchTerm)
-                );
-            }
-
-            if (filterType !== 'ALL') {
-                filteredLogs = filteredLogs.filter(log => log.activity_type === filterType);
-            }
-
-            if (filterDate !== 'ALL') {
-                const now = new Date();
-                const filterDate_ms = {
-                    'TODAY': 24 * 60 * 60 * 1000,
-                    'WEEK': 7 * 24 * 60 * 60 * 1000,
-                    'MONTH': 30 * 24 * 60 * 60 * 1000
-                }[filterDate];
-
-                if (filterDate_ms) {
-                    filteredLogs = filteredLogs.filter(log => {
-                        const logDate = new Date(log.timestamp);
-                        return (now.getTime() - logDate.getTime()) <= filterDate_ms;
-                    });
-                }
-            }
-
-            setLogs(filteredLogs);
-            setTotalPages(Math.ceil(filteredLogs.length / logsPerPage));
-
-        } catch (err) {
-            console.error('Error fetching logs:', err);
+            const response = await adminApi.getLogs({
+                search: searchTerm || undefined,
+                activity_type: filterType !== 'ALL' ? filterType : undefined,
+                date_filter: filterDate !== 'ALL' ? filterDate : undefined,
+                page: currentPage,
+                per_page: logsPerPage
+            });
+            const logsData: ActivityLog[] = response.items.map((item: any) => ({
+                id: item.id,
+                user_id: item.user_id,
+                user_nickname: item.user_nickname || '알 수 없음',
+                activity_type: item.activity_type,
+                details: item.details || '세부 정보 없음',
+                ip_address: item.ip_address || '0.0.0.0',
+                timestamp: item.timestamp || new Date().toISOString(),
+                metadata: item.metadata || {}
+            }));
+            setTotalPages(response.totalPages || Math.ceil(logsData.length / logsPerPage));
+            setLogs(logsData);
+        } catch (error) {
+            setLogs([]);
+            setTotalPages(1);
         } finally {
             setLoading(false);
         }
     };
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ko-KR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-    };
+    useEffect(() => {
+        fetchLogs();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, searchTerm, filterType, filterDate]);
 
-    const getActivityIcon = (type: string) => {
-        const iconClass = "w-5 h-5";
-        switch (type) {
-            case 'LOGIN':
-                return <LogIn className={`${iconClass} text-green-400`} />;
-            case 'LOGOUT':
-                return <LogIn className={`${iconClass} text-red-400`} />;
-            case 'SIGNUP':
-                return <UserPlus className={`${iconClass} text-blue-400`} />;
-            case 'GAME_PLAY':
-            case 'GAME_WIN':
-            case 'GAME_LOSS':
-                return <Gamepad2 className={`${iconClass} text-purple-400`} />;
-            case 'REWARD_RECEIVED':
-                return <Gift className={`${iconClass} text-yellow-400`} />;
-            case 'PURCHASE':
-                return <DollarSign className={`${iconClass} text-green-400`} />;
-            case 'PROFILE_UPDATE':
-            case 'PASSWORD_CHANGE':
-                return <Settings className={`${iconClass} text-orange-400`} />;
-            default:
-                return <Activity className={`${iconClass} text-gray-400`} />;
-        }
-    };
 
-    const getActivityColor = (type: string) => {
-        switch (type) {
-            case 'LOGIN':
-            case 'SIGNUP':
-                return 'text-green-400';
-            case 'LOGOUT':
-                return 'text-red-400';
-            case 'GAME_WIN':
-            case 'REWARD_RECEIVED':
-                return 'text-yellow-400';
-            case 'GAME_LOSS':
-                return 'text-red-400';
-            case 'GAME_PLAY':
-                return 'text-purple-400';
-            case 'PURCHASE':
-                return 'text-green-400';
-            default:
-                return 'text-gray-400';
-        }
-    };
 
     // 페이지네이션을 위한 현재 페이지 로그들
     const currentLogs = logs.slice(
@@ -366,52 +194,58 @@ const AdminLogsPage = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-700">
-                                {currentLogs.map((log) => (
-                                    <tr key={log.id} className="hover:bg-gray-700 transition-colors">
-                                        <td className="px-3 py-2 text-gray-400 text-xs whitespace-nowrap">
-                                            {new Date(log.timestamp).toLocaleString('ko-KR', {
-                                                month: '2-digit',
-                                                day: '2-digit',
-                                                hour: '2-digit',
-                                                minute: '2-digit',
-                                                second: '2-digit'
-                                            })}
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                {getActivityIcon(log.activity_type)}
-                                                <span className={`ml-2 font-medium ${getActivityColor(log.activity_type)}`}>
-                                                    {log.activity_type}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <Link
-                                                href={`/admin/users/${log.user_id}`}
-                                                className="text-blue-400 hover:text-blue-300 font-medium"
-                                            >
-                                                {log.user_nickname}
-                                            </Link>
-                                        </td>
-                                        <td className="px-3 py-2 text-gray-300 max-w-xs">
-                                            <div className="truncate">{log.details}</div>
-                                        </td>
-                                        <td className="px-3 py-2 text-gray-400 font-mono text-xs">
-                                            {log.ip_address}
-                                        </td>
-                                        <td className="px-3 py-2 text-xs text-gray-500 max-w-xs">
-                                            {log.metadata && (
-                                                <div className="truncate">
-                                                    {Object.entries(log.metadata).map(([key, value]) => (
-                                                        <span key={key} className="mr-2">
-                                                            {key}:{JSON.stringify(value)}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </td>
+                                {currentLogs.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="text-center text-gray-400 py-8">활동 로그가 없습니다.</td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    currentLogs.map((log) => (
+                                        <tr key={log.id} className="hover:bg-gray-700 transition-colors">
+                                            <td className="px-3 py-2 text-gray-400 text-xs whitespace-nowrap">
+                                                {new Date(log.timestamp).toLocaleString('ko-KR', {
+                                                    month: '2-digit',
+                                                    day: '2-digit',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    second: '2-digit'
+                                                })}
+                                            </td>
+                                            <td className="px-3 py-2 whitespace-nowrap">
+                                                <div className="flex items-center">
+                                                    {getActivityIcon(log.activity_type)}
+                                                    <span className={`ml-2 font-medium ${getActivityColor(log.activity_type)}`}>
+                                                        {log.activity_type}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-2 whitespace-nowrap">
+                                                <Link
+                                                    href={`/admin/users/${log.user_id}`}
+                                                    className="text-blue-400 hover:text-blue-300 font-medium"
+                                                >
+                                                    {log.user_nickname}
+                                                </Link>
+                                            </td>
+                                            <td className="px-3 py-2 text-gray-300 max-w-xs">
+                                                <div className="truncate">{log.details}</div>
+                                            </td>
+                                            <td className="px-3 py-2 text-gray-400 font-mono text-xs">
+                                                {log.ip_address}
+                                            </td>
+                                            <td className="px-3 py-2 text-xs text-gray-500 max-w-xs">
+                                                {log.metadata && (
+                                                    <div className="truncate">
+                                                        {Object.entries(log.metadata).map(([key, value]) => (
+                                                            <span key={key} className="mr-2">
+                                                                {key}:{JSON.stringify(value)}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -447,6 +281,53 @@ const AdminLogsPage = () => {
             </div>
         </div>
     );
+}
+
+const getActivityIcon = (type: string) => {
+    const iconClass = "w-5 h-5";
+    switch (type) {
+        case 'LOGIN':
+            return <LogIn className={`${iconClass} text-green-400`} />;
+        case 'LOGOUT':
+            return <LogIn className={`${iconClass} text-red-400`} />;
+        case 'SIGNUP':
+            return <UserPlus className={`${iconClass} text-blue-400`} />;
+        case 'GAME_PLAY':
+        case 'GAME_WIN':
+        case 'GAME_LOSS':
+            return <Gamepad2 className={`${iconClass} text-purple-400`} />;
+        case 'REWARD_RECEIVED':
+            return <Gift className={`${iconClass} text-yellow-400`} />;
+        case 'PURCHASE':
+            return <DollarSign className={`${iconClass} text-green-400`} />;
+        case 'PROFILE_UPDATE':
+        case 'PASSWORD_CHANGE':
+            return <Settings className={`${iconClass} text-orange-400`} />;
+        default:
+            return <Activity className={`${iconClass} text-gray-400`} />;
+    }
 };
+
+const getActivityColor = (type: string) => {
+    switch (type) {
+        case 'LOGIN':
+        case 'SIGNUP':
+            return 'text-green-400';
+        case 'LOGOUT':
+            return 'text-red-400';
+        case 'GAME_WIN':
+        case 'REWARD_RECEIVED':
+            return 'text-yellow-400';
+        case 'GAME_LOSS':
+            return 'text-red-400';
+        case 'GAME_PLAY':
+            return 'text-purple-400';
+        case 'PURCHASE':
+            return 'text-green-400';
+        default:
+            return 'text-gray-400';
+    }
+};
+
 
 export default AdminLogsPage;

@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+// SheetJS 라이브러리 임포트 (npm install xlsx 필요)
+import * as XLSX from 'xlsx';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { adminApi } from '../../../lib/api-client';
 import {
     ChevronLeft,
     Gift,
@@ -59,6 +62,30 @@ const AdminRewardsPage = () => {
     });
     const [submitting, setSubmitting] = useState(false);
 
+    // 엑셀 업로드 input ref
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    // 엑셀 업로드 핸들러
+    const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const data = evt.target?.result;
+            if (!data) return;
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            // TODO: 서버 연동 API로 전송 (아래는 샘플 콘솔)
+            console.log('엑셀 업로드 데이터:', jsonData);
+            alert('엑셀 데이터가 정상적으로 파싱되었습니다. (서버 연동은 추후 구현)');
+        };
+        reader.readAsBinaryString(file);
+        // 파일 선택 후 input 초기화(동일 파일 재업로드 가능)
+        e.target.value = '';
+    };
+
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -66,15 +93,12 @@ const AdminRewardsPage = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            
-            // API에서 실제 사용자 데이터 가져오기
+            // 사용자 데이터
             try {
                 const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/admin/users`);
                 if (response.ok) {
                     const data = await response.json();
                     const usersData = Array.isArray(data.items) ? data.items : [];
-                    
-                    // 사용자 데이터 포맷 변환
                     const formattedUsers: User[] = usersData.map((u: any) => ({
                         id: u.id,
                         nickname: u.nickname || u.site_id,
@@ -82,58 +106,40 @@ const AdminRewardsPage = () => {
                         cyber_token_balance: u.cyber_token_balance || 0,
                         current_rank: u.rank || 'BASIC'
                     }));
-                    
                     setUsers(formattedUsers);
                 } else {
-                    console.error('사용자 목록을 불러오는데 실패했습니다:', response.status);
                     setUsers([]);
                 }
             } catch (error) {
-                console.error('사용자 API 호출 오류:', error);
                 setUsers([]);
             }
-            ];
-
-            const testRewardHistory: RewardHistory[] = [
-                {
-                    id: 1,
-                    user_id: 1,
-                    user_nickname: '플레이어123',
-                    reward_type: 'BONUS',
-                    amount: 500,
-                    reason: '일일 로그인 보너스',
-                    admin_nickname: 'Admin',
-                    created_at: '2024-07-28T10:30:00Z',
-                    status: 'COMPLETED'
-                },
-                {
-                    id: 2,
-                    user_id: 2,
-                    user_nickname: '게이머456',
-                    reward_type: 'EVENT',
-                    amount: 1000,
-                    reason: '이벤트 참여 보상',
-                    admin_nickname: 'Admin',
-                    created_at: '2024-07-28T09:15:00Z',
-                    status: 'COMPLETED'
-                },
-                {
-                    id: 3,
-                    user_id: 3,
-                    user_nickname: '카지노킹',
-                    reward_type: 'COMPENSATION',
-                    amount: 200,
-                    reason: '시스템 오류 보상',
-                    admin_nickname: 'Admin',
-                    created_at: '2024-07-27T16:45:00Z',
-                    status: 'COMPLETED'
+            // 보상 내역 데이터
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/admin/rewards`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const rewardsData = Array.isArray(data.items) ? data.items : [];
+                    const formattedRewards: RewardHistory[] = rewardsData.map((r: any) => ({
+                        id: r.id,
+                        user_id: r.user_id,
+                        user_nickname: r.user_nickname || '알 수 없음',
+                        reward_type: r.reward_type || 'BONUS',
+                        amount: r.amount || 0,
+                        reason: r.reason || '',
+                        admin_nickname: r.admin_nickname || 'Admin',
+                        created_at: r.created_at || new Date().toISOString(),
+                        status: r.status || 'COMPLETED'
+                    }));
+                    setRewardHistory(formattedRewards);
+                } else {
+                    setRewardHistory([]);
                 }
-            ];
-
-            setUsers(testUsers);
-            setRewardHistory(testRewardHistory);
+            } catch (error) {
+                setRewardHistory([]);
+            }
         } catch (err) {
-            console.error('Error fetching data:', err);
+            setUsers([]);
+            setRewardHistory([]);
         } finally {
             setLoading(false);
         }
@@ -153,47 +159,64 @@ const AdminRewardsPage = () => {
         try {
             setSubmitting(true);
 
-            // 실제로는 API 호출
-            console.log('Giving reward:', {
-                ...rewardForm,
-                user_id: selectedUser.id
+            // 실제 API 호출
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/admin/rewards/give`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: selectedUser.id,
+                    reward_type: rewardForm.reward_type,
+                    amount: rewardForm.amount,
+                    reason: rewardForm.reason
+                })
             });
 
-            // 성공적으로 지급됨을 시뮬레이션
-            const newReward: RewardHistory = {
-                id: Date.now(),
-                user_id: selectedUser.id,
-                user_nickname: selectedUser.nickname,
-                reward_type: rewardForm.reward_type,
-                amount: rewardForm.amount,
-                reason: rewardForm.reason,
-                admin_nickname: 'Admin',
-                created_at: new Date().toISOString(),
-                status: 'COMPLETED'
-            };
+            if (response.ok) {
+                // API 응답에서 새로 생성된 보상 정보 가져오기
+                const data = await response.json();
 
-            setRewardHistory(prev => [newReward, ...prev]);
+                // 보상 내역에 새 항목 추가
+                const newReward: RewardHistory = {
+                    id: data.id || Date.now(),
+                    user_id: selectedUser.id,
+                    user_nickname: selectedUser.nickname,
+                    reward_type: rewardForm.reward_type,
+                    amount: rewardForm.amount,
+                    reason: rewardForm.reason,
+                    admin_nickname: data.admin_nickname || 'Admin',
+                    created_at: data.created_at || new Date().toISOString(),
+                    status: data.status || 'COMPLETED'
+                };
 
-            // 사용자 잔액 업데이트
-            setUsers(prev => prev.map(user =>
-                user.id === selectedUser.id
-                    ? { ...user, cyber_token_balance: user.cyber_token_balance + rewardForm.amount }
-                    : user
-            ));
+                setRewardHistory(prev => [newReward, ...prev]);
 
-            setShowRewardModal(false);
-            setSelectedUser(null);
-            setRewardForm({
-                user_id: 0,
-                reward_type: 'BONUS',
-                amount: 0,
-                reason: ''
-            });
+                // 사용자 잔액 업데이트
+                setUsers(prev => prev.map(user =>
+                    user.id === selectedUser.id
+                        ? { ...user, cyber_token_balance: user.cyber_token_balance + rewardForm.amount }
+                        : user
+                ));
 
-            alert('보상이 성공적으로 지급되었습니다!');
+                setShowRewardModal(false);
+                setSelectedUser(null);
+                setRewardForm({
+                    user_id: 0,
+                    reward_type: 'BONUS',
+                    amount: 0,
+                    reason: ''
+                });
+
+                alert('보상이 성공적으로 지급되었습니다!');
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('보상 지급 API 오류:', response.status, errorData);
+                alert(`보상 지급에 실패했습니다. 오류: ${errorData.message || response.statusText}`);
+            }
         } catch (err) {
             console.error('Error giving reward:', err);
-            alert('보상 지급에 실패했습니다.');
+            alert('보상 지급에 실패했습니다. 네트워크 오류가 발생했습니다.');
         } finally {
             setSubmitting(false);
         }
@@ -257,8 +280,8 @@ const AdminRewardsPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-900 text-white">
-            {/* Header */}
-            <div className="bg-gray-800 border-b border-gray-700 p-6">
+            {/* Header + 엑셀 업로드 버튼 */}
+            <div className="bg-gray-800 border-b border-gray-700 p-6 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                         <Link href="/admin" className="text-gray-400 hover:text-white transition-colors">
@@ -272,6 +295,23 @@ const AdminRewardsPage = () => {
                     <div className="flex items-center space-x-4">
                         <Gift className="w-8 h-8 text-green-400" />
                     </div>
+                </div>
+                {/* 엑셀 업로드 버튼 */}
+                <div className="flex justify-end">
+                    <button
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <Plus className="w-4 h-4" />
+                        엑셀 업로드
+                    </button>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".xlsx,.xls"
+                        style={{ display: 'none' }}
+                        onChange={handleExcelUpload}
+                    />
                 </div>
             </div>
 
@@ -338,36 +378,41 @@ const AdminRewardsPage = () => {
                         최근 보상 내역
                     </h2>
 
+
                     <div className="space-y-3 max-h-96 overflow-y-auto">
-                        {rewardHistory.map((reward) => (
-                            <div
-                                key={reward.id}
-                                className="p-4 bg-gray-700 rounded-lg border border-gray-600"
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center space-x-2">
-                                        <span className="font-medium text-white">{reward.user_nickname}</span>
-                                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadge(reward.status)}`}>
-                                            {reward.status}
+                        {rewardHistory.length === 0 ? (
+                            <div className="text-center text-gray-400 py-8">보상 내역이 없습니다.</div>
+                        ) : (
+                            rewardHistory.map((reward) => (
+                                <div
+                                    key={reward.id}
+                                    className="p-4 bg-gray-700 rounded-lg border border-gray-600"
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center space-x-2">
+                                            <span className="font-medium text-white">{reward.user_nickname}</span>
+                                            <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadge(reward.status)}`}>
+                                                {reward.status}
+                                            </span>
+                                        </div>
+                                        <div className="text-yellow-400 font-bold">
+                                            +{reward.amount.toLocaleString()}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className={`${getRewardTypeColor(reward.reward_type)} font-medium`}>
+                                            {reward.reward_type}
+                                        </span>
+                                        <span className="text-gray-400">
+                                            {formatDate(reward.created_at)}
                                         </span>
                                     </div>
-                                    <div className="text-yellow-400 font-bold">
-                                        +{reward.amount.toLocaleString()}
+                                    <div className="text-sm text-gray-400 mt-1">
+                                        {reward.reason}
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className={`${getRewardTypeColor(reward.reward_type)} font-medium`}>
-                                        {reward.reward_type}
-                                    </span>
-                                    <span className="text-gray-400">
-                                        {formatDate(reward.created_at)}
-                                    </span>
-                                </div>
-                                <div className="text-sm text-gray-400 mt-1">
-                                    {reward.reason}
-                                </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
 
                     <Link

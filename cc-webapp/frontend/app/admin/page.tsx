@@ -72,7 +72,9 @@ const AdminDashboard = () => {
             ]);
 
             setStats(statsData);
-            setActivities(activitiesData.slice(0, 10)); // 최근 10개만 표시
+            // PaginatedResponse에서 items 배열을 추출한 후 slice 사용
+            const activityItems = Array.isArray(activitiesData) ? activitiesData : activitiesData.items || [];
+            setActivities(activityItems.slice(0, 10)); // 최근 10개만 표시
 
         } catch (fetchError) {
             console.error('관리자 데이터 로드 실패:', fetchError);

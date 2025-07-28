@@ -52,7 +52,7 @@ const AdminUsersPage = () => {
             // 응답 데이터 처리 (데이터가 없는 경우도 정상적으로 처리)
             const items = response?.items || [];
             const totalItems = response?.totalItems || 0;
-            
+
             setUsers(items);
             setTotalUsers(totalItems);
 

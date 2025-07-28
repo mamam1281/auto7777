@@ -18,7 +18,8 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.10",
     "tailwindcss-filters": "^3.0.0",
-    "use-sound": "^5.0.0"
+    "use-sound": "^5.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@storybook/addon-docs": "^9.0.13",
