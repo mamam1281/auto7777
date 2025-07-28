@@ -1,6 +1,8 @@
+
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   Coins,
@@ -22,6 +24,7 @@ import { SimpleProgressBar } from '../../components/SimpleProgressBar';
 
 export default function WalletPage() {
   const [selectedTab, setSelectedTab] = useState<'history' | 'bonus'>('history');
+  const router = useRouter();
 
   // 가상 데이터
   const walletData = {
@@ -67,18 +70,18 @@ export default function WalletPage() {
       }} />
 
       <div className="max-w-md mx-auto p-4 space-y-6 relative z-10">
-        
-        {/* 프리미엄 헤더 */}
-        <motion.div 
-          className="text-center py-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <h1 className="text-white mb-0 tracking-tight" style={{ fontSize: '30px', fontWeight: '900' }}>
-            💎 Cosmic Wallet
-          </h1>
-        </motion.div>
+
+
+        {/* 보유 아이템 버튼 */}
+        <div className="flex justify-end mb-2">
+          <button
+            className="px-4 py-2 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-semibold text-sm shadow-md transition-all duration-150"
+            onClick={() => router.push('/wallet/owned-items')}
+          >
+            보유 아이템
+          </button>
+        </div>
+
 
         {/* 프리미엄 잔액 대시보드 */}
         <motion.div

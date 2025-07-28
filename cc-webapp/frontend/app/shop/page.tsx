@@ -4,43 +4,33 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Coins, Gem, Gift, ShoppingCart, Shield } from "lucide-react";
+import { Percent } from "lucide-react";
+import { Link2 } from "lucide-react";
 
-const shopItems = [
-  {
-    id: 1,
-    name: "프리미엄 젬 100개",
-    description: "게임 내 프리미엄 젬 100개를 즉시 획득!",
-    price: 1200,
-    currency: "KRW",
-    icon: <Gem className="w-7 h-7 text-pink-400" />,
-    isBest: true
-  },
-  {
-    id: 2,
-    name: "코인 10,000개",
-    description: "일반 코인 10,000개로 다양한 게임을 즐기세요.",
-    price: 500,
-    currency: "KRW",
-    icon: <Coins className="w-7 h-7 text-yellow-300" />
-  },
-  {
-    id: 3,
-    name: "한정 패키지",
-    description: "젬+코인+랜덤박스가 모두 포함된 한정 패키지!",
-    price: 2500,
-    currency: "KRW",
-    icon: <Gift className="w-7 h-7 text-emerald-400" />,
-    isHot: true
+const itemGroup = [
   {
     id: 4,
     name: "한폴방지 아이템",
-    description: "한폴방지 아이템으로 안전하게 플레이하세요!",
     price: 20000,
-    currency: "KRW",
-    icon: <Shield className="w-7 h-7 text-blue-400" />
+    icon: <Shield className="w-7 h-7 text-blue-400" />,
+    extra: "(주 2회)"
   },
+  {
+    id: 5,
+    name: "출석연결 아이템",
+    price: 30000,
+    icon: <Link2 className="w-7 h-7 text-cyan-400" />,
+    extra: "(월 3회)"
+  },
+  {
+    id: 6,
+    name: "입플 30% 아이템",
+    price: 50000,
+    icon: <Percent className="w-7 h-7 text-lime-400" />,
+    extra: "(주 1회)"
   }
 ];
+
 
 export default function ShopPage() {
   const [selected, setSelected] = useState<number | null>(null);
@@ -48,7 +38,7 @@ export default function ShopPage() {
   return (
     <div className="shop-dashboard w-full max-w-[420px] mx-auto min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
       <motion.header
-        className="py-6 text-center relative z-20"
+        className="pt-3 pb-4 text-center relative z-20"
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut" }}
@@ -60,52 +50,48 @@ export default function ShopPage() {
           <ShoppingCart className="w-7 h-7 text-pink-400" />
           상점
         </motion.h1>
-        <p className="mt-2 text-sm text-white/70">젬, 코인, 한정 패키지를 구매하고 더 많은 혜택을 누리세요!</p>
       </motion.header>
       <main className="flex-1 pb-8 px-3">
-        <motion.div
-          className="flex flex-col gap-5 mt-8"
-          initial="hidden"
-          animate="visible"
-          variants={{
-            visible: { transition: { staggerChildren: 0.12 } }
-          }}
-        >
-          {shopItems.map((item, idx) => (
-            <motion.div
-              key={item.id}
-              className={`relative rounded-xl bg-white/5 border border-white/10 p-5 flex items-center gap-4 shadow-lg backdrop-blur-md transition-all duration-200 ${selected === item.id ? "ring-2 ring-pink-400" : "hover:scale-[1.025]"}`}
-              whileHover={{ y: -2, scale: 1.025 }}
-              onClick={() => setSelected(item.id)}
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0 }
-              }}
-            >
-              <div className="flex-shrink-0">
-                {item.icon}
+        {/* 아이템구매 그룹 */}
+        <section className="mt-4 mb-6">
+          <h2 className="text-lg font-bold text-pink-300 mb-4 tracking-wider text-center">MODEL 아이템 구매</h2>
+          <div className="flex flex-col gap-3 bg-white/5 border border-pink-400/30 rounded-xl p-4">
+            {itemGroup.map(item => (
+              <div key={item.id} className="flex items-center gap-3">
+                <span>{item.icon}</span>
+                <span className="flex-1 text-base font-semibold text-white">{item.name.replace('아이템', '').trim()}</span>
+                <span className="text-yellow-300 font-bold text-base">{item.price.toLocaleString()} GOLD</span>
+                {item.extra && <span className="ml-2 text-xs text-pink-200 font-medium">{item.extra}</span>}
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-white drop-shadow-md tracking-wide">{item.name}</span>
-                  {item.isBest && <span className="ml-2 px-2 py-0.5 text-xs rounded bg-pink-400 text-white font-semibold animate-pulse">BEST</span>}
-                  {item.isHot && <span className="ml-2 px-2 py-0.5 text-xs rounded bg-emerald-400 text-white font-semibold animate-pulse">HOT</span>}
-                </div>
-                <p className="text-sm text-white/70 mt-1">{item.description}</p>
-              </div>
-              <div className="flex flex-col items-end">
-                <span className="text-xl font-bold text-pink-300">₩{item.price.toLocaleString()}</span>
-                <button
-                  className="mt-2 px-4 py-1.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-semibold text-sm shadow-md transition-all duration-150"
-                  onClick={e => { e.stopPropagation(); alert('결제 기능은 곧 제공됩니다!'); }}
-                >
-                  구매하기
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* 포인트구매 그룹 */}
+        <section className="mb-6">
+          <h2 className="text-lg font-bold text-blue-300 mb-4 tracking-wider text-center">MODEL 포인트 구매</h2>
+          <div className="flex flex-col gap-3 bg-white/5 border border-blue-400/30 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <span className="text-yellow-300 font-bold text-base">30,000 GOLD</span>
+              <span className="flex-1 text-base font-semibold text-white text-right">30,000 포인트</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-yellow-300 font-bold text-base">100,000 GOLD</span>
+              <span className="flex-1 text-base font-semibold text-white text-right">105,000 포인트</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-yellow-300 font-bold text-base">300,000 GOLD</span>
+              <span className="flex-1 text-base font-semibold text-white text-right">330,000 포인트</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-yellow-300 font-bold text-base">1,000,000 GOLD</span>
+              <span className="flex-1 text-base font-semibold text-white text-right">1,150,000 포인트</span>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   );
 }
+
+// TODO: 하단 내역 메뉴를 '지갑'으로 변경 (Footer/Navigation 컴포넌트가 별도 파일일 경우 해당 파일도 수정 필요)
