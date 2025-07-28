@@ -143,136 +143,130 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 p-6">
-        <h1 className="text-3xl font-bold">관리자 대시보드</h1>
-        <p className="text-gray-400 mt-2">시스템 현황 및 사용자 관리</p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">전체 사용자</p>
-              <p className="text-3xl font-bold mt-2">{stats.totalUsers.toLocaleString()}</p>
-            </div>
-            <span className="text-4xl">👥</span>
-          </div>
+      {/* Compact Header */}
+      <div className="bg-gray-800 border-b border-gray-700 px-6 py-3 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold">관리자 대시보드</h1>
+          <p className="text-gray-400 text-sm">시스템 현황 및 사용자 관리</p>
         </div>
-
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">활성 사용자</p>
-              <p className="text-3xl font-bold mt-2">{stats.activeUsers.toLocaleString()}</p>
-            </div>
-            <span className="text-4xl">📈</span>
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">총 토큰</p>
-              <p className="text-3xl font-bold mt-2">{stats.totalRewards.toLocaleString()}</p>
-            </div>
-            <span className="text-4xl">🏆</span>
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">오늘 활동</p>
-              <p className="text-3xl font-bold mt-2">{stats.todayActivities.toLocaleString()}</p>
-            </div>
-            <span className="text-4xl">⚡</span>
-          </div>
+        <div className="text-right text-sm text-gray-400">
+          {new Date().toLocaleDateString('ko-KR')} {new Date().toLocaleTimeString('ko-KR')}
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="px-6 mb-6">
-        <h2 className="text-xl font-bold mb-4">빠른 작업</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link href="/admin/users" className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-blue-500 transition-colors cursor-pointer">
-            <div className="flex items-center space-x-3">
-              <span className="text-3xl">👥</span>
-              <div>
-                <p className="font-semibold">사용자 관리</p>
-                <p className="text-sm text-gray-400">사용자 목록 및 상세 정보</p>
-              </div>
+      {/* Compact Stats Grid */}
+      <div className="p-4 grid grid-cols-4 gap-4">
+        <div className="bg-gray-800 rounded p-3 border border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-xs">전체 사용자</p>
+              <p className="text-xl font-bold mt-1">{stats.totalUsers.toLocaleString()}</p>
             </div>
-          </Link>
+            <span className="text-2xl">👥</span>
+          </div>
+        </div>
 
-          <Link href="/admin/rewards" className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-yellow-500 transition-colors cursor-pointer">
-            <div className="flex items-center space-x-3">
-              <span className="text-3xl">🎁</span>
-              <div>
-                <p className="font-semibold">보상 지급</p>
-                <p className="text-sm text-gray-400">사용자에게 토큰 지급</p>
-              </div>
+        <div className="bg-gray-800 rounded p-3 border border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-xs">활성 사용자</p>
+              <p className="text-xl font-bold mt-1">{stats.activeUsers.toLocaleString()}</p>
             </div>
-          </Link>
+            <span className="text-2xl">📈</span>
+          </div>
+        </div>
 
-          <Link href="/admin/activities" className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-purple-500 transition-colors cursor-pointer">
-            <div className="flex items-center space-x-3">
-              <span className="text-3xl">📊</span>
-              <div>
-                <p className="font-semibold">활동 로그</p>
-                <p className="text-sm text-gray-400">전체 활동 기록 조회</p>
-              </div>
+        <div className="bg-gray-800 rounded p-3 border border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-xs">총 토큰</p>
+              <p className="text-xl font-bold mt-1">{stats.totalRewards.toLocaleString()}</p>
             </div>
-          </Link>
+            <span className="text-2xl">🏆</span>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded p-3 border border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-xs">오늘 활동</p>
+              <p className="text-xl font-bold mt-1">{stats.todayActivities.toLocaleString()}</p>
+            </div>
+            <span className="text-2xl">⚡</span>
+          </div>
         </div>
       </div>
 
-      {/* Recent Activities */}
-      <div className="px-6 pb-6">
-        <h2 className="text-xl font-bold mb-4">최근 활동</h2>
-        <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-700">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  사용자
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  활동 유형
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  상세 내용
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  시간
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-700">
-              {activities.map((activity) => (
-                <tr key={activity.id} className="hover:bg-gray-700 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Link href={`/admin/users/${activity.user_id}`} className="text-blue-400 hover:text-blue-300">
-                      {activity.user_nickname}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center">
-                      <span className="mr-2">{getActivityIcon(activity.activity_type)}</span>
-                      {activity.activity_type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-400">
-                    {activity.details}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                    {formatTime(activity.timestamp)}
-                  </td>
+      {/* Main Content Grid */}
+      <div className="px-4 pb-4 grid grid-cols-3 gap-4 h-[calc(100vh-180px)]">
+        {/* Quick Actions - Compact List */}
+        <div className="bg-gray-800 rounded border border-gray-700 p-4">
+          <h2 className="text-lg font-bold mb-3">빠른 작업</h2>
+          <div className="space-y-2">
+            <Link href="/admin/users" className="flex items-center p-2 hover:bg-gray-700 rounded transition-colors cursor-pointer">
+              <span className="text-lg mr-3">👥</span>
+              <div className="flex-1">
+                <p className="font-medium text-sm">사용자 관리</p>
+                <p className="text-xs text-gray-400">사용자 목록 및 상세 정보</p>
+              </div>
+            </Link>
+
+            <Link href="/admin/rewards" className="flex items-center p-2 hover:bg-gray-700 rounded transition-colors cursor-pointer">
+              <span className="text-lg mr-3">🎁</span>
+              <div className="flex-1">
+                <p className="font-medium text-sm">보상 지급</p>
+                <p className="text-xs text-gray-400">사용자에게 토큰 지급</p>
+              </div>
+            </Link>
+
+            <Link href="/admin/logs" className="flex items-center p-2 hover:bg-gray-700 rounded transition-colors cursor-pointer">
+              <span className="text-lg mr-3">📊</span>
+              <div className="flex-1">
+                <p className="font-medium text-sm">활동 로그</p>
+                <p className="text-xs text-gray-400">전체 활동 기록 조회</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Recent Activities - Compact Table */}
+        <div className="col-span-2 bg-gray-800 rounded border border-gray-700 p-4">
+          <h2 className="text-lg font-bold mb-3">최근 활동</h2>
+          <div className="overflow-y-auto h-[calc(100%-40px)]">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-gray-700">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-300">사용자</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-300">활동</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-300">상세</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-300">시간</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {activities.map((activity) => (
+                  <tr key={activity.id} className="hover:bg-gray-700">
+                    <td className="px-3 py-2">
+                      <Link href={`/admin/users/${activity.user_id}`} className="text-blue-400 hover:text-blue-300 text-sm">
+                        {activity.user_nickname}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className="inline-flex items-center text-sm">
+                        <span className="mr-2">{getActivityIcon(activity.activity_type)}</span>
+                        {activity.activity_type}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-sm text-gray-400 max-w-xs truncate">
+                      {activity.details}
+                    </td>
+                    <td className="px-3 py-2 text-sm text-gray-400">
+                      {formatTime(activity.timestamp)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

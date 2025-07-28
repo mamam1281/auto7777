@@ -13,7 +13,8 @@ import {
   Bell,
   Gift,
   Trophy,
-  ChevronRight
+  ChevronRight,
+  Shield
 } from 'lucide-react';
 
 interface MenuModalProps {
@@ -37,6 +38,7 @@ const MenuModal: React.FC<MenuModalProps> = ({ isOpen, onClose }) => {
     { icon: Bell, label: '알림', path: '/notifications', color: 'text-amber-400' },
     { icon: Gift, label: '프로모션', path: '/promotions', color: 'text-pink-400' },
     { icon: Trophy, label: '리워드', path: '/rewards', color: 'text-orange-400' },
+    { icon: Shield, label: '관리자', path: '/admin', color: 'text-red-400' },
     { icon: Settings, label: '설정', path: '/settings', color: 'text-gray-400' }
   ];
 
