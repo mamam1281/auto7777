@@ -25,3 +25,6 @@ class User(Base):
     notifications = relationship("Notification", back_populates="user")
     created_invite_codes = relationship("InviteCode", foreign_keys="[InviteCode.created_by_user_id]", back_populates="created_by_user")
     used_invite_code = relationship("InviteCode", foreign_keys="[InviteCode.used_by_user_id]", back_populates="used_by_user")
+    # Additional relationships
+    segment = relationship("UserSegment", uselist=False, back_populates="user")  # One-to-one
+    actions = relationship("UserAction", back_populates="user")

@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import { store } from '../store/store';
 import AppHeader from '../components/AppHeader';
 import BottomNavigationBar from '../components/BottomNavigationBar';
+import { AuthProvider } from '../contexts/AuthContext';
 
 export interface LayoutWrapperProps {
   children: React.ReactNode;
@@ -50,26 +51,28 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
 
   return (
     <Provider store={store}>
-      <div className="miniapp-container">
-        {/* AppHeader - 고정 상단 (CSS fixed 적용) */}
-        <AppHeader
-          appName="CasinoClub"
-          onNotificationsClick={handleNotificationsClick}
-          onSettingsClick={handleSettingsClick}
-          hasNotifications={false}
-        />
-        
-        {/* 메인 콘텐츠 영역 - 단일 스크롤 */}
-        <div className="miniapp-content">
-          {children}
+      <AuthProvider>
+        <div className="miniapp-container">
+          {/* AppHeader - 고정 상단 (CSS fixed 적용) */}
+          <AppHeader
+            appName="CasinoClub"
+            onNotificationsClick={handleNotificationsClick}
+            onSettingsClick={handleSettingsClick}
+            hasNotifications={false}
+          />
+          
+          {/* 메인 콘텐츠 영역 - 단일 스크롤 */}
+          <div className="miniapp-content">
+            {children}
+          </div>
         </div>
-      </div>
-      
-      {/* BottomNavigationBar - miniapp-container 밖으로 빼서 완전 독립 */}
-      <BottomNavigationBar
-        activeTab={activeTab}
-        onTabClick={handleTabClick}
-      />
+        
+        {/* BottomNavigationBar - miniapp-container 밖으로 빼서 완전 독립 */}
+        <BottomNavigationBar
+          activeTab={activeTab}
+          onTabClick={handleTabClick}
+        />
+      </AuthProvider>
     </Provider>
   );
 }

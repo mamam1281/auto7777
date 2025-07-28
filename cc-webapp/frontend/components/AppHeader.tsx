@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, Settings, Home, Menu } from 'lucide-react';
+import { ArrowLeft, Bell, Settings, Home, Menu, Shield } from 'lucide-react';
 import Button from './Button';
 import { useRouter, usePathname } from 'next/navigation';
 import MenuModal from './ui/navigation/MenuModal';
+import { useAuth } from '../contexts/AuthContext';
 
 export interface AppHeaderProps {
   appName: string;
@@ -45,6 +46,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const { isAdmin } = useAuth();
+  
   // Check if we're on the home page
   const isHomePage = pathname === '/';
 
@@ -137,6 +140,16 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     
     return (
       <div className="flex items-center gap-2 flex-shrink-0 px-3">
+        {isAdmin && (
+          <button
+            onClick={() => router.push('/admin')}
+            className={`${baseButtonClasses} text-yellow-400`}
+            aria-label="관리자"
+          >
+            <Shield size={iconSize} />
+          </button>
+        )}
+        
         <button
           onClick={handleNotificationsClick}
           className={`${baseButtonClasses} ${hasNotifications ? 'text-amber-400' : 'text-white'}`}
