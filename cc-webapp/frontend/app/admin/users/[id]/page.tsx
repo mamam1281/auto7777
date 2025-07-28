@@ -27,17 +27,11 @@ const UserDetailPage = () => {
   const params = useParams();
   const userId = params?.id as string;
   
-  const [user, setUser] = useState<UserDetail | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showRewardModal, setShowRewardModal] = useState(false);
-  
-  // 보상 지급 폼 상태
-  const [rewardForm, setRewardForm] = useState({
-    reward_type: 'BONUS',
-    amount: 0,
-    reason: '',
-  });
+  const [rewardAmount, setRewardAmount] = useState<number>(0);
 
   useEffect(() => {
     if (userId) {
