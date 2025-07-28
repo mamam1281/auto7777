@@ -77,48 +77,15 @@ def list_activities(
     skip: int = 0, 
     limit: int = 100, 
     user_id: Optional[int] = None,
-    search: Optional[str] = None,
-    activity_type: Optional[str] = None,
-    date_filter: Optional[str] = None,
-    page: Optional[int] = None,
-    per_page: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
     """
-    List user activities with optional filtering
+    List user activities with optional user filtering
     """
     query = db.query(UserActivity).join(User)
     
     if user_id:
         query = query.filter(UserActivity.user_id == user_id)
-    
-    if search:
-        query = query.filter(
-            (UserActivity.details.ilike(f"%{search}%")) |
-            (User.nickname.ilike(f"%{search}%"))
-        )
-    
-    if activity_type:
-        query = query.filter(UserActivity.activity_type == activity_type)
-    
-    # Handle date filtering
-    if date_filter:
-        from datetime import datetime, timedelta
-        now = datetime.now()
-        if date_filter == "TODAY":
-            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            query = query.filter(UserActivity.timestamp >= start_date)
-        elif date_filter == "WEEK":
-            start_date = now - timedelta(days=7)
-            query = query.filter(UserActivity.timestamp >= start_date)
-        elif date_filter == "MONTH":
-            start_date = now - timedelta(days=30)
-            query = query.filter(UserActivity.timestamp >= start_date)
-    
-    # Handle pagination - use page/per_page if provided, otherwise use skip/limit
-    if page is not None and per_page is not None:
-        skip = (page - 1) * per_page
-        limit = per_page
     
     activities = query.order_by(UserActivity.timestamp.desc()).offset(skip).limit(limit).all()
     return activities

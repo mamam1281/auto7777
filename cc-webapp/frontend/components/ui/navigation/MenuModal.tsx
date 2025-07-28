@@ -3,9 +3,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import {
-  X,
-  Home,
+import { 
+  X, 
+  Home, 
   Gamepad2,
   MessageCircle,
   User,
@@ -13,8 +13,7 @@ import {
   Bell,
   Gift,
   Trophy,
-  ChevronRight,
-  Shield
+  ChevronRight
 } from 'lucide-react';
 
 interface MenuModalProps {
@@ -38,7 +37,6 @@ const MenuModal: React.FC<MenuModalProps> = ({ isOpen, onClose }) => {
     { icon: Bell, label: '알림', path: '/notifications', color: 'text-amber-400' },
     { icon: Gift, label: '프로모션', path: '/promotions', color: 'text-pink-400' },
     { icon: Trophy, label: '리워드', path: '/rewards', color: 'text-orange-400' },
-    { icon: Shield, label: '관리자', path: '/admin', color: 'text-red-400' },
     { icon: Settings, label: '설정', path: '/settings', color: 'text-gray-400' }
   ];
 
@@ -148,9 +146,9 @@ const MenuModal: React.FC<MenuModalProps> = ({ isOpen, onClose }) => {
                           onClick={action.action}
                           className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all duration-200 group"
                         >
-                          <IconComponent
-                            size={20}
-                            className="text-gray-400 group-hover:scale-110 transition-transform"
+                          <IconComponent 
+                            size={20} 
+                            className="text-gray-400 group-hover:scale-110 transition-transform" 
                           />
                           <span className="text-white group-hover:text-white/90 font-medium flex-1 text-left">
                             {action.label}

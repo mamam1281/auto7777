@@ -13,13 +13,13 @@ interface LoginFormProps {
   autoFillTestAccount?: boolean;
 }
 
-export default function LoginForm({
-  onLogin,
+export default function LoginForm({ 
+  onLogin, 
   onSwitchToSignup,
   onSwitchToResetPassword,
-  isLoading: propIsLoading = false,
+  isLoading: propIsLoading = false, 
   error: propError = '',
-  autoFillTestAccount = false
+  autoFillTestAccount = false 
 }: LoginFormProps) {
   const [siteId, setSiteId] = useState('');
   const [password, setPassword] = useState('');
@@ -28,7 +28,7 @@ export default function LoginForm({
   const [error, setError] = useState(propError);
   const searchParams = useSearchParams();
   const router = useRouter();
-
+  
   // 테스트 계정 자동 입력
   useEffect(() => {
     const useTestAccount = autoFillTestAccount || searchParams?.get('test') === 'true';
@@ -40,14 +40,14 @@ export default function LoginForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (onLogin) {
       onLogin(siteId, password);
     } else {
       setIsLoading(true);
       try {
         // 백엔드 API 호출
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8002';
         const response = await fetch(`${apiUrl}/api/auth/login`, {
           method: 'POST',
           headers: {
@@ -58,21 +58,21 @@ export default function LoginForm({
             password: password
           }),
         });
-
+        
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.detail || '로그인에 실패했습니다');
         }
-
+        
         const data = await response.json();
         console.log('로그인 성공', data);
-
+        
         // JWT 토큰 저장 (localStorage 또는 쿠키)
         if (data.access_token) {
           localStorage.setItem('access_token', data.access_token);
           localStorage.setItem('user_info', JSON.stringify(data.user));
         }
-
+        
         // 로그인 후 메인 페이지로 이동
         alert(`환영합니다, ${data.user?.nickname || '사용자'}님!`);
         router.push('/games');
@@ -89,26 +89,26 @@ export default function LoginForm({
     <div className="auth-content">
       <div className="auth-header-simple">
         <div className="auth-tab active">로그인</div>
-        <div
-          className="auth-tab inactive"
+        <div 
+          className="auth-tab inactive" 
           onClick={onSwitchToSignup}
           style={{ cursor: 'pointer' }}
         >
           회원가입
         </div>
       </div>
-
+      
       <div style={{ flex: 1 }}></div>
-
+      
       <div className="game-platform-title">Game Platform</div>
       <div className="game-platform-subtitle">차세대 게임 경험의 시작</div>
-
+      
       <div className="login-message">다시 오신 것을 환영합니다</div>
       <div className="login-help">게임에 로그인하여 시작하세요</div>
-
+      
       <form className="auth-form" onSubmit={handleSubmit}>
         {error && <div className="auth-error">{error}</div>}
-
+        
         <div className="form-group">
           <label htmlFor="siteId" className="form-label">
             사이트ID
@@ -128,7 +128,7 @@ export default function LoginForm({
             />
           </div>
         </div>
-
+        
         <div className="form-group">
           <label htmlFor="password" className="form-label">
             비밀번호
@@ -148,7 +148,7 @@ export default function LoginForm({
             />
           </div>
         </div>
-
+        
         <button
           type="submit"
           className="auth-button"
@@ -167,9 +167,9 @@ export default function LoginForm({
           )}
         </button>
       </form>
-
+      
       <div style={{ flex: 1 }}></div>
-
+      
       <div className="bottom-info">
         안전하고 신뢰할 수 있는 게임 플랫폼
       </div>

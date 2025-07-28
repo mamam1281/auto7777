@@ -5,10 +5,3 @@ from app.schemas.site_visit import SiteVisit, SiteVisitCreate, SiteVisitBase
 from app.schemas.user_action import UserAction, UserActionCreate, UserActionBase
 from app.schemas.invite_code import InviteCode, InviteCodeCreate, InviteCodeBase, InviteCodeResponse, InviteCodeList
 from app.schemas.feedback import FeedbackResponse, FeedbackRequest, FeedbackLog
-from app.schemas.adult_content import (
-    AdultContentDetail, AdultContentGalleryItem, AdultContentGalleryResponse,
-    ContentPreviewResponse, ContentUnlockResponse, AccessUpgradeRequest, 
-    AccessUpgradeResponse, ContentStageInfo, ContentUnlockRequestNew,
-    UnlockHistoryItem, UnlockHistoryResponse, AdultContentStageBase
-)
-from app.schemas.recommendation import FinalRecommendation

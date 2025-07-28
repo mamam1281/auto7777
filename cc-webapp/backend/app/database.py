@@ -11,7 +11,7 @@ Base = declarative_base()
 # Update this to use PostgreSQL by default
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "sqlite:///./dev.db"  # 테스트를 위해 dev.db 사용
+    "postgresql://cc_user:cc_password@localhost/cc_webapp"
 )
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}

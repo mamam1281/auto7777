@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, Settings, Home, Menu, Shield } from 'lucide-react';
+import { ArrowLeft, Bell, Settings, Home, Menu } from 'lucide-react';
 import Button from './Button';
 import { useRouter, usePathname } from 'next/navigation';
 import MenuModal from './ui/navigation/MenuModal';
-import { useAuth } from '../lib/auth';
 
 export interface AppHeaderProps {
   appName: string;
@@ -35,18 +34,16 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-
+    
     // Initial check
     handleResize();
-
+    
     // Add event listener
     window.addEventListener('resize', handleResize);
-
+    
     // Cleanup
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  const { isAdmin } = useAuth();
 
   // Check if we're on the home page
   const isHomePage = pathname === '/';
@@ -71,7 +68,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     router.push('/settings');
     onSettingsClick?.();
   };
-
+  
   const handleMenuClick = () => {
     console.log('Menu clicked');
     setIsMenuOpen(true);
@@ -91,7 +88,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         </button>
       );
     }
-
+    
     return (
       <button
         onClick={handleBackClick}
@@ -106,12 +103,12 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   // Responsive app name component
   const AppName = () => {
     if (!showAppName) return null;
-
+    
     return (
       <div className="flex-1 flex items-center justify-center px-2 sm:px-4 min-w-0">
-        <span
-          className={`${compact ? 'text-lg' : 'text-xl'} font-bold truncate text-center max-w-full`}
-          style={{
+        <span 
+          className={`${compact ? 'text-lg' : 'text-xl'} font-bold truncate text-center max-w-full`} 
+          style={{ 
             color: '#ffffff',
             fontFamily: 'system-ui, -apple-system, sans-serif',
             fontWeight: '700',
@@ -130,26 +127,16 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     const buttonSize = compact ? "sm" : "md";
     const iconSize = compact ? 18 : 20;
     const baseButtonClasses = "p-1 hover:bg-white/20 active:scale-95 transition-all duration-normal rounded-full";
-
+    
     // 로그인/회원가입/프로필 페이지 여부 확인
     const isAuthPage = pathname?.includes('/auth') || pathname?.includes('/profile');
-
+    
     if (isAuthPage) {
       return <div className="px-3" />; // 인증 페이지에서는 빈 공간만 제공
     }
-
+    
     return (
       <div className="flex items-center gap-2 flex-shrink-0 px-3">
-        {isAdmin && (
-          <button
-            onClick={() => router.push('/admin')}
-            className={`${baseButtonClasses} text-yellow-400`}
-            aria-label="관리자"
-          >
-            <Shield size={iconSize} />
-          </button>
-        )}
-
         <button
           onClick={handleNotificationsClick}
           className={`${baseButtonClasses} ${hasNotifications ? 'text-amber-400' : 'text-white'}`}
@@ -157,7 +144,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         >
           <Bell size={iconSize} />
         </button>
-
+        
         <button
           onClick={handleSettingsClick}
           className={`${baseButtonClasses} text-white`}
@@ -165,7 +152,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         >
           <Settings size={iconSize} />
         </button>
-
+        
         <button
           onClick={handleMenuClick}
           className={`${baseButtonClasses} text-white`}
@@ -212,9 +199,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       </header>
 
       {/* 메뉴 모달 */}
-      <MenuModal
-        isOpen={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
+      <MenuModal 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)} 
       />
     </>
   );
