@@ -19,7 +19,7 @@ class User(Base):
     
     # Relationships with the admin module
     activities = relationship("UserActivity", back_populates="user")
-    rewards = relationship("Reward", back_populates="user")
+    rewards = relationship("Reward", back_populates="user", foreign_keys="[Reward.user_id]")
     # User rewards and notifications relationships
     user_rewards = relationship("UserReward", back_populates="user")
     notifications = relationship("Notification", back_populates="user")
@@ -28,3 +28,5 @@ class User(Base):
     # Additional relationships
     segment = relationship("UserSegment", uselist=False, back_populates="user")  # One-to-one
     actions = relationship("UserAction", back_populates="user")
+    administered_rewards = relationship("Reward", back_populates="admin", foreign_keys="[Reward.admin_id]")
+    site_visits = relationship("SiteVisit", back_populates="user")

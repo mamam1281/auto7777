@@ -24,10 +24,10 @@ def generate_random_string(length: int = 8) -> str:
 
 def create_test_data():
     """테스트 데이터 생성"""
-        # 데이터베이스 테이블 생성
-        Base.metadata.create_all(bind=engine)
-        
-        db: Session = SessionLocal()
+    # 데이터베이스 테이블 생성
+    Base.metadata.create_all(bind=engine)
+    
+    db: Session = SessionLocal()
     
     try:
         print("🔧 테스트 데이터 생성 시작...")

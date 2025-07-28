@@ -89,7 +89,7 @@ class User(Base):
 
     actions = relationship("UserAction", back_populates="user")
     segment = relationship("UserSegment", uselist=False, back_populates="user") # One-to-one
-    rewards = relationship("UserReward", back_populates="user")
+    # rewards = relationship("UserReward", back_populates="user", primaryjoin="User.id == UserReward.user_id")  # 임시 비활성화
     site_visits = relationship("SiteVisit", back_populates="user")
     notifications = relationship("Notification", back_populates="user")
 
@@ -151,7 +151,8 @@ class UserReward(Base):
     source_description = Column(Text, nullable=True)  # Add missing column
 
     # Relationship
-    user = relationship("User", back_populates="rewards")
+    # user = relationship("User", back_populates="rewards", primaryjoin="UserReward.user_id == User.id")  # 임시 비활성화
+    # trigger_action = relationship("UserAction", primaryjoin="UserReward.trigger_action_id == UserAction.id")  # 임시 비활성화
 
 class AdultContent(Base):
     __tablename__ = "adult_content"

@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 class _DummyScheduler:
     running = False
@@ -97,7 +98,8 @@ app = FastAPI(
     description="API for interactive mini-games and token-based reward system",
     version="0.1.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    default_response_class=JSONResponse
 )
 
 # Prometheus Instrumentation
@@ -118,8 +120,12 @@ if Instrumentator:
 origins = [
     "http://localhost:3000",  # Next.js 기본 포트
     "http://localhost:3001",  # Next.js 대체 포트 (3000이 사용 중일 때)
+    "http://localhost",  # 포트 없는 로컬호스트 지원
+    "http://127.0.0.1:3000",  # IPv4 주소 지원
+    "http://127.0.0.1:3001",  # IPv4 주소 지원
     "http://139.180.155.143:3000",  # 프로덕션 프론트엔드
     "https://139.180.155.143:3000",  # HTTPS 지원
+    "*",  # 개발 중에만 모든 출처 허용 (프로덕션에서는 제거 필요)
     # Add other origins if needed
 ]
 
@@ -130,6 +136,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Ensure all JSON responses use UTF-8 encoding
+@app.middleware("http")
+async def add_charset_encoding_header(request, call_next):
+    response = await call_next(request)
+    if response.headers.get("content-type") == "application/json":
+        response.headers["content-type"] = "application/json; charset=utf-8"
+    return response
 
 # Register API routers
 app.include_router(auth.router, prefix="/api")

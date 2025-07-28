@@ -26,4 +26,4 @@ class Reward(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     user = relationship("User", foreign_keys=[user_id], back_populates="rewards")
-    admin = relationship("User", foreign_keys=[admin_id])
+    admin = relationship("User", foreign_keys=[admin_id], back_populates="administered_rewards")
