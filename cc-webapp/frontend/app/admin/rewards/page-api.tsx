@@ -139,6 +139,7 @@ const AdminRewardsPage = () => {
             // 실제 API 호출
             await adminApi.giveReward({
                 user_id: selectedUser.id,
+                reward_type: rewardForm.reward_type,
                 amount: rewardForm.amount,
                 reason: rewardForm.reason
             });
@@ -391,8 +392,8 @@ const AdminRewardsPage = () => {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.rank === 'VIP' ? 'bg-purple-600' :
-                                                                user.rank === 'PREMIUM' ? 'bg-blue-600' :
-                                                                    user.rank === 'ADMIN' ? 'bg-red-600' : 'bg-gray-600'
+                                                            user.rank === 'PREMIUM' ? 'bg-blue-600' :
+                                                                user.rank === 'ADMIN' ? 'bg-red-600' : 'bg-gray-600'
                                                             } text-white`}>
                                                             {user.rank || 'BASIC'}
                                                         </span>

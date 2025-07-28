@@ -2,7 +2,7 @@
 # --- Unified Imports & Base ---
 from sqlalchemy import Column, Integer, String, DateTime, Float, ForeignKey, Boolean, Text, Index
 from sqlalchemy.orm import relationship, declarative_base
-from sqlalchemy.dialects.postgresql import JSONB
+# from sqlalchemy.dialects.postgresql import JSONB  # 임시 비활성화
 from sqlalchemy.types import JSON
 from datetime import datetime
 
