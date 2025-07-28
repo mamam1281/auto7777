@@ -34,10 +34,26 @@ interface UserDetail {
     id: number;
     site_id: string;
     nickname: string;
+    email?: string;
     phone_number: string;
     cyber_token_balance: number;
     rank: string;
     created_at: string;
+    vip_tier?: string;
+    current_rank?: string;
+    battlepass_level?: number;
+    total_spent?: number;
+    total_games?: number;
+    win_rate?: number;
+    last_login?: string;
+    last_game_played?: string;
+    is_active?: boolean;
+    tokens?: {
+        cyber_tokens?: number;
+        coins?: number;
+        gems?: number;
+        streak?: number;
+    };
     recent_activities?: ActivityLog[];
     recent_rewards?: any[];
 }
@@ -47,6 +63,8 @@ interface ActivityLog {
     activity_type: string;
     details: string;
     timestamp: string;
+    ip_address?: string;
+    user_id?: number;
 }
 
 interface RewardForm {
@@ -59,7 +77,7 @@ const UserDetailPage = () => {
     const params = useParams();
     const userId = params?.id as string;
 
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<UserDetail | null>(null);
     const [activities, setActivities] = useState<ActivityLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -256,103 +274,105 @@ const UserDetailPage = () => {
                 </div>
             </div>
 
-            {/* Compact User Info Grid */}
+            {/* User Info Tables */}
             <div className="p-4 space-y-4">
-                {/* 3-Column Layout */}
-                <div className="grid grid-cols-3 gap-4">
-                    {/* Left: Basic Info */}
-                    <div className="bg-gray-800 rounded border border-gray-700">
-                        <div className="bg-gray-700 px-3 py-2 border-b border-gray-600">
-                            <h3 className="text-sm font-medium text-white flex items-center">
-                                <User className="w-4 h-4 mr-2" />
-                                기본 정보
-                            </h3>
-                        </div>
-                        <div className="p-3 space-y-3">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">닉네임</span>
-                                <span className="text-white font-medium">{user.nickname}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">이메일</span>
-                                <span className="text-white">{user.email}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">VIP 등급</span>
-                                <span className={`font-medium ${user.vip_tier === 'PREMIUM' ? 'text-purple-400' :
-                                        user.vip_tier === 'VIP' ? 'text-yellow-400' : 'text-gray-300'
-                                    }`}>
-                                    {user.vip_tier || user.current_rank || 'BASIC'}
-                                </span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">배틀패스 레벨</span>
-                                <span className="text-white">{user.battlepass_level || 1}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">총 지출</span>
-                                <span className="text-green-400 font-medium">{user.total_spent?.toLocaleString() || 0}원</span>
-                            </div>
-                        </div>
+                {/* Basic Info Table */}
+                <div className="bg-gray-800 rounded border border-gray-700">
+                    <div className="bg-gray-700 px-3 py-2 border-b border-gray-600">
+                        <h3 className="text-sm font-medium text-white flex items-center">
+                            <User className="w-4 h-4 mr-2" />
+                            기본 정보
+                        </h3>
                     </div>
-
-                    {/* Center: Token Balance */}
-                    <div className="bg-gray-800 rounded border border-gray-700">
-                        <div className="bg-gray-700 px-3 py-2 border-b border-gray-600">
-                            <h3 className="text-sm font-medium text-white flex items-center">
-                                <Coins className="w-4 h-4 mr-2" />
-                                토큰 보유량
-                            </h3>
-                        </div>
-                        <div className="p-3 space-y-3">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">사이버 토큰</span>
-                                <span className="text-blue-400 font-bold">{user.cyber_token_balance?.toLocaleString() || user.tokens?.cyber_tokens?.toLocaleString() || 0}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">일반 코인</span>
-                                <span className="text-yellow-400 font-bold">{user.tokens?.coins?.toLocaleString() || 0}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">프리미엄 젬</span>
-                                <span className="text-purple-400 font-bold">{user.tokens?.gems?.toLocaleString() || 0}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">현재 스트릭</span>
-                                <span className="text-orange-400 font-bold">{user.tokens?.streak || 0}일</span>
-                            </div>
-                        </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <tbody className="divide-y divide-gray-700">
+                                <tr>
+                                    <td className="px-4 py-2 text-gray-400">닉네임</td>
+                                    <td className="px-4 py-2 text-white font-medium">{user.nickname}</td>
+                                    <td className="px-4 py-2 text-gray-400">이메일</td>
+                                    <td className="px-4 py-2 text-white">{user.email}</td>
+                                </tr>
+                                <tr>
+                                    <td className="px-4 py-2 text-gray-400">VIP 등급</td>
+                                    <td className="px-4 py-2">
+                                        <span className={`font-medium ${user.vip_tier === 'PREMIUM' ? 'text-purple-400' :
+                                            user.vip_tier === 'VIP' ? 'text-yellow-400' : 'text-gray-300'
+                                            }`}>
+                                            {user.vip_tier || user.current_rank || 'BASIC'}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-2 text-gray-400">배틀패스 레벨</td>
+                                    <td className="px-4 py-2 text-white">{user.battlepass_level || 1}</td>
+                                </tr>
+                                <tr>
+                                    <td className="px-4 py-2 text-gray-400">총 지출</td>
+                                    <td className="px-4 py-2 text-green-400 font-medium">{user.total_spent?.toLocaleString() || 0}원</td>
+                                    <td className="px-4 py-2 text-gray-400">계정 상태</td>
+                                    <td className="px-4 py-2">
+                                        <span className={`text-xs px-2 py-1 rounded ${user.is_active !== false ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                                            {user.is_active !== false ? '활성' : '비활성'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
+                </div>
 
-                    {/* Right: Activity Summary */}
-                    <div className="bg-gray-800 rounded border border-gray-700">
-                        <div className="bg-gray-700 px-3 py-2 border-b border-gray-600">
-                            <h3 className="text-sm font-medium text-white flex items-center">
-                                <Activity className="w-4 h-4 mr-2" />
-                                활동 요약
-                            </h3>
-                        </div>
-                        <div className="p-3 space-y-3">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">최근 접속</span>
-                                <span className="text-white">{formatDate(user.last_login)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">총 게임</span>
-                                <span className="text-blue-400">{user.total_games || 0}회</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">승률</span>
-                                <span className="text-green-400">{user.win_rate || 0}%</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">계정 상태</span>
-                                <span className={`text-xs px-2 py-1 rounded ${user.is_active !== false ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
-                                    }`}>
-                                    {user.is_active !== false ? '활성' : '비활성'}
-                                </span>
-                            </div>
-                        </div>
+                {/* Token Balance Table */}
+                <div className="bg-gray-800 rounded border border-gray-700">
+                    <div className="bg-gray-700 px-3 py-2 border-b border-gray-600">
+                        <h3 className="text-sm font-medium text-white flex items-center">
+                            <Coins className="w-4 h-4 mr-2" />
+                            토큰 보유량
+                        </h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <tbody className="divide-y divide-gray-700">
+                                <tr>
+                                    <td className="px-4 py-2 text-gray-400">사이버 토큰</td>
+                                    <td className="px-4 py-2 text-blue-400 font-bold">{user.cyber_token_balance?.toLocaleString() || user.tokens?.cyber_tokens?.toLocaleString() || 0}</td>
+                                    <td className="px-4 py-2 text-gray-400">일반 코인</td>
+                                    <td className="px-4 py-2 text-yellow-400 font-bold">{user.tokens?.coins?.toLocaleString() || 0}</td>
+                                </tr>
+                                <tr>
+                                    <td className="px-4 py-2 text-gray-400">프리미엄 젬</td>
+                                    <td className="px-4 py-2 text-purple-400 font-bold">{user.tokens?.gems?.toLocaleString() || 0}</td>
+                                    <td className="px-4 py-2 text-gray-400">현재 스트릭</td>
+                                    <td className="px-4 py-2 text-orange-400 font-bold">{user.tokens?.streak || 0}일</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Activity Summary Table */}
+                <div className="bg-gray-800 rounded border border-gray-700">
+                    <div className="bg-gray-700 px-3 py-2 border-b border-gray-600">
+                        <h3 className="text-sm font-medium text-white flex items-center">
+                            <Activity className="w-4 h-4 mr-2" />
+                            활동 요약
+                        </h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <tbody className="divide-y divide-gray-700">
+                                <tr>
+                                    <td className="px-4 py-2 text-gray-400">최근 접속</td>
+                                    <td className="px-4 py-2 text-white">{formatDate(user.last_login)}</td>
+                                    <td className="px-4 py-2 text-gray-400">총 게임</td>
+                                    <td className="px-4 py-2 text-blue-400">{user.total_games || 0}회</td>
+                                </tr>
+                                <tr>
+                                    <td className="px-4 py-2 text-gray-400">승률</td>
+                                    <td className="px-4 py-2 text-green-400">{user.win_rate || 0}%</td>
+                                    <td className="px-4 py-2 text-gray-400">최근 게임</td>
+                                    <td className="px-4 py-2 text-white">{formatDate(user.last_game_played)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -394,9 +414,9 @@ const UserDetailPage = () => {
                                         </td>
                                         <td className="px-3 py-2 whitespace-nowrap">
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${activity.activity_type === 'LOGIN' ? 'bg-green-900 text-green-300' :
-                                                    activity.activity_type.startsWith('GAME_') ? 'bg-blue-900 text-blue-300' :
-                                                        activity.activity_type === 'PURCHASE' ? 'bg-purple-900 text-purple-300' :
-                                                            'bg-gray-700 text-gray-300'
+                                                activity.activity_type.startsWith('GAME_') ? 'bg-blue-900 text-blue-300' :
+                                                    activity.activity_type === 'PURCHASE' ? 'bg-purple-900 text-purple-300' :
+                                                        'bg-gray-700 text-gray-300'
                                                 }`}>
                                                 {activity.activity_type}
                                             </span>

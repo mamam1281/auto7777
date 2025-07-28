@@ -49,31 +49,31 @@ const AdminUsersPage = () => {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            
+
             // API 호출
             const usersData = await adminApi.getUsers();
-            
+
             // 필터링 로직
             let filteredUsers = usersData;
-            
+
             if (searchTerm) {
-                filteredUsers = filteredUsers.filter(user => 
+                filteredUsers = filteredUsers.filter(user =>
                     user.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     user.site_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     user.phone_number.includes(searchTerm)
                 );
             }
-            
+
             if (filterRank !== 'ALL') {
                 filteredUsers = filteredUsers.filter(user => user.rank === filterRank);
             }
-            
+
             setTotalUsers(filteredUsers.length);
-            
+
             // 페이지네이션
             const startIndex = (currentPage - 1) * usersPerPage;
             const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
-            
+
             setUsers(paginatedUsers);
         } catch (error) {
             console.error('사용자 목록 로드 실패:', error);
@@ -159,7 +159,7 @@ const AdminUsersPage = () => {
                     </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                    <button 
+                    <button
                         onClick={fetchUsers}
                         className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                     >

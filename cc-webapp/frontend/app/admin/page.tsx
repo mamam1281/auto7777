@@ -39,12 +39,12 @@ const AdminDashboard = () => {
 
         // 관리자 권한 체크 - 로그인 페이지로 리다이렉트하기 전에 콘솔에 디버그 정보 출력
         if (!user || !isAdmin) {
-            console.log('Access denied to admin page:', { 
-                user: user ? 'exists' : 'null', 
-                userRank: user?.rank, 
-                isAdmin: isAdmin 
+            console.log('Access denied to admin page:', {
+                user: user ? 'exists' : 'null',
+                userRank: user?.rank,
+                isAdmin: isAdmin
             });
-            
+
             // 로그인하지 않은 경우에만 로그인 페이지로 리다이렉트
             if (!user) {
                 router.push('/auth/login');
