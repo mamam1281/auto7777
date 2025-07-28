@@ -116,7 +116,8 @@ if Instrumentator:
 
 # Configure CORS
 origins = [
-    "http://localhost:3000",  # Assuming Next.js runs on port 3000
+    "http://localhost:3000",  # Next.js 기본 포트
+    "http://localhost:3001",  # Next.js 대체 포트 (3000이 사용 중일 때)
     "http://139.180.155.143:3000",  # 프로덕션 프론트엔드
     "https://139.180.155.143:3000",  # HTTPS 지원
     # Add other origins if needed

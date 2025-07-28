@@ -16,7 +16,10 @@ export interface LayoutWrapperProps {
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const router = useRouter();
   const pathname = usePathname();
-  
+
+  // 관리자 페이지 여부 체크
+  const isAdminPage = pathname?.startsWith('/admin') || false;
+
   // 현재 경로에 따라 activeTab 설정
   const getActiveTab = () => {
     if (pathname === '/') return 'home';
@@ -27,14 +30,23 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
     if (pathname === '/dashboard-new') return 'home';
     return 'home';
   };
-  
+
   const [activeTab, setActiveTab] = React.useState(getActiveTab());
-  
+
   // pathname이 변경될 때마다 activeTab 업데이트
   React.useEffect(() => {
     setActiveTab(getActiveTab());
-  }, [pathname]);
-  
+    
+    // 관리자 페이지일 때 body에 특별한 클래스 추가
+    if (isAdminPage) {
+      document.body.classList.add('admin-page');
+      document.body.classList.remove('miniapp-page');
+    } else {
+      document.body.classList.add('miniapp-page');
+      document.body.classList.remove('admin-page');
+    }
+  }, [pathname, isAdminPage]);
+
   const handleTabClick = (tabId: string, path: string) => {
     console.log(`🚀 바텀네비 클릭: ${tabId} -> ${path}`);
     setActiveTab(tabId);
@@ -52,26 +64,36 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   return (
     <Provider store={store}>
       <AuthProvider>
-        <div className="miniapp-container">
-          {/* AppHeader - 고정 상단 (CSS fixed 적용) */}
-          <AppHeader
-            appName="CasinoClub"
-            onNotificationsClick={handleNotificationsClick}
-            onSettingsClick={handleSettingsClick}
-            hasNotifications={false}
-          />
-          
-          {/* 메인 콘텐츠 영역 - 단일 스크롤 */}
-          <div className="miniapp-content">
+        <div 
+          className={isAdminPage ? "admin-container" : "miniapp-container"}
+          style={isAdminPage ? { width: '100vw', maxWidth: 'none', margin: 0 } : {}}
+        >
+          {/* AppHeader - 관리자 페이지에서는 숨김 */}
+          {!isAdminPage && (
+            <AppHeader
+              appName="CasinoClub"
+              onNotificationsClick={handleNotificationsClick}
+              onSettingsClick={handleSettingsClick}
+              hasNotifications={false}
+            />
+          )}
+
+          {/* 메인 콘텐츠 영역 */}
+          <div 
+            className={isAdminPage ? "admin-content" : "miniapp-content"}
+            style={isAdminPage ? { width: '100%', maxWidth: 'none' } : {}}
+          >
             {children}
           </div>
         </div>
-        
-        {/* BottomNavigationBar - miniapp-container 밖으로 빼서 완전 독립 */}
-        <BottomNavigationBar
-          activeTab={activeTab}
-          onTabClick={handleTabClick}
-        />
+
+        {/* BottomNavigationBar - 관리자 페이지에서는 숨김 */}
+        {!isAdminPage && (
+          <BottomNavigationBar
+            activeTab={activeTab}
+            onTabClick={handleTabClick}
+          />
+        )}
       </AuthProvider>
     </Provider>
   );

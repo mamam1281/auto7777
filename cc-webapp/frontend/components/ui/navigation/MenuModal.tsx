@@ -3,9 +3,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { 
-  X, 
-  Home, 
+import {
+  X,
+  Home,
   Gamepad2,
   MessageCircle,
   User,
@@ -148,9 +148,9 @@ const MenuModal: React.FC<MenuModalProps> = ({ isOpen, onClose }) => {
                           onClick={action.action}
                           className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all duration-200 group"
                         >
-                          <IconComponent 
-                            size={20} 
-                            className="text-gray-400 group-hover:scale-110 transition-transform" 
+                          <IconComponent
+                            size={20}
+                            className="text-gray-400 group-hover:scale-110 transition-transform"
                           />
                           <span className="text-white group-hover:text-white/90 font-medium flex-1 text-left">
                             {action.label}
