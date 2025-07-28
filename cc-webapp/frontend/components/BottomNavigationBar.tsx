@@ -14,7 +14,7 @@ export const navItems: NavItemData[] = [
   { id: 'home', label: '홈', icon: Home, path: '/' },
   { id: 'game', label: '게임', icon: Gamepad, path: '/games' },
   { id: 'shop', label: '상점', icon: Store, path: '/shop', isHighlighted: true }, // 상점 버튼만 강조 표시
-  { id: 'history', label: '내역', icon: MessageCircle, path: '/wallet' },
+  { id: 'history', label: '지갑', icon: MessageCircle, path: '/wallet' },
   { id: 'profile', label: '프로필', icon: User, path: '/profile' },
 ];
 
