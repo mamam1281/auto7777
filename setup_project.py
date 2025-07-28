@@ -47,6 +47,8 @@ def main():
     print("🎮 FastAPI 서버를 시작하려면 다음 명령을 실행하세요:")
     print("   cd cc-webapp/backend && uvicorn app.main:app --reload")
     print("\n🌟 즐거운 개발되세요!")
+    os.chdir('c:\\Users\\bdbd\\Downloads\\auto202506-a-main\\auto202506-a-main')
+    run_command("python setup_project.py")
 
 if __name__ == "__main__":
     main()

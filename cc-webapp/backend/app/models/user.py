@@ -20,3 +20,6 @@ class User(Base):
     # Relationships with the admin module
     activities = relationship("UserActivity", back_populates="user")
     rewards = relationship("Reward", back_populates="user")
+    # User rewards and notifications relationships
+    user_rewards = relationship("UserReward", back_populates="user")
+    notifications = relationship("Notification", back_populates="user")
