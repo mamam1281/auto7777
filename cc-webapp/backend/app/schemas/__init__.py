@@ -16,3 +16,6 @@ from app.schemas.adult_content import AccessUpgradeRequest
 from app.schemas.adult_content import AccessUpgradeResponse
 from app.schemas.adult_content import ContentUnlockRequestNew
 from app.schemas.adult_content import UnlockHistoryResponse
+
+# VIP schemas
+from app.schemas.vip import VIPInfoResponse, VIPExclusiveContentItem
