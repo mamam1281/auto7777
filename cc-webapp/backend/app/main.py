@@ -68,6 +68,18 @@ from app.routers import (
     doc_titles  # 추가
 )
 
+# Kafka API 임포트 추가
+try:
+    from app.api.v1.kafka import router as kafka_router
+    KAFKA_AVAILABLE = True
+    print("✅ Kafka API 모듈 로드 성공")
+except ImportError as e:
+    KAFKA_AVAILABLE = False
+    print(f"⚠️ Warning: Kafka integration not available: {e}")
+except Exception as e:
+    KAFKA_AVAILABLE = False
+    print(f"❌ Error loading Kafka integration: {e}")
+
 # --- Sentry Initialization (Placeholder - should be configured properly with DSN) ---
 # It's good practice to initialize Sentry as early as possible.
 # The DSN should be configured via an environment variable for security and flexibility.
@@ -169,6 +181,13 @@ app.include_router(corporate.router, prefix="/api")  # 추가
 app.include_router(users.router, prefix="/api")  # 추가
 app.include_router(recommendation.router, prefix="/api")  # 추가된 라우터 등록
 app.include_router(doc_titles.router)  # prefix 없이 등록하여 /docs/titles 직접 접근 가능
+
+# Kafka API 라우터 등록 (가능한 경우에만)
+if KAFKA_AVAILABLE:
+    app.include_router(kafka_router)
+    print("✅ Kafka API endpoints registered")
+else:
+    print("⚠️ Kafka API endpoints not available")
 
 # Kafka integration route
 @app.post("/api/kafka/publish", tags=["Kafka", "Event"])
