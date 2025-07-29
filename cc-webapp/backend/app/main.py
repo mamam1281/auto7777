@@ -1,9 +1,7 @@
-# ...existing code...
-
-# ...existing code...
-
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional
 
 class _DummyScheduler:
     running = False
@@ -28,6 +26,18 @@ try:
 except Exception:  # noqa: BLE001
     sentry_sdk = None
 import os  # For Sentry DSN from env var
+
+# Kafka integration
+from app.kafka_client import send_kafka_message
+
+# Define the app first
+# ... (app initialization code) ...
+
+# Then define models and routes
+class UserActionEvent(BaseModel):
+    user_id: str
+    action_type: str
+    payload: Optional[dict] = None
 from pydantic import BaseModel  # For request/response models
 from typing import Optional
 
@@ -160,6 +170,16 @@ app.include_router(users.router, prefix="/api")  # 추가
 app.include_router(recommendation.router, prefix="/api")  # 추가된 라우터 등록
 app.include_router(doc_titles.router)  # prefix 없이 등록하여 /docs/titles 직접 접근 가능
 
+# Kafka integration route
+@app.post("/api/kafka/publish", tags=["Kafka", "Event"])
+async def publish_user_action_event(event: UserActionEvent = Body(...)):
+    """
+    사용자 행동 이벤트를 Kafka로 발행 (샘플)
+    - topic: user_actions
+    - value: {user_id, action_type, payload}
+    """
+    send_kafka_message("user_actions", event.model_dump())
+    return {"status": "ok", "message": "Event published to Kafka", "event": event.model_dump()}
 
 # Request/Response Models
 class UserLogin(BaseModel):
@@ -197,11 +217,13 @@ async def login(user: UserLogin):
 
 
 @app.get("/health", tags=["System"])
+@app.head("/health", tags=["System"])
 async def health_check():
     """
     시스템 상태 확인 엔드포인트
 
     - 서버 정상 동작 여부 확인
     - 헬스체크 용도
+    - GET 및 HEAD 메서드 모두 지원
     """
     return {"status": "healthy"}

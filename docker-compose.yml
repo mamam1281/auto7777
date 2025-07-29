@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://json.schemastore.org/docker-compose.json
 version: '3.8'
 # 공통 서비스 정의 (dev/prod에서 override)
 services:
@@ -12,9 +13,14 @@ services:
       - pgdata:/var/lib/postgresql/data
       # - ./backend/init-db:/docker-entrypoint-initdb.d
     ports:
-      - "5432:5432" # dev/prod에서 override 가능
+      - "5432:5432"
     networks:
       - ccnet
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-cc_user} -d ${DB_NAME:-cc_webapp}" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   redis:
     image: redis:7
@@ -25,6 +31,11 @@ services:
       - redis_data:/data
     networks:
       - ccnet
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   kafka:
     image: bitnami/kafka:3.5
@@ -41,6 +52,11 @@ services:
       - zookeeper
     networks:
       - ccnet
+    healthcheck:
+      test: [ "CMD", "kafka-topics", "--bootstrap-server", "localhost:9093", "--list" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.0.1
@@ -57,7 +73,7 @@ services:
   # Backend API
   backend:
     build:
-      context: /root/auto7777/backend
+      context: ./cc-webapp/backend
       dockerfile: Dockerfile
     depends_on:
       postgres:

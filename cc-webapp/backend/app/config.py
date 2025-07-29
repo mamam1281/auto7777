@@ -7,7 +7,8 @@ management with support for environment variables.
 
 import os
 from typing import List, Optional
-from pydantic import BaseSettings, validator
+from pydantic_settings import BaseSettings
+from pydantic import validator
 
 
 class Settings(BaseSettings):
@@ -38,8 +39,8 @@ class Settings(BaseSettings):
     redis_expire_time: int = 3600  # 1 hour default
     
     # Kafka (optional)
-    kafka_bootstrap_servers: str = "localhost:9092"
-    kafka_enabled: bool = False
+    kafka_bootstrap_servers: str = "kafka:9093"
+    kafka_enabled: bool = True
     
     # CORS
     cors_origins: List[str] = [

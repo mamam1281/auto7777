@@ -1,6 +1,7 @@
 # 🚀 프로덕션용 Docker Compose 설정
 # docker-compose -f docker-compose.yml -f docker-compose.prod.yml up 으로 실행
 
+# yaml-language-server: $schema=https://json.schemastore.org/docker-compose.json
 version: '3.8'
 
 services:
@@ -83,27 +84,40 @@ services:
       - postgres
       - redis
       - kafka
+    volumes:
+      - backend_logs:/app/logs
     networks:
       - ccnet
 
-*** End Patch
-      APP_ENV: production
-      DEBUG: false
-    volumes:
-      - backend_logs:/app/logs
-
   # Celery Beat 프로덕션 설정
   celery-beat:
+    build: ./backend
+    container_name: cc_celery_beat_prod
     restart: always
+    command: celery -A app.main beat --loglevel=info
     environment:
       APP_ENV: production
       DEBUG: false
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    depends_on:
+      - postgres
+      - redis
     volumes:
       - backend_logs:/app/logs
+    networks:
+      - ccnet
 
   # Nginx 리버스 프록시 (프로덕션 전용)
   nginx:
     image: nginx:alpine
+    container_name: cc_nginx_prod
     restart: always
     ports:
       - "80:80"
@@ -113,10 +127,17 @@ services:
       - ./deployment/nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - backend
-      - frontend
+    networks:
+      - ccnet
+
+networks:
+  ccnet:
+    driver: bridge
 
 volumes:
-  postgres_data:
+  pgdata:
+    driver: local
   redis_data:
-  kafka_data:
+    driver: local
   backend_logs:
+    driver: local

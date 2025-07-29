@@ -1,121 +1,79 @@
+# yaml-language-server: $schema=https://json.schemastore.org/docker-compose.json
 version: '3.8'
 
 services:
-  # PostgreSQL 데이터베이스
   db:
     image: postgres:13-alpine
     container_name: cc_postgres_dev
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-cc_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cc_password}
-      POSTGRES_DB: ${POSTGRES_DB:-cc_webapp_db}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"  # 외부 접근 가능
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cc_user} -d ${POSTGRES_DB:-cc_webapp_db}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
 
-  # Redis 캐시
   redis:
     image: redis:7-alpine
     container_name: cc_redis_dev
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
 
-  # 백엔드 API 서버
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
     container_name: cc_backend_dev
     environment:
-      # 데이터베이스 설정
-      DATABASE_URL: "postgresql://${POSTGRES_USER:-cc_user}:${POSTGRES_PASSWORD:-cc_password}@db:5432/${POSTGRES_DB:-cc_webapp_db}"
-      
-      # Redis 설정
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
       REDIS_URL: "redis://redis:6379/0"
-      
-      # JWT 시크릿
-      JWT_SECRET: ${JWT_SECRET:-dev_secret_key_change_in_production}
-      
-      # 환경 설정
-      ENVIRONMENT: ${ENVIRONMENT:-development}
-      DEBUG: ${DEBUG:-true}
-      
-      # CORS 설정 (개발용)
+      JWT_SECRET: ${JWT_SECRET}
+      ENVIRONMENT: ${ENVIRONMENT}
+      DEBUG: ${DEBUG}
       CORS_ORIGINS: "*"
-      
-      # 포트 설정
       PORT: 8000
-      
-      # 로그 레벨
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      
+      LOG_LEVEL: ${LOG_LEVEL}
     ports:
-      - "${BACKEND_PORT:-8000}:8000"  # 외부 접근 가능
-    volumes:
-      - ./backend:/app
-      - /app/venv  # 가상환경 볼륨 마운트 제외
+      - "${BACKEND_PORT}:8000"
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_started
     restart: unless-stopped
-    command: >
-      sh -c "
-        echo '🚀 백엔드 개발 서버 시작 중...' &&
-        python -m uvicorn app.main:app 
-        --host 0.0.0.0 
-        --port 8000 
-        --reload 
-        --reload-dir /app
-        --log-level info
-      "
 
-  # 프론트엔드 개발 서버 (옵션)
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    container_name: cc_frontend_dev
+  kafka:
+    image: bitnami/kafka:3.5
+    container_name: cc_kafka_dev
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-8000}
-      - NODE_ENV=development
-      - PORT=3000
+      KAFKA_BROKER_ID: 1
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093
+      ALLOW_PLAINTEXT_LISTENER: "yes"
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"  # 외부 접근 가능
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules  # node_modules 볼륨 마운트 제외
-      - /app/.next  # .next 볼륨 마운트 제외
+      - "9093:9093"
     depends_on:
-      - backend
+      - zookeeper
     restart: unless-stopped
-    command: >
-      sh -c "
-        echo '🎨 프론트엔드 개발 서버 시작 중...' &&
-        npm run dev
-      "
 
-  # Adminer (데이터베이스 관리 도구)
-  adminer:
-    image: adminer:latest
-    container_name: cc_adminer_dev
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.0.1
+    container_name: cc_zookeeper_dev
     ports:
-      - "${ADMINER_PORT:-8080}:8080"
+      - "2181:2181"
     environment:
-      ADMINER_DEFAULT_SERVER: db
-    depends_on:
-      - db
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_4LW_COMMANDS_WHITELIST: "*"
     restart: unless-stopped
 
 volumes:

@@ -1,6 +1,7 @@
 # 🔧 개발 환경용 Docker Compose Override
 # docker-compose up 실행 시 자동으로 적용됨
 
+# yaml-language-server: $schema=https://json.schemastore.org/docker-compose.json
 version: '3.8'
 
 services:
@@ -12,7 +13,7 @@ services:
       PYTHONUNBUFFERED: 1
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
-      - ./backend:/app:cached  # 성능 향상을 위한 cached 옵션
+      - ./backend:/app:cached # 성능 향상을 위한 cached 옵션
       - backend_logs:/app/logs
 
   # 프론트엔드 개발 설정
