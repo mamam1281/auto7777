@@ -68,6 +68,18 @@ from app.routers import (
     doc_titles  # 추가
 )
 
+# JWT 인증 API 임포트 추가
+try:
+    from app.routers import auth_jwt
+    JWT_AUTH_AVAILABLE = True
+    print("✅ JWT 인증 API 모듈 로드 성공")
+except ImportError as e:
+    JWT_AUTH_AVAILABLE = False
+    print(f"⚠️ Warning: JWT Auth API not available: {e}")
+except Exception as e:
+    JWT_AUTH_AVAILABLE = False
+    print(f"❌ Error loading JWT Auth API: {e}")
+
 # Kafka API 임포트 추가
 try:
     from app.api.v1.kafka import router as kafka_router
@@ -101,7 +113,15 @@ else:
     )
 # --- End Sentry Initialization Placeholder ---
 
+# 로깅 시스템 및 에러 핸들러 임포트
+from app.core.logging import setup_logging, LoggingContextMiddleware
+from app.core.error_handlers import add_exception_handlers, error_handling_middleware
 
+# 로깅 시스템 초기화
+setup_logging(
+    development_mode=os.getenv("ENVIRONMENT", "development") != "production",
+    log_file=os.getenv("LOG_FILE")
+)
 
 from contextlib import asynccontextmanager
 
@@ -148,6 +168,15 @@ origins = [
     # Add other origins if needed
 ]
 
+# 에러 핸들러 등록
+add_exception_handlers(app)
+
+# 에러 핸들링 미들웨어 등록
+error_handling_middleware(app)
+
+# 로깅 컨텍스트 미들웨어 등록
+app.middleware("http")(LoggingContextMiddleware())
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -181,6 +210,13 @@ app.include_router(corporate.router, prefix="/api")  # 추가
 app.include_router(users.router, prefix="/api")  # 추가
 app.include_router(recommendation.router, prefix="/api")  # 추가된 라우터 등록
 app.include_router(doc_titles.router)  # prefix 없이 등록하여 /docs/titles 직접 접근 가능
+
+# JWT 인증 API 라우터 등록
+if JWT_AUTH_AVAILABLE:
+    app.include_router(auth_jwt.router)
+    print("✅ JWT 인증 API endpoints registered")
+else:
+    print("⚠️ JWT 인증 API endpoints not available")
 
 # Kafka API 라우터 등록 (가능한 경우에만)
 if KAFKA_AVAILABLE:
