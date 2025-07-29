@@ -10,6 +10,7 @@ from app.repositories.game_repository import GameRepository
 from app.services.token_service import TokenService
 
 
+@pytest.mark.skip(reason="Old roulette system has been replaced with prize roulette")
 class TestRouletteService:
     """Tests for the RouletteService class."""
 

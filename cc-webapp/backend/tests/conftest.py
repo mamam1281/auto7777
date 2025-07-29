@@ -54,7 +54,6 @@ def client():
     try:
         from fastapi.testclient import TestClient
         from app.main import app
-        from app.main import app
         return TestClient(app)
     except ImportError as e:
         pytest.skip(f"TestClient or app not available: {e}")
