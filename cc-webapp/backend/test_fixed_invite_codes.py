@@ -5,11 +5,13 @@
 새로 설정된 고정 초대코드 (5882, 6969, 6974)로 API 테스트 수행
 """
 
+import pytest
 import requests
 import json
 
 BASE_URL = "http://139.180.155.143:8000"
 
+@pytest.mark.skip(reason="외부 서버 연결 테스트 - 배포 시 제외")
 def test_fixed_invite_codes():
     """고정 초대코드를 사용한 회원가입 테스트"""
     print("🎫 고정 초대코드 테스트 시작")

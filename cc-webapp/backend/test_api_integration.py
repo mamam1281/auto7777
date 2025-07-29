@@ -1,11 +1,13 @@
 """
 Phase D: API 엔드포인트 통합 테스트
 """
+import pytest
 import requests
 import json
 
 BASE_URL = "http://139.180.155.143:8000"  # 실제 백엔드 서버 주소
 
+@pytest.mark.skip(reason="외부 서버 연결 테스트 - 배포 시 제외")
 def test_server_health():
     """서버 상태 확인"""
     print("🏥 서버 헬스체크")
@@ -13,15 +15,16 @@ def test_server_health():
         response = requests.get(f"{BASE_URL}/health")  # '/api/health'에서 '/health'로 수정
         if response.status_code == 200:
             print("✅ 서버 정상 동작")
-            return True
+            assert True
         else:
             print(f"❌ 서버 응답 오류: {response.status_code}")
-            return False
+            assert False
     except Exception as e:
         print(f"❌ 서버 연결 실패: {e}")
-        return False
+        assert False
 
 
+@pytest.mark.skip(reason="외부 서버 연결 테스트 - 배포 시 제외")
 def test_signup_api():
     """회원가입 API 테스트"""
     print("\n📝 회원가입 API 테스트")
