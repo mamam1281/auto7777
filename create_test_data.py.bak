@@ -1,0 +1,57 @@
+# 샘플 데이터 생성 스크립트 (2025-07-29)
+# users, user_segments, user_actions 등 핵심 테이블 샘플 데이터 자동 생성
+
+import random
+from datetime import datetime, timedelta
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), 'cc-webapp', 'backend', 'app'))
+from models import Base, User, UserSegment, UserAction
+
+DB_URL = "postgresql://postgres:postgres@localhost:5432/ccdb"
+engine = create_engine(DB_URL)
+Session = sessionmaker(bind=engine)
+session = Session()
+
+# 샘플 유저 생성
+users = []
+for i in range(10):
+    user = User(
+        site_id=f"site_{i}",
+        nickname=f"user_{i}",
+        phone_number=f"010-0000-00{i:02d}",
+        password_hash="hash",
+        invite_code="ABC123",
+        created_at=datetime.utcnow() - timedelta(days=random.randint(0, 30)),
+        rank=random.choice(["STANDARD", "PREMIUM", "VIP"]),
+    )
+    session.add(user)
+    users.append(user)
+session.commit()
+
+# 샘플 세그먼트 생성
+for user in users:
+    segment = UserSegment(
+        user_id=user.id,
+        rfm_group=random.choice(["Whale", "High Engaged", "Medium", "Low/At-risk"]),
+        risk_profile=random.choice(["Low", "Medium", "High"]),
+        name=f"segment_{user.nickname}"
+    )
+    session.add(segment)
+session.commit()
+
+# 샘플 액션 생성
+for user in users:
+    for j in range(5):
+        action = UserAction(
+            user_id=user.id,
+            action_type=random.choice(["LOGIN", "SLOT_SPIN", "GACHA_SPIN"]),
+            timestamp=datetime.utcnow() - timedelta(hours=random.randint(0, 100)),
+            value=random.uniform(0, 100)
+        )
+        session.add(action)
+session.commit()
+
+print("샘플 데이터 생성 완료!")
