@@ -1,38 +1,47 @@
 version: '3.8'
-
+# 공통 서비스 정의 (dev/prod에서 override)
 services:
-  # PostgreSQL 데이터베이스
   postgres:
     image: postgres:14
+    container_name: cc_postgres
     environment:
       POSTGRES_DB: ${DB_NAME:-cc_webapp}
       POSTGRES_USER: ${DB_USER:-cc_user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-cc_password}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
       # - ./backend/init-db:/docker-entrypoint-initdb.d
     ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-cc_user}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "5432:5432" # dev/prod에서 override 가능
+    networks:
+      - ccnet
 
-  # Redis 캐시
   redis:
-    image: redis:7-alpine
+    image: redis:7
+    container_name: cc_redis
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-  # Kafka (이벤트 스트리밍)
+    networks:
+      - ccnet
+
+  kafka:
+    image: bitnami/kafka:3.5
+    container_name: cc_kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    ports:
+      - "9093:9093"
+    depends_on:
+      - zookeeper
+    networks:
+      - ccnet
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.0.1
     container_name: cc_zookeeper
@@ -42,41 +51,8 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_4LW_COMMANDS_WHITELIST: "*"
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 2181 || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  kafka:
-    image: confluentinc/cp-kafka:7.0.1
-    container_name: cc_kafka
-    ports:
-      - "${KAFKA_HOST_PORT:-9093}:9093"
-    depends_on:
-      zookeeper:
-        condition: service_healthy
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${KAFKA_HOST_PORT:-9093}
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-    volumes:
-      - kafka_data:/var/lib/kafka/data
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9093 || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
+    networks:
+      - ccnet
 
   # Backend API
   backend:
@@ -97,26 +73,26 @@ services:
       DB_NAME: ${DB_NAME:-cc_webapp}
       DB_USER: ${DB_USER:-cc_user}
       DB_PASSWORD: ${DB_PASSWORD:-cc_password}
-      
+
       # Redis 설정
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      
+
       # Kafka 설정
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      
+
       # JWT 설정
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-your-secret-key-here}
       JWT_ALGORITHM: HS256
       JWT_EXPIRE_MINUTES: 30
-      
+
       # 앱 설정
       APP_ENV: ${APP_ENV:-development}
       DEBUG: ${DEBUG:-true}
-      
+
       # 사이버 토큰 설정
       INITIAL_CYBER_TOKENS: 200
-      
+
       # 본사 사이트 연동 설정
       CORPORATE_SITE_URL: ${CORPORATE_SITE_URL:-http://localhost:8080}
       CORPORATE_API_KEY: ${CORPORATE_API_KEY:-test-api-key}
@@ -126,7 +102,7 @@ services:
       - /root/auto7777/backend:/app
       - backend_logs:/app/logs
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -191,7 +167,11 @@ services:
       - /root/auto7777/backend:/app
 
 volumes:
-  postgres_data:
+  pgdata:
   redis_data:
   kafka_data:
   backend_logs:
+
+
+networks:
+  ccnet:

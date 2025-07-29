@@ -4,85 +4,89 @@
 version: '3.8'
 
 services:
-  # PostgreSQL 프로덕션 설정
   postgres:
+    image: postgres:14
+    container_name: cc_postgres
     restart: always
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
       - ./backend/init-db:/docker-entrypoint-initdb.d
-    # 프로덕션에서는 포트 노출 안함
-    ports: []
+    ports: [] # 프로덕션에서는 포트 노출 안함
+    networks:
+      - ccnet
 
-  # Redis 프로덕션 설정
   redis:
+    image: redis:7
+    container_name: cc_redis
     restart: always
-    # 프로덕션에서는 포트 노출 안함
-    ports: []
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
-
-  # Kafka 프로덕션 설정
-  zookeeper:
-    restart: always
+    ports: []
+    volumes:
+      - redis_data:/data
+    networks:
+      - ccnet
 
   kafka:
+    image: bitnami/kafka:3.5
+    container_name: cc_kafka
     restart: always
-    # 프로덕션에서는 포트 노출 안함
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093
+      ALLOW_PLAINTEXT_LISTENER: "yes"
     ports: []
+    depends_on:
+      - zookeeper
+    networks:
+      - ccnet
 
-  # 백엔드 프로덕션 설정
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.0.1
+    container_name: cc_zookeeper
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_4LW_COMMANDS_WHITELIST: "*"
+    ports: []
+    networks:
+      - ccnet
+
   backend:
+    build: ./backend
+    container_name: cc_backend_prod
     restart: always
     environment:
       APP_ENV: production
       DEBUG: false
       PYTHONUNBUFFERED: 1
-      # 데이터베이스 설정
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      # Redis 설정
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      # Kafka 설정
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      # JWT 설정
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9093
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       JWT_ALGORITHM: HS256
       JWT_EXPIRE_MINUTES: 30
-      # 사이버 토큰 설정
       INITIAL_CYBER_TOKENS: 200
-      # 본사 사이트 연동 설정
-      CORPORATE_SITE_URL: ${CORPORATE_SITE_URL}
-      CORPORATE_API_KEY: ${CORPORATE_API_KEY}
-    # 프로덕션에서는 소스 마운트 안함
-    volumes:
-      - backend_logs:/app/logs
-    # 프로덕션에서는 포트 노출 안함 (nginx가 프록시)
-    ports: []
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - ccnet
 
-  # 프론트엔드 프로덕션 설정
-  frontend:
-    restart: always
-    environment:
-      NODE_ENV: production
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
-    # 프로덕션에서는 소스 마운트 안함
-    volumes: []
-    # 프로덕션에서는 포트 노출 안함 (nginx가 프록시)
-    ports: []
-
-  # Celery Worker 프로덕션 설정
-  celery-worker:
-    restart: always
-    environment:
+*** End Patch
       APP_ENV: production
       DEBUG: false
     volumes:

@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:13-alpine
-    container_name: cc_postgres_db
+  postgres:
+    image: postgres:14
+    container_name: cc_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-cc_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cc_password}
@@ -11,7 +11,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5433}:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cc_user} -d ${POSTGRES_DB:-cc_webapp_db}" ]
       interval: 10s
@@ -23,13 +23,13 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: "postgresql://${POSTGRES_USER:-cc_user}:${POSTGRES_PASSWORD:-cc_password}@db:5432/${POSTGRES_DB:-cc_webapp_db}"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-cc_user}:${POSTGRES_PASSWORD:-cc_password}@postgres:5432/${POSTGRES_DB:-cc_webapp_db}"
       JWT_SECRET: ${JWT_SECRET:-dev_secret}
     ports:
       - "${BACKEND_PORT:-8001}:8000"
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
 
 volumes:
-  db_data:
+  pgdata:
