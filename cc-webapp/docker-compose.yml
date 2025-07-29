@@ -9,24 +9,24 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cc_password}
       POSTGRES_DB: ${POSTGRES_DB:-cc_webapp_db}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cc_user} -d ${POSTGRES_DB:-cc_webapp_db}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cc_user} -d ${POSTGRES_DB:-cc_webapp_db}" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
   backend:
     build:
-      context: ./cc-webapp/backend
+      context: ./backend
       dockerfile: Dockerfile
     environment:
       DATABASE_URL: "postgresql://${POSTGRES_USER:-cc_user}:${POSTGRES_PASSWORD:-cc_password}@db:5432/${POSTGRES_DB:-cc_webapp_db}"
       JWT_SECRET: ${JWT_SECRET:-dev_secret}
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "${BACKEND_PORT:-8001}:8000"
     depends_on:
       db:
         condition: service_healthy

@@ -15,6 +15,5 @@ COPY . .
 # 포트 노출
 EXPOSE 8000
 
-# 엔트리포인트 스크립트 복사 및 권한 부여
-RUN chmod +x /app/entrypoint.sh
-ENTRYPOINT ["/app/entrypoint.sh"]
+# 서버 실행
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

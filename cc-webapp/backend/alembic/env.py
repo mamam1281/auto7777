@@ -1,4 +1,7 @@
+
 import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from dotenv import load_dotenv
 load_dotenv() # Load .env file
 
@@ -9,7 +12,10 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from app.models import Base # Import Base from your models
+try:
+    from models import Base
+except ImportError:
+    from app.models import Base
 target_metadata = Base.metadata # Configure Alembic to use your models' metadata
 
 # this is the Alembic Config object, which provides

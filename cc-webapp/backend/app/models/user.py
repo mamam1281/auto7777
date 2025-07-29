@@ -1,10 +1,25 @@
+
+import enum
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
 from app.database import Base
 
+
+from sqlalchemy import Enum as SqlEnum
+
+class UserRankEnum(str, enum.Enum):
+    STANDARD = "STANDARD"
+    VIP = "VIP"
+    PREMIUM = "PREMIUM"
+    ADMIN = "ADMIN"
+
 class User(Base):
+    """
+    User model. 'rank' field now supports: STANDARD, VIP, PREMIUM, ADMIN.
+    Use 'ADMIN' to distinguish admin users for authentication/authorization.
+    """
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -15,8 +30,8 @@ class User(Base):
     invite_code = Column(String(6), nullable=False, index=True)
     cyber_token_balance = Column(Integer, default=200)
     created_at = Column(DateTime, default=datetime.utcnow)
-    rank = Column(String(20), default="STANDARD", nullable=False)
-    
+    rank = Column(SqlEnum(UserRankEnum), default=UserRankEnum.STANDARD, nullable=False)
+
     # Relationships with the admin module
     activities = relationship("UserActivity", back_populates="user")
     rewards = relationship("Reward", back_populates="user", foreign_keys="[Reward.user_id]")
