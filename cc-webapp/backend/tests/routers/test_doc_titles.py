@@ -5,9 +5,9 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 from pathlib import Path
 
-from app.main import app
+import app.main
 
-client = TestClient(app)
+client = TestClient(app.main.app)
 
 
 def test_get_docs_titles_success():
