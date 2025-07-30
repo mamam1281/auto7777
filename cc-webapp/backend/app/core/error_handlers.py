@@ -29,6 +29,14 @@ class InviteCodeException(CasinoClubException):
     def __init__(self, message: str, error_code: str = "INVITE_CODE_ERROR"):
         super().__init__(message, error_code, 400)
 
+class AuthenticationException(CasinoClubException):
+    def __init__(self, message: str, error_code: str = "AUTH_ERROR"):
+        super().__init__(message, error_code, 401)
+
+class AuthorizationException(CasinoClubException):
+    def __init__(self, message: str, error_code: str = "AUTHORIZATION_ERROR"):
+        super().__init__(message, error_code, 403)
+
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)

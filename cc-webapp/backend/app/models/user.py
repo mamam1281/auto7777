@@ -31,6 +31,13 @@ class User(Base):
     cyber_token_balance = Column(Integer, default=200)
     created_at = Column(DateTime, default=datetime.utcnow)
     rank = Column(SqlEnum(UserRankEnum), default=UserRankEnum.STANDARD, nullable=False)
+    
+    # 로그인 관련 필드
+    last_login_at = Column(DateTime, nullable=True)
+    login_count = Column(Integer, default=0)
+    failed_login_attempts = Column(Integer, default=0)
+    account_locked_until = Column(DateTime, nullable=True)
+    password_changed_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships with the admin module
     activities = relationship("UserActivity", back_populates="user")
@@ -45,3 +52,5 @@ class User(Base):
     actions = relationship("UserAction", back_populates="user")
     administered_rewards = relationship("Reward", back_populates="admin", foreign_keys="[Reward.admin_id]")
     site_visits = relationship("SiteVisit", back_populates="user")
+    # 세션 관계
+    sessions = relationship("UserSession", back_populates="user")

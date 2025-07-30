@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
-from jose import jwt, JWTError
+import jwt
 from passlib.context import CryptContext
 import random
 import string
@@ -84,7 +84,7 @@ def get_user_from_token(token: str = Depends(oauth2_scheme)) -> int:
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
         user_id = int(str(payload.get("sub")))
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise credentials_exception
     return user_id
 
@@ -158,25 +158,24 @@ async def signup(data: SignUpRequest, db: Session = Depends(get_db)):
 @router.post("/login", response_model=TokenResponse)
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
     """로그인 처리 - 사이트ID와 비밀번호로 인증"""
-    # 테스트용 계정
-    if data.site_id == "testuser":
-        logger.info("Test login for %s", data.site_id)
-        return TokenResponse(access_token="fake-token")
-
-    # 사이트ID로 사용자 찾기 (새로운 site_id 필드 사용)
-    user = db.query(models.User).filter(
-        models.User.site_id == data.site_id
-    ).first()
-    
+    # 사용자 조회
+    user = db.query(models.User).filter(models.User.site_id == data.site_id).first()
     if not user:
-        logger.warning("Login failed for site_id %s - user not found", data.site_id)
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        logger.warning("Login failed: site_id %s not found", data.site_id)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid site ID or password"
+        )
     
-    # 비밀번호 검증 (password_hash 필드 사용)
-    if not user.password_hash or not pwd_context.verify(data.password, user.password_hash):
-        logger.warning("Login failed for site_id %s - wrong password", data.site_id)
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    # 비밀번호 검증
+    if not pwd_context.verify(data.password, user.password_hash):
+        logger.warning("Login failed: invalid password for site_id %s", data.site_id)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid site ID or password"
+        )
     
+    # JWT 토큰 생성
     access_token = create_access_token({"sub": str(user.id)})
     logger.info("Login success for site_id %s", data.site_id)
     return TokenResponse(access_token=access_token)

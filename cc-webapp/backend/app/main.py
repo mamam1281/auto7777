@@ -77,6 +77,15 @@ try:
 except ImportError as e:
     JWT_AUTH_AVAILABLE = False
     print(f"⚠️ Warning: JWT Auth API not available: {e}")
+
+# 고급 인증 API 임포트 추가
+try:
+    from app.routers import advanced_auth
+    ADVANCED_AUTH_AVAILABLE = True
+    print("✅ 고급 인증 API 모듈 로드 성공")
+except ImportError as e:
+    ADVANCED_AUTH_AVAILABLE = False
+    print(f"⚠️ Warning: Advanced Auth API not available: {e}")
 except Exception as e:
     JWT_AUTH_AVAILABLE = False
     print(f"❌ Error loading JWT Auth API: {e}")
