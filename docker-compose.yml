@@ -97,7 +97,7 @@ services:
       REDIS_PORT: 6379
 
       # Kafka 설정
-      KAFKA_BOOTSTRAP_SERVERS: localhost:9093
+      KAFKA_BOOTSTRAP_SERVERS: cc_kafka:9093
 
       # JWT 설정
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-your-secret-key-here}

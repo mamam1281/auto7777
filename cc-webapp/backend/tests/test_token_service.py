@@ -172,6 +172,14 @@ def test_token_service_full_flow(token_service_with_mocks):
     assert new_balance == 125
     assert mock_user.cyber_token_balance == 125
 
+    # Try to deduct more than available
+    result = service.deduct_tokens(user_id=123, amount=999)
+    assert result is None
+
+    # Try to add negative tokens
+    new_balance = service.add_tokens(user_id=123, amount=-50)
+    assert new_balance == 75  # 125 - 50
+
 
 def test_token_service_error_recovery(token_service_with_mocks):
     """Test error recovery in token operations."""

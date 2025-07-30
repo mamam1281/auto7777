@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.database import Base
 
@@ -12,6 +12,9 @@ class InviteCode(Base):
     is_used = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     used_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, default=lambda: datetime.utcnow() + timedelta(days=30), nullable=True)
+    max_uses = Column(Integer, default=1, nullable=True)
+    use_count = Column(Integer, default=0, nullable=False)
     created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     used_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     

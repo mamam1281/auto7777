@@ -2,7 +2,6 @@
 # docker-compose up 실행 시 자동으로 적용됨
 
 # yaml-language-server: $schema=https://json.schemastore.org/docker-compose.json
-version: '3.8'
 
 services:
   # 백엔드 개발 설정
@@ -13,15 +12,15 @@ services:
       PYTHONUNBUFFERED: 1
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
-      - ./backend:/app:cached # 성능 향상을 위한 cached 옵션
+      - ./cc-webapp/backend:/app:cached # 경로 통일
       - backend_logs:/app/logs
 
   # 프론트엔드 개발 설정
   frontend:
     environment:
       NODE_ENV: development
-      NEXT_PUBLIC_API_URL: http://139.180.155.143:${BACKEND_PORT:-8000}
-      NEXT_PUBLIC_WS_URL: ws://139.180.155.143:${BACKEND_PORT:-8000}
+      NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT:-8000}
+      NEXT_PUBLIC_WS_URL: ws://localhost:${BACKEND_PORT:-8000}
     command: npm run dev
     volumes:
       - ./cc-webapp/frontend:/app:cached

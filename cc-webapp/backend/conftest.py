@@ -4,15 +4,23 @@ Sets up fixtures and configurations for testing.
 """
 import pytest
 import os
-from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from prometheus_client import CollectorRegistry, REGISTRY
 from unittest.mock import patch
+from fastapi.testclient import TestClient
 
+# Set test environment variables
+os.environ["TESTING"] = "true"
+os.environ["DATABASE_URL"] = "sqlite:///./test.db"
+os.environ["LOG_LEVEL"] = "DEBUG"
+os.environ["SECRET_KEY"] = "test-secret-key"
+os.environ["JWT_SECRET"] = "test-jwt-secret"
+os.environ["DISABLE_SCHEDULER"] = "1"
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_environment():
     """Setup test environment configuration."""
-    os.environ["DISABLE_SCHEDULER"] = "1"
     # Clear prometheus registry for tests
     try:
         # Clear existing metrics
@@ -33,6 +41,24 @@ def test_app():
         from app.main import app
         yield app
 
+
+@pytest.fixture(scope="session")
+def test_db_engine():
+    """Create a SQLAlchemy engine for testing"""
+    from app.database import Base
+    engine = create_engine("sqlite:///./test.db")
+    Base.metadata.create_all(engine)
+    yield engine
+    Base.metadata.drop_all(engine)
+
+@pytest.fixture
+def db_session(test_db_engine):
+    """Create a session for each test"""
+    Session = sessionmaker(bind=test_db_engine)
+    session = Session()
+    yield session
+    session.rollback()
+    session.close()
 
 @pytest.fixture
 def client(test_app):

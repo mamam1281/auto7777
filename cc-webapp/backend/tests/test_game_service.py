@@ -76,6 +76,32 @@ class TestGameService:
         self.gacha_service.pull.assert_called_once_with(user_id, count, self.db)
         assert result == expected_result
 
+    def test_slot_spin_error(self):
+        """SlotService에서 예외 발생 시 처리 테스트"""
+        user_id = 1
+        self.slot_service.spin.side_effect = Exception("Slot error")
+        with pytest.raises(Exception) as exc:
+            self.service.slot_spin(user_id, self.db)
+        assert "Slot error" in str(exc.value)
+
+    def test_roulette_spin_error(self):
+        user_id = 1
+        bet = 10
+        bet_type = "color"
+        value = "red"
+        self.roulette_service.spin.side_effect = Exception("Roulette error")
+        with pytest.raises(Exception) as exc:
+            self.service.roulette_spin(user_id, bet, bet_type, value, self.db)
+        assert "Roulette error" in str(exc.value)
+
+    def test_gacha_pull_error(self):
+        user_id = 1
+        count = 10
+        self.gacha_service.pull.side_effect = Exception("Gacha error")
+        with pytest.raises(Exception) as exc:
+            self.service.gacha_pull(user_id, count, self.db)
+        assert "Gacha error" in str(exc.value)
+
     def test_initialization_defaults(self):
         """Test service initializes with default dependencies."""
         # Act

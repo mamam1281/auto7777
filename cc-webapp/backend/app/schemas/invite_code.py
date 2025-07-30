@@ -16,6 +16,9 @@ class InviteCode(InviteCodeBase):
     is_used: bool
     created_at: datetime
     used_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+    max_uses: Optional[int] = 1
+    use_count: int = 0
     created_by_user_id: Optional[int] = None
     used_by_user_id: Optional[int] = None
 
@@ -25,6 +28,9 @@ class InviteCodeResponse(BaseModel):
     is_used: bool
     created_at: datetime
     used_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+    max_uses: Optional[int] = 1
+    use_count: int = 0
 
 # Add InviteCodeList for listing multiple invite codes
 class InviteCodeList(BaseModel):

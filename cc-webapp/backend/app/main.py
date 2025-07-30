@@ -65,7 +65,8 @@ from app.routers import (
     corporate,  # 추가
     users,  # 추가
     recommendation,  # 추가된 임포트
-    doc_titles  # 추가
+    doc_titles,  # 추가
+    invite_router  # 초대코드 관련 API 추가
 )
 
 # JWT 인증 API 임포트 추가
@@ -118,10 +119,8 @@ from app.core.logging import setup_logging, LoggingContextMiddleware
 from app.core.error_handlers import add_exception_handlers, error_handling_middleware
 
 # 로깅 시스템 초기화
-setup_logging(
-    development_mode=os.getenv("ENVIRONMENT", "development") != "production",
-    log_file=os.getenv("LOG_FILE")
-)
+log_level = "DEBUG" if os.getenv("ENVIRONMENT", "development") != "production" else "INFO"
+setup_logging(level=log_level)
 
 from contextlib import asynccontextmanager
 
@@ -172,10 +171,10 @@ origins = [
 add_exception_handlers(app)
 
 # 에러 핸들링 미들웨어 등록
-error_handling_middleware(app)
+app.add_middleware(error_handling_middleware)
 
 # 로깅 컨텍스트 미들웨어 등록
-app.middleware("http")(LoggingContextMiddleware())
+app.add_middleware(LoggingContextMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -210,6 +209,7 @@ app.include_router(corporate.router, prefix="/api")  # 추가
 app.include_router(users.router, prefix="/api")  # 추가
 app.include_router(recommendation.router, prefix="/api")  # 추가된 라우터 등록
 app.include_router(doc_titles.router)  # prefix 없이 등록하여 /docs/titles 직접 접근 가능
+app.include_router(invite_router.router)  # 초대코드 유효성 검증 API 추가 (이미 /api/invite prefix 포함)
 
 # JWT 인증 API 라우터 등록
 if JWT_AUTH_AVAILABLE:
