@@ -54,3 +54,9 @@ class User(Base):
     site_visits = relationship("SiteVisit", back_populates="user")
     # 세션 관계
     sessions = relationship("UserSession", back_populates="user")
+    
+    # Mission system relationships
+    mission_progress = relationship("UserMissionProgress", back_populates="user")
+    
+    # Profile image/avatar relationships
+    profile_images = relationship("UserProfileImage", back_populates="user")

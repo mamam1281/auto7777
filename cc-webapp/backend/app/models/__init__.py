@@ -11,5 +11,14 @@ from app.models.user_session import UserSession, LoginAttempt, BlacklistedToken
 from app.models.user_segment import UserSegment
 from app.models.adult_content import AdultContent
 from app.models.vip_access_log import VIPAccessLog
+
+# Mission system
+from app.models.mission import Mission
+from app.models.user_mission_progress import UserMissionProgress
+
+# Avatar/Profile system
+from app.models.avatar import Avatar
+from app.models.user_profile_image import UserProfileImage
+
 from app.database import Base
 

@@ -139,7 +139,7 @@ async def get_user_profile(
                 UserMissionProgress.user_id == target_user.id,
                 UserMissionProgress.is_completed == False,
                 Mission.is_active == True
-            ).order_by(Mission.priority.desc(), Mission.created_at.asc()).limit(10).all()
+            ).order_by(Mission.created_at.asc()).limit(10).all()
             
             active_missions = []
             for progress in mission_progress:
@@ -155,11 +155,8 @@ async def get_user_profile(
                     "progress_percentage": min(100, progress_percentage),
                     "reward_type": mission.reward_type,
                     "reward_amount": mission.reward_amount,
-                    "reward_description": mission.reward_description,
                     "is_completed": progress.is_completed,
-                    "is_claimed": progress.is_claimed,
-                    "is_daily": mission.is_daily,
-                    "is_weekly": mission.is_weekly
+                    "is_claimed": progress.is_claimed
                 })
             
             profile_data["active_missions"] = active_missions
@@ -167,7 +164,7 @@ async def get_user_profile(
         # 프로필 이미지 정보 추가
         profile_image = db.query(UserProfileImage).filter(
             UserProfileImage.user_id == target_user.id,
-            UserProfileImage.is_active == True
+            UserProfileImage.is_current == True
         ).first()
         
         if profile_image:
@@ -186,7 +183,7 @@ async def get_user_profile(
                 if avatar:
                     image_info["image_url"] = avatar.image_url
                     image_info["avatar_name"] = avatar.name
-                    image_info["avatar_category"] = avatar.category
+                    image_info["avatar_category"] = getattr(avatar, "category", "basic")  # 기본값 사용
                     image_info["image_type"] = "avatar"
             
             profile_data["profile_image"] = image_info
@@ -331,7 +328,7 @@ async def get_user_missions(
     mission_progress = db.query(UserMissionProgress).join(Mission).filter(
         UserMissionProgress.user_id == target_user.id,
         Mission.is_active == True
-    ).order_by(Mission.priority.desc(), Mission.created_at.asc()).all()
+    ).order_by(Mission.created_at.asc()).all()
     
     missions = []
     for progress in mission_progress:
@@ -347,11 +344,8 @@ async def get_user_missions(
             "progress_percentage": min(100, progress_percentage),
             "reward_type": mission.reward_type,
             "reward_amount": mission.reward_amount,
-            "reward_description": mission.reward_description,
             "is_completed": progress.is_completed,
             "is_claimed": progress.is_claimed,
-            "is_daily": mission.is_daily,
-            "is_weekly": mission.is_weekly,
             "completed_at": progress.completed_at.isoformat() if progress.completed_at else None,
             "claimed_at": progress.claimed_at.isoformat() if progress.claimed_at else None
         })
@@ -418,14 +412,14 @@ async def claim_mission_reward(
         # TODO: 다른 보상 타입들 구현 (premium_gem, item 등)
         
         # 보상 수령 상태 업데이트
-        progress.is_claimed = True
+        progress.status = "claimed"
         progress.claimed_at = datetime.utcnow()
         
         db.commit()
         
         return {
             "success": True,
-            "message": f"보상을 수령했습니다: {mission.reward_description}",
+            "message": f"보상을 수령했습니다: {mission.reward_type} {mission.reward_amount}개",
             "reward_type": mission.reward_type,
             "reward_amount": mission.reward_amount,
             "new_balance": target_user.cyber_token_balance if mission.reward_type == "cyber_token" else None
