@@ -11,14 +11,14 @@ interface ProfileInfoProps {
   onLogout?: () => void;
 }
 
-export default function ProfileInfo({ 
+export default function ProfileInfo({
   user,
   onLogout = () => console.log('Logout clicked')
 }: ProfileInfoProps) {
   // Mock user data if not provided
   const defaultUser: User = {
     id: 1,
-    nickname: 'GameMaster',
+    nickname: '모델지민',
     cyber_token_balance: 1500,
     rank: 'PREMIUM',
     level: 15,

@@ -9,11 +9,11 @@ import type { User, ProfileContainerProps, Mission } from './types';
 import '../../styles/profile-mobile.css';
 
 export default function ProfileContainer({ className = '' }: ProfileContainerProps) {
-  
+
   // Mock user data
   const [user] = useState<User>({
     id: 1,
-    nickname: 'GameMaster',
+    nickname: '모델지민',
     cyber_token_balance: 1500,
     rank: 'PREMIUM',
     level: 15,
@@ -83,7 +83,7 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
       <div className="w-full max-w-sm min-h-screen mx-auto px-4 pt-6 pb-8 
                       overflow-y-auto overscroll-y-contain
                       scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
-           style={{ maxWidth: '420px' }}>
+        style={{ maxWidth: '420px' }}>
 
         {/* 메인 컨텐츠 - 더 넓은 간격 */}
         <main className="space-y-8">
@@ -101,7 +101,7 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
           <section>
             <div className="space-y-6">
               <h3 className="text-xl font-bold text-white px-4">오늘의 미션</h3>
-              <MissionCards 
+              <MissionCards
                 missions={missions}
                 onMissionClick={handleMissionClick}
                 onVisitSite={handleVisitSite}

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>프로필 API 테스트</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffe6e6; }
+        .success { background: #e6ffe6; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>프로필 API 테스트</h1>
+    
+    <div id="results"></div>
+    
+    <button onclick="testSignup()">1. 회원가입 테스트</button>
+    <button onclick="testProfile()">2. 프로필 조회 테스트</button>
+    <button onclick="testOtherProfile()">3. 타인 프로필 테스트</button>
+    <button onclick="testStats()">4. 통계 조회 테스트</button>
+    <button onclick="testUnauthorized()">5. 인증 없이 접근 테스트</button>
+    
+    <script>
+        let authToken = '';
+        let userId = '';
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        async function testSignup() {
+            try {
+                const timestamp = Date.now().toString();
+                const response = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        site_id: `test_${timestamp}`,
+                        nickname: `테스트유저${timestamp.slice(-4)}`,
+                        phone_number: `010-${timestamp.slice(-4)}-${timestamp.slice(-4)}`,
+                        password: 'testpass123',
+                        invite_code: '6969'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.access_token;
+                    log(`✅ 회원가입 성공! 토큰: ${authToken.substring(0, 20)}...`, 'success');
+                } else {
+                    log(`❌ 회원가입 실패 (${response.status}): ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 회원가입 예외: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testProfile() {
+            if (!authToken) {
+                log('❌ 먼저 회원가입을 해주세요', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/users/me/profile', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    userId = data.id;
+                    log(`✅ 프로필 조회 성공!<br>
+                         - ID: ${data.id}<br>
+                         - 닉네임: ${data.nickname}<br>
+                         - 사이버 토큰: ${data.cyber_token_balance}<br>
+                         - 등급: ${data.rank}<br>
+                         - 민감정보 포함: ${data.phone_number ? '예' : '아니오'}`, 'success');
+                } else {
+                    log(`❌ 프로필 조회 실패 (${response.status}): ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 프로필 조회 예외: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testOtherProfile() {
+            if (!authToken || !userId) {
+                log('❌ 먼저 본인 프로필을 조회해주세요', 'error');
+                return;
+            }
+            
+            try {
+                const otherUserId = userId + 1;
+                const response = await fetch(`/api/users/${otherUserId}/profile`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ 타인 프로필 조회 성공!<br>
+                         - 닉네임: ${data.nickname}<br>
+                         - 민감정보 숨김: ${!data.phone_number ? '정상' : '문제'}`, 
+                         !data.phone_number ? 'success' : 'error');
+                } else if (response.status === 404) {
+                    log(`✅ 존재하지 않는 사용자 접근 차단 (404)`, 'success');
+                } else if (response.status === 403) {
+                    log(`✅ 타인 프로필 접근 권한 차단 (403)`, 'success');
+                } else {
+                    log(`❌ 타인 프로필 조회 실패 (${response.status}): ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 타인 프로필 조회 예외: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testStats() {
+            if (!authToken) {
+                log('❌ 먼저 회원가입을 해주세요', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/users/me/stats', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ 통계 조회 성공!<br>
+                         - 총 액션: ${data.total_actions}<br>
+                         - 총 보상: ${data.total_rewards}<br>
+                         - 플레이 시간: ${data.play_time_minutes}분`, 'success');
+                } else {
+                    log(`❌ 통계 조회 실패 (${response.status}): ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 통계 조회 예외: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testUnauthorized() {
+            try {
+                const response = await fetch('/api/users/me/profile');
+                const data = await response.json();
+                
+                if (response.status === 401 || response.status === 422) {
+                    log(`✅ 인증되지 않은 접근 차단 (${response.status})`, 'success');
+                } else {
+                    log(`❌ 인증 없이 접근 가능 (${response.status}): ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 무인증 접근 테스트 예외: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -39,7 +39,7 @@ class UserStatsResponse(BaseModel):
 @router.get("/users/{user_id}/profile", response_model=UserProfileResponse, tags=["Users"])
 async def get_user_profile(
     user_id: str,  # "me" 또는 실제 사용자 ID
-    current_user: User = Depends(get_user_from_token),
+    current_user_id: int = Depends(get_user_from_token),
     db: Session = Depends(get_db)
 ):
     """
@@ -54,57 +54,77 @@ async def get_user_profile(
     - 관리자: 모든 사용자 정보 조회 가능
     """
     
-    # "me"인 경우 현재 사용자로 설정
-    if user_id == "me":
-        target_user = current_user
-        is_self = True
-    else:
-        # 숫자 ID인 경우 해당 사용자 조회
-        try:
-            target_user_id = int(user_id)
-        except ValueError:
+    try:
+        # 현재 사용자 객체 가져오기
+        current_user = db.query(User).filter(User.id == current_user_id).first()
+        if not current_user:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="올바르지 않은 사용자 ID 형식입니다"
-            )
-            
-        target_user = db.query(User).filter(User.id == target_user_id).first()
-        if not target_user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="사용자를 찾을 수 없습니다"
             )
-        is_self = current_user.id == target_user_id
+        
+        # "me"인 경우 현재 사용자로 설정
+        if user_id == "me":
+            target_user = current_user
+            is_self = True
+        else:
+            # 숫자 ID인 경우 해당 사용자 조회
+            try:
+                target_user_id = int(user_id)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="올바르지 않은 사용자 ID 형식입니다"
+                )
+                
+            target_user = db.query(User).filter(User.id == target_user_id).first()
+            if not target_user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="사용자를 찾을 수 없습니다"
+                )
+            is_self = current_user.id == target_user_id
+        
+        # 권한 확인
+        is_admin = current_user.rank == "ADMIN"
+        
+        # 응답 데이터 구성
+        profile_data = {
+            "id": target_user.id,
+            "site_id": target_user.site_id,
+            "nickname": target_user.nickname,
+            "cyber_token_balance": target_user.cyber_token_balance,
+            "rank": target_user.rank,
+            "created_at": target_user.created_at.isoformat() if target_user.created_at else None,
+            "last_login_at": target_user.last_login_at.isoformat() if target_user.last_login_at else None,
+            "login_count": target_user.login_count
+        }
+        
+        # 민감 정보는 본인이거나 관리자일 때만 포함
+        if is_self or is_admin:
+            profile_data.update({
+                "phone_number": target_user.phone_number,
+                "invite_code": target_user.invite_code,
+                "failed_login_attempts": target_user.failed_login_attempts
+            })
+        
+        return profile_data
     
-    # 권한 확인
-    is_admin = current_user.rank.value == "ADMIN"
-    
-    # 응답 데이터 구성
-    profile_data = {
-        "id": target_user.id,
-        "site_id": target_user.site_id,
-        "nickname": target_user.nickname,
-        "cyber_token_balance": target_user.cyber_token_balance,
-        "rank": target_user.rank.value,
-        "created_at": target_user.created_at.isoformat() if target_user.created_at else None,
-        "last_login_at": target_user.last_login_at.isoformat() if target_user.last_login_at else None,
-        "login_count": target_user.login_count
-    }
-    
-    # 민감 정보는 본인이거나 관리자일 때만 포함
-    if is_self or is_admin:
-        profile_data.update({
-            "phone_number": target_user.phone_number,
-            "invite_code": target_user.invite_code,
-            "failed_login_attempts": target_user.failed_login_attempts
-        })
-    
-    return profile_data
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        print(f"Profile API error: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"프로필 조회 중 오류 발생: {str(e)}"
+        )
 
 @router.get("/users/{user_id}/stats", response_model=UserStatsResponse, tags=["Users"])
 async def get_user_stats(
     user_id: str,  # "me" 또는 실제 사용자 ID
-    current_user: User = Depends(get_user_from_token),
+    current_user_id: int = Depends(get_user_from_token),
     db: Session = Depends(get_db)
 ):
     """
@@ -115,6 +135,14 @@ async def get_user_stats(
     
     권한: 본인이거나 관리자만 조회 가능
     """
+    
+    # 현재 사용자 객체 가져오기
+    current_user = db.query(User).filter(User.id == current_user_id).first()
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="사용자를 찾을 수 없습니다"
+        )
     
     # "me"인 경우 현재 사용자로 설정
     if user_id == "me":
@@ -139,7 +167,7 @@ async def get_user_stats(
         is_self = current_user.id == target_user_id
     
     # 권한 확인 (본인이거나 관리자만)
-    is_admin = current_user.rank.value == "ADMIN"
+    is_admin = current_user.rank == "ADMIN"
     
     if not (is_self or is_admin):
         raise HTTPException(

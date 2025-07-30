@@ -12,7 +12,7 @@ import '../../styles/profile-mobile.css';
 export default function ProfileContainerMobile(props: ProfileContainerProps) {
   const [user, setUser] = useState<User>({
     id: 1,
-    nickname: "Player123",
+    nickname: "모델지민",
     cyber_token_balance: 15420,
     level: 15,
     experience: 2350,
@@ -46,20 +46,20 @@ export default function ProfileContainerMobile(props: ProfileContainerProps) {
   ]);
 
   return (
-    <div className="profile-mobile-layout">
+    <div className="profile-mobile-layout bg-transparent">
       <div className="w-full">
         <div className="profile-mobile-header">
           <ProfileHeader user={user} />
         </div>
-        
+
         <div className="profile-mobile-stats">
           <ProfileStats user={user} />
         </div>
-        
+
         <div className="profile-mobile-missions">
           <MissionCards missions={missions} />
         </div>
-        
+
         <div className="profile-mobile-actions">
           <ProfileActions />
         </div>

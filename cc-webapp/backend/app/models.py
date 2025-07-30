@@ -87,15 +87,24 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)    # 랭크 시스템 - VIP, PREMIUM, STANDARD 등
     rank = Column(String(20), default="STANDARD", nullable=False)
 
+    # 기존 관계들
     actions = relationship("UserAction", back_populates="user")
     segment = relationship("UserSegment", uselist=False, back_populates="user") # One-to-one
-    # rewards = relationship("UserReward", back_populates="user", primaryjoin="User.id == UserReward.user_id")  # 임시 비활성화
     site_visits = relationship("SiteVisit", back_populates="user")
     notifications = relationship("Notification", back_populates="user")
 
     # Relationships for new models
     flash_offers = relationship("FlashOffer", back_populates="user")
     vip_access_logs = relationship("VIPAccessLog", back_populates="user")
+    
+    # 새로운 관계들 - 미션 및 프로필
+    mission_progress = relationship("UserMissionProgress", back_populates="user")
+    profile_image = relationship("UserProfileImage", uselist=False, back_populates="user")
+
+    # 추가 필드들 (기존 User 필드에 추가)
+    last_login_at = Column(DateTime, nullable=True)
+    login_count = Column(Integer, default=0)
+    failed_login_attempts = Column(Integer, default=0)
 
 class UserAction(Base):
     __tablename__ = "user_actions"

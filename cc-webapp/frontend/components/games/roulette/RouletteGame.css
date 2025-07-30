@@ -1,5 +1,17 @@
 /* 룰렛 게임 프리미엄 스타일 */
-.roulette-game-container,
+.roulette-game-container {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 600px;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: visible;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
 .roulette-popup-container {
   position: relative;
   width: 100%;
@@ -10,21 +22,24 @@
   align-items: center;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-}
-
-.roulette-popup-container {
   height: calc(var(--vh, 1vh) * 100);
-  max-width: 600px;
+  max-width: 420px;
   margin: 0 auto;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
-/* 네온 백그라운드 효과 */
-.roulette-background-effects {
+/* 네온 백그라운드 효과 - 팝업에서만 표시 */
+.roulette-popup-container .roulette-background-effects {
   position: absolute;
   width: 100%;
   height: 100%;
   pointer-events: none;
   overflow: hidden;
+}
+
+.roulette-game-container .roulette-background-effects {
+  display: none;
 }
 
 .neon-circle {
@@ -62,15 +77,34 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -30px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
 }
 
 /* 상단 헤더 */
-.roulette-header {
+.roulette-game-container .roulette-header {
   width: 100%;
-  padding: 20px;
+  padding: 0;
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom: none;
+  z-index: 10;
+}
+
+.roulette-popup-container .roulette-header {
+  width: 100%;
+  padding: 10px;
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -84,6 +118,10 @@
   flex-wrap: wrap;
 }
 
+.roulette-popup-container .user-stats {
+  gap: 10px;
+}
+
 .stat-item {
   display: flex;
   align-items: center;
@@ -93,6 +131,11 @@
   border-radius: 25px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
+}
+
+.roulette-popup-container .stat-item {
+  padding: 6px 12px;
+  gap: 4px;
 }
 
 .stat-item:hover {
@@ -117,6 +160,19 @@
   margin-left: 5px;
 }
 
+.roulette-popup-container .stat-icon {
+  font-size: 20px;
+}
+
+.roulette-popup-container .stat-value {
+  font-size: 16px;
+}
+
+.roulette-popup-container .stat-label {
+  font-size: 10px;
+  margin-left: 3px;
+}
+
 .spins-left {
   background: linear-gradient(135deg, rgba(123, 41, 205, 0.2) 0%, rgba(91, 48, 246, 0.2) 100%);
   border-color: rgba(123, 41, 205, 0.3);
@@ -125,15 +181,23 @@
 /* 룰렛 휠 컨테이너 */
 .roulette-wheel-container {
   position: relative;
-  width: 400px;
-  height: 400px;
-  margin: 40px auto;
+  width: 450px;
+  height: 450px;
+  margin: 20px auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 400px;
-  min-height: 400px;
+  min-width: 450px;
+  min-height: 450px;
   overflow: visible;
+}
+
+.roulette-popup-container .roulette-wheel-container {
+  width: 340px;
+  height: 340px;
+  margin: 20px auto;
+  min-width: 340px;
+  min-height: 340px;
 }
 
 /* 룰렛 포인터 */
@@ -153,8 +217,15 @@
 }
 
 @keyframes pointer-glow {
-  0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8)); }
-  50% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 1)); }
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 1));
+  }
 }
 
 /* 룰렛 휠 */
@@ -168,7 +239,7 @@
   overflow: visible;
   transform-origin: center center;
   transform-box: fill-box;
-  box-shadow: 
+  box-shadow:
     0 0 50px rgba(0, 0, 0, 0.5),
     inset 0 0 50px rgba(0, 0, 0, 0.3),
     0 0 100px rgba(123, 41, 205, 0.3);
@@ -202,6 +273,15 @@
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
 }
 
+/* 팝업에서 세그먼트 텍스트 크기 조정 */
+.roulette-popup-container .segment-icon-text {
+  font-size: 16px !important;
+}
+
+.roulette-popup-container .segment-label-text {
+  font-size: 8px !important;
+}
+
 .roulette-wheel.spinning {
   animation: wheel-glow 3s ease-in-out;
 }
@@ -211,13 +291,27 @@
 }
 
 @keyframes wheel-glow {
-  0%, 100% { box-shadow: 0 0 50px rgba(0, 0, 0, 0.5), inset 0 0 50px rgba(0, 0, 0, 0.3), 0 0 100px rgba(123, 41, 205, 0.3); }
-  50% { box-shadow: 0 0 80px rgba(0, 0, 0, 0.5), inset 0 0 50px rgba(0, 0, 0, 0.3), 0 0 150px rgba(255, 69, 22, 0.5); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5), inset 0 0 50px rgba(0, 0, 0, 0.3), 0 0 100px rgba(123, 41, 205, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 80px rgba(0, 0, 0, 0.5), inset 0 0 50px rgba(0, 0, 0, 0.3), 0 0 150px rgba(255, 69, 22, 0.5);
+  }
 }
 
 @keyframes jackpot-pulse {
-  0%, 100% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.5); }
-  50% { box-shadow: 0 0 100px rgba(255, 215, 0, 0.8); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 100px rgba(255, 215, 0, 0.8);
+  }
 }
 
 /* 티어별 호버 효과 */
@@ -246,8 +340,15 @@
 }
 
 @keyframes jackpot-segment-pulse {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.2); }
+
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.2);
+  }
 }
 
 /* 스핀 버튼 */
@@ -256,13 +357,13 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   background: linear-gradient(135deg, #7C3AED 0%, #5B30F6 100%);
   border: 4px solid #FFD700;
   color: white;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   display: flex;
   flex-direction: column;
@@ -271,20 +372,24 @@
   gap: 5px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-  box-shadow: 
+  box-shadow:
     0 5px 25px rgba(123, 41, 205, 0.5),
     inset 0 -2px 10px rgba(0, 0, 0, 0.3);
   z-index: 50;
-  /* 버튼 위치 고정 */
   pointer-events: all;
-  /* 위치 절대 고정 */
   will-change: transform;
   transform-style: preserve-3d;
 }
 
+.roulette-popup-container .roulette-spin-button {
+  width: 100px;
+  height: 100px;
+  font-size: 18px;
+}
+
 .roulette-spin-button:hover:not(.disabled):not(.spinning) {
   transform: translate(-50%, -50%) scale(1.05);
-  box-shadow: 
+  box-shadow:
     0 10px 40px rgba(123, 41, 205, 0.7),
     inset 0 -2px 10px rgba(0, 0, 0, 0.3);
 }
@@ -300,8 +405,15 @@
 }
 
 @keyframes button-pulse {
-  0%, 100% { box-shadow: 0 5px 25px rgba(123, 41, 205, 0.5); }
-  50% { box-shadow: 0 10px 40px rgba(123, 41, 205, 0.8); }
+
+  0%,
+  100% {
+    box-shadow: 0 5px 25px rgba(123, 41, 205, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 10px 40px rgba(123, 41, 205, 0.8);
+  }
 }
 
 .roulette-spin-button.disabled {
@@ -313,22 +425,41 @@
 }
 
 @keyframes button-pulse {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.05); }
+
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.05);
+  }
 }
 
 .button-icon {
-  font-size: 32px;
+  font-size: 36px;
 }
 
 .button-text {
-  font-size: 16px;
+  font-size: 18px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
+.roulette-popup-container .button-icon {
+  font-size: 24px;
+}
+
+.roulette-popup-container .button-text {
+  font-size: 14px;
+}
+
 .spin-loader {
-  font-size: 32px;
+  font-size: 36px;
+}
+
+.roulette-popup-container .spin-loader {
+  font-size: 24px;
 }
 
 /* 히스토리 */
@@ -341,6 +472,12 @@
   backdrop-filter: blur(10px);
   border-radius: 15px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.roulette-popup-container .roulette-history {
+  margin: 15px auto;
+  padding: 15px;
+  max-width: 380px;
 }
 
 .history-title {
@@ -446,8 +583,15 @@
 }
 
 @keyframes jackpot-modal-glow {
-  0%, 100% { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 50px rgba(255, 215, 0, 0.3); }
-  50% { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 100px rgba(255, 215, 0, 0.5); }
+
+  0%,
+  100% {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 50px rgba(255, 215, 0, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 100px rgba(255, 215, 0, 0.5);
+  }
 }
 
 .jackpot-particles {
@@ -478,9 +622,17 @@
 }
 
 @keyframes result-icon-bounce {
-  0% { transform: scale(0) rotate(0deg); }
-  50% { transform: scale(1.2) rotate(180deg); }
-  100% { transform: scale(1) rotate(360deg); }
+  0% {
+    transform: scale(0) rotate(0deg);
+  }
+
+  50% {
+    transform: scale(1.2) rotate(180deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(360deg);
+  }
 }
 
 .result-title {
@@ -553,47 +705,78 @@
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .roulette-wheel-container {
-    width: 320px;
-    height: 320px;
+    width: 380px;
+    height: 380px;
   }
-  
+
+  .roulette-popup-container .roulette-wheel-container {
+    width: 280px;
+    height: 280px;
+  }
+
   .roulette-spin-button {
-    width: 100px;
-    height: 100px;
-    font-size: 18px;
+    width: 120px;
+    height: 120px;
+    font-size: 20px;
   }
-  
+
+  .roulette-popup-container .roulette-spin-button {
+    width: 80px;
+    height: 80px;
+    font-size: 16px;
+  }
+
   .button-icon {
-    font-size: 24px;
+    font-size: 28px;
   }
-  
+
+  .roulette-popup-container .button-icon {
+    font-size: 20px;
+  }
+
   .button-text {
-    font-size: 12px;
+    font-size: 14px;
   }
-  
+
+  .roulette-popup-container .button-text {
+    font-size: 10px;
+  }
+
   .segment-icon {
     font-size: 16px;
   }
-  
+
   .segment-label {
     font-size: 8px;
   }
-  
+
   .segment-content {
     top: 12%;
     left: 8%;
   }
-  
+
   .stat-item {
     padding: 8px 16px;
   }
-  
+
+  .roulette-popup-container .stat-item {
+    padding: 6px 10px;
+  }
+
   .stat-icon {
     font-size: 20px;
   }
-  
+
+  .roulette-popup-container .stat-icon {
+    font-size: 18px;
+  }
+
   .stat-value {
     font-size: 16px;
+  }
+
+  .roulette-popup-container .stat-value {
+    font-size: 14px;
   }
 }
 
@@ -602,37 +785,37 @@
     width: 280px;
     height: 280px;
   }
-  
+
   .roulette-spin-button {
     width: 80px;
     height: 80px;
     font-size: 16px;
   }
-  
+
   .button-icon {
     font-size: 20px;
   }
-  
+
   .button-text {
     font-size: 10px;
   }
-  
+
   .segment-icon {
     font-size: 14px;
   }
-  
+
   .segment-label {
     font-size: 7px;
   }
-  
+
   .user-stats {
     gap: 15px;
   }
-  
+
   .result-content {
     padding: 30px 20px;
   }
-  
+
   .roulette-pointer {
     border-left: 12px solid transparent;
     border-right: 12px solid transparent;

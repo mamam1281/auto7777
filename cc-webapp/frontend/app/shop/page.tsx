@@ -38,13 +38,13 @@ export default function ShopPage() {
   return (
     <div className="shop-dashboard w-full max-w-[420px] mx-auto min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
       <motion.header
-        className="p-12 text-center relative z-20"
+        className="py-[var(--app-header-padding-y)] text-center relative z-20"
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut" }}
       >
         <motion.h1
-          className="text-4xl font-extrabold tracking-wide text-pink-400 drop-shadow-lg text-center"
+          className="heading-h1 text-pink-400 drop-shadow-lg text-center"
           whileHover={{ scale: 1.03 }}
         >
           상점

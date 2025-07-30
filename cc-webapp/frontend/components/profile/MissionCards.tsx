@@ -15,36 +15,36 @@ interface MissionCardsProps {
   onVisitSite?: () => void;
 }
 
-export default function MissionCards({ 
-  missions, 
+export default function MissionCards({
+  missions,
   onMissionClick,
-  onVisitSite 
+  onVisitSite
 }: MissionCardsProps) {
   const getMissionTypeColor = (type: Mission['type']) => {
     switch (type) {
       case 'DAILY':
         return {
-          bg: 'from-gray-800/95 to-gray-900/95',
-          border: 'border-gray-600/40',
-          text: 'text-gray-200',
+          bg: 'from-black/80 to-gray-900/80',
+          border: 'border-pink-500/30',
+          text: 'text-pink-200',
           icon: '📅',
-          glow: 'shadow-gray-600/20'
+          glow: 'shadow-pink-500/20'
         };
       case 'WEEKLY':
         return {
-          bg: 'from-gray-800/95 to-gray-900/95',
-          border: 'border-gray-600/40',
-          text: 'text-gray-200',
+          bg: 'from-black/80 to-gray-900/80',
+          border: 'border-purple-500/30',
+          text: 'text-purple-200',
           icon: '📊',
-          glow: 'shadow-gray-600/20'
+          glow: 'shadow-purple-500/20'
         };
       case 'SPECIAL':
         return {
-          bg: 'from-gray-800/95 to-gray-900/95',
-          border: 'border-yellow-500/40',
-          text: 'text-yellow-200',
+          bg: 'from-black/80 to-gray-900/80',
+          border: 'border-indigo-500/30',
+          text: 'text-indigo-200',
           icon: '⭐',
-          glow: 'shadow-yellow-500/20'
+          glow: 'shadow-indigo-500/20'
         };
       default:
         return {
@@ -85,14 +85,14 @@ export default function MissionCards({
               className="w-full"
             >
               {/* 데일리 모달과 동일한 카드 스타일 - 고정 높이 적용 */}
-              <div 
+              <div
                 className={`
                   rounded-xl min-h-[250px] relative overflow-hidden bg-gray-800/95 
                   backdrop-blur-sm border border-gray-600/50 shadow-lg w-full
                   cursor-pointer transition-all duration-300 flex flex-col
                   ${isCompleted ? 'opacity-75' : 'hover:shadow-xl hover:shadow-gray-600/20'}
                 `}
-                style={{ 
+                style={{
                   padding: '24px',
                   maxWidth: '100% !important',
                   width: '100% !important'
@@ -110,14 +110,14 @@ export default function MissionCards({
                                      border border-gray-600/50 flex items-center justify-center shadow-lg flex-shrink-0">
                         <span className="text-base">{colors.icon}</span>
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-white leading-tight mb-1 whitespace-nowrap overflow-hidden text-ellipsis" 
-                            style={{ fontSize: '16px' }}>
+                        <h4 className="font-bold text-white leading-tight mb-1 whitespace-nowrap overflow-hidden text-ellipsis"
+                          style={{ fontSize: '16px' }}>
                           {mission.title}
                         </h4>
-                        <p className="text-white/90 leading-tight font-medium whitespace-nowrap overflow-hidden text-ellipsis" 
-                           style={{ fontSize: '12px' }}>
+                        <p className="text-white/90 leading-tight font-medium whitespace-nowrap overflow-hidden text-ellipsis"
+                          style={{ fontSize: '12px' }}>
                           {mission.description}
                         </p>
                       </div>
@@ -130,10 +130,10 @@ export default function MissionCards({
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ type: 'spring', stiffness: 500 }}
-                          className="w-8 h-8 rounded-full bg-green-500/30 border border-green-500/50 
+                          className="w-8 h-8 rounded-full bg-pink-500/30 border border-pink-500/50 
                                      flex items-center justify-center"
                         >
-                          <CheckCircle className="w-5 h-5 text-green-400" />
+                          <CheckCircle className="w-5 h-5 text-pink-400" />
                         </motion.div>
                       ) : null}
                     </div>
@@ -145,32 +145,32 @@ export default function MissionCards({
                         <span className={`font-bold ${colors.text} px-3 py-2 rounded-lg 
                                         bg-gradient-to-br from-white/20 to-white/5 border-2 border-white/30 
                                         shadow-[inset_0_1px_0_0_rgba(255,255,255,0.3),0_2px_4px_rgba(0,0,0,0.3)] 
-                                        whitespace-nowrap transform hover:scale-105 transition-all duration-200`} 
-                              style={{ fontSize: '12px' }}>
+                                        whitespace-nowrap transform hover:scale-105 transition-all duration-200`}
+                          style={{ fontSize: '12px' }}>
                           {mission.progress}/{mission.target}
                         </span>
                       </div>
-                      
-                      <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-yellow-500/30 to-orange-500/20 
-                                     border-2 border-yellow-400/40 
+
+                      <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-pink-500/30 to-purple-500/20 
+                                     border-2 border-pink-400/40 
                                      shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_3px_6px_rgba(0,0,0,0.4)] 
                                      transform hover:scale-105 transition-all duration-200">
                         <span className="text-lg">💎</span>
-                        <span className="font-bold text-yellow-200 whitespace-nowrap drop-shadow-lg" style={{ fontSize: '12px' }}>
+                        <span className="font-bold text-pink-200 whitespace-nowrap drop-shadow-lg" style={{ fontSize: '12px' }}>
                           +{mission.reward.amount}
                         </span>
                       </div>
                     </div>
-                    
+
                     {/* Progress Bar */}
                     <div className="space-y-1">
-                      <SimpleProgressBar 
+                      <SimpleProgressBar
                         progress={progressPercentage}
                         size="md"
                         showPercentage={false}
                         className="w-full [&>div]:bg-gray-700 [&>div>div]:bg-gradient-to-r [&>div>div]:from-gray-400 [&>div>div]:to-gray-200"
                       />
-                      
+
                       <div className="flex items-center justify-between text-white/60" style={{ fontSize: '11px' }}>
                         <span>0%</span>
                         <span className={`font-bold ${colors.text}`}>

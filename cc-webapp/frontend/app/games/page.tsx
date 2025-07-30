@@ -4,12 +4,12 @@ import './games.css';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Star, 
-  Zap, 
-  TrendingUp, 
-  Dice1, 
-  Target, 
+import {
+  Star,
+  Zap,
+  TrendingUp,
+  Dice1,
+  Target,
   Sparkles,
   Trophy,
   Coins,
@@ -34,16 +34,16 @@ interface GameCardProps {
   isHot?: boolean;
 }
 
-function GameCard({ 
-  title, 
-  description, 
-  icon, 
-  gameType, 
-  accent, 
-  difficulty, 
-  minBet, 
-  maxWin, 
-  isNew, 
+function GameCard({
+  title,
+  description,
+  icon,
+  gameType,
+  accent,
+  difficulty,
+  minBet,
+  maxWin,
+  isNew,
   isHot
 }: GameCardProps) {
   const router = useRouter();
@@ -60,11 +60,11 @@ function GameCard({
       menubar: 'no',
       location: 'no'
     };
-    
+
     const configString = Object.entries(popupConfig)
       .map(([key, value]) => `${key}=${value}`)
       .join(',');
-    
+
     let popupUrl = '';
     switch (gameType) {
       case 'slots':
@@ -96,12 +96,91 @@ function GameCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
+      onClick={handleClick}
     >
-      {/* 게임 타이틀 영역 복원 */}
-      <div className="w-full flex items-center justify-center py-3">
-        <span className="text-lg font-bold text-white drop-shadow-md tracking-wide">
-          {title}
-        </span>
+      {/* 메인 게임 카드 */}
+      <div className="relative bg-gradient-to-br from-slate-800/60 via-slate-700/40 to-slate-800/60 
+                      rounded-2xl p-6 border border-white/10 backdrop-blur-md
+                      shadow-2xl hover:shadow-3xl transition-all duration-500
+                      group-hover:border-white/20 group-hover:from-slate-700/70 
+                      group-hover:via-slate-600/50 group-hover:to-slate-700/70">
+
+        {/* 뱃지들 */}
+        <div className="absolute top-3 right-3 flex gap-1">
+          {isNew && (
+            <span className="px-2 py-1 text-xs font-bold bg-gradient-to-r from-purple-500 to-pink-500 
+                           text-white rounded-full shadow-lg">
+              NEW
+            </span>
+          )}
+          {isHot && (
+            <span className="px-2 py-1 text-xs font-bold bg-gradient-to-r from-orange-500 to-red-500 
+                           text-white rounded-full shadow-lg flex items-center gap-1">
+              <Flame className="w-3 h-3" />
+              HOT
+            </span>
+          )}
+        </div>
+
+        {/* 아이콘과 제목 */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className={`p-3 rounded-xl bg-gradient-to-br from-${accent}/20 to-${accent}/10 
+                          border border-${accent}/20 group-hover:from-${accent}/30 
+                          group-hover:to-${accent}/20 transition-all duration-300`}>
+            {icon}
+          </div>
+
+          <div className="flex-1">
+            <h3 className="text-xl font-bold text-white mb-1 group-hover:text-gray-100 
+                          transition-colors duration-300">
+              {title}
+            </h3>
+            <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+              {description}
+            </p>
+          </div>
+        </div>
+
+        {/* 게임 정보 */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="text-center">
+            <div className="text-xs text-gray-400 mb-1">난이도</div>
+            <div className={`text-sm font-semibold ${difficulty === 'Easy' ? 'text-green-400' :
+                difficulty === 'Medium' ? 'text-yellow-400' : 'text-red-400'
+              }`}>
+              {difficulty}
+            </div>
+          </div>
+
+          <div className="text-center">
+            <div className="text-xs text-gray-400 mb-1">최소 베팅</div>
+            <div className="text-sm font-semibold text-blue-400">
+              {minBet.toLocaleString()}원
+            </div>
+          </div>
+
+          <div className="text-center">
+            <div className="text-xs text-gray-400 mb-1">최대 상금</div>
+            <div className="text-sm font-semibold text-emerald-400">
+              {maxWin.toLocaleString()}원
+            </div>
+          </div>
+        </div>
+
+        {/* 플레이 버튼 */}
+        <button className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 
+                         hover:from-purple-500 hover:to-blue-500 
+                         text-white font-semibold rounded-xl 
+                         transition-all duration-300 transform 
+                         group-hover:scale-105 shadow-lg hover:shadow-xl
+                         flex items-center justify-center gap-2">
+          <Play className="w-5 h-5" />
+          게임 시작
+        </button>
+
+        {/* 호버 글로우 효과 */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/5 to-transparent 
+                       opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       </div>
     </motion.div>
   );
@@ -158,7 +237,7 @@ function HomePage() {
   return (
     <div className="game-dashboard w-full max-w-[420px] mx-auto min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 
                     relative overflow-hidden">
-      
+
       {/* 깔끔한 별빛 효과만 유지 */}
       <div className="absolute inset-0 opacity-20">
         {[
@@ -188,7 +267,7 @@ function HomePage() {
 
       {/* 메인 컨텐츠 */}
       <div className="relative z-10 min-h-screen flex flex-col px-2 max-w-lg mx-auto w-full">
-        
+
         {/* 개선된 헤더 */}
         <motion.header
           className="py-5 text-center relative z-20"
@@ -209,7 +288,7 @@ function HomePage() {
           >
             MODEL CASINO
           </motion.h1>
-          
+
           {/* 프리미엄 통계 */}
           <motion.div
             className="flex items-center justify-center gap-4 text-sm"
@@ -282,13 +361,13 @@ function HomePage() {
           transition={{ delay: 1.2 }}
         >
           <p style={{
-               fontFamily: "'Inter', sans-serif",
-               color: 'rgba(255, 255, 255, 0.6)',
-               fontSize: '0.875rem',
-               fontWeight: '400',
-               letterSpacing: '0.025em',
-               textShadow: '0 2px 8px rgba(0,0,0,0.3)'
-             }}>
+            fontFamily: "'Inter', sans-serif",
+            color: 'rgba(255, 255, 255, 0.6)',
+            fontSize: '0.875rem',
+            fontWeight: '400',
+            letterSpacing: '0.025em',
+            textShadow: '0 2px 8px rgba(0,0,0,0.3)'
+          }}>
             Responsible Gaming • Licensed & Secure ⭐
           </p>
         </motion.footer>

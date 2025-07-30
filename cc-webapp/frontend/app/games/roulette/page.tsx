@@ -26,7 +26,7 @@ function RouletteMainContent() {
   return (
     <div className="w-full bg-gradient-to-br from-[var(--color-primary-dark-navy)] via-[var(--color-primary-charcoal)] 
     to-[var(--color-primary-dark-navy)] min-h-screen flex flex-col">
-      
+
       {/* 헤더 */}
       <motion.header
         className="z-20 py-4 sm:py-6 px-4 sm:px-6 w-full bg-gradient-to-br from-[var(--color-primary-dark-navy)]/90 via-[var(--color-primary-charcoal)]/90 to-[var(--color-primary-dark-navy)]/90 backdrop-blur-md border-b border-[var(--border)]/30"
@@ -43,39 +43,42 @@ function RouletteMainContent() {
           >
             🎰 경품추첨 룰렛
           </motion.h1>
-          <motion.p 
+          <motion.p
             className="text-[var(--text-secondary)] text-sm sm:text-base text-center max-w-2xl"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
-            매일 3번까지 무료로 경품을 추첨해보세요! <br className="sm:hidden"/>
+            매일 3번까지 무료로 경품을 추첨해보세요! <br className="sm:hidden" />
             <span className="text-[var(--color-accent-amber)]">코인, 젬, 잭팟까지</span> 다양한 보상이 기다리고 있습니다.
           </motion.p>
         </div>
       </motion.header>
 
       {/* 메인 컨텐츠 */}
-      <div className="flex-1 w-full flex flex-col items-center justify-center p-4 sm:p-6 relative">
+      <div className="flex-1 w-full flex flex-col items-center p-4 sm:p-6 relative">
         {/* 배경 효과 */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-10 left-10 w-32 h-32 bg-[var(--color-accent-amber)]/10 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-20 right-10 w-40 h-40 bg-[var(--color-accent-red)]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
           <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
-        
-        <motion.div
-          className="w-full max-w-2xl relative z-10"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-        >
-          <RouletteGame />
-        </motion.div>
-        
+
+        {/* 룰렛 게임 - 중앙 배치 및 크기 확대 */}
+        <div className="flex-1 flex items-center justify-center w-full min-h-[500px]">
+          <motion.div
+            className="w-full max-w-lg relative z-10"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+          >
+            <RouletteGame isPopup={false} />
+          </motion.div>
+        </div>
+
         {/* 추가 정보 카드 */}
         <motion.div
-          className="mt-12 max-w-4xl w-full grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="mt-6 max-w-4xl w-full grid grid-cols-1 md:grid-cols-3 gap-4 px-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.5 }}
@@ -101,7 +104,7 @@ function RouletteMainContent() {
               </div>
             </div>
           </div>
-          
+
           {/* 게임 규칙 */}
           <div className="bg-gradient-to-br from-[var(--color-primary-charcoal)]/60 to-[var(--color-primary-dark-navy)]/60 
           backdrop-blur-sm p-6 rounded-2xl border border-[var(--border)]/30 text-center">
@@ -115,7 +118,7 @@ function RouletteMainContent() {
               <p>• 즉시 보상 지급</p>
             </div>
           </div>
-          
+
           {/* 통계 */}
           <div className="bg-gradient-to-br from-[var(--color-primary-charcoal)]/60 to-[var(--color-primary-dark-navy)]/60 
           backdrop-blur-sm p-6 rounded-2xl border border-[var(--border)]/30 text-center">
