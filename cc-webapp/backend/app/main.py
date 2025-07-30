@@ -196,6 +196,7 @@ app.add_middleware(
 # Register API routers
 app.include_router(auth.router, prefix="/api")
 app.include_router(auth_simple.router, prefix="/api")  # 새로운 단순 인증 시스템
+app.include_router(advanced_auth.router, prefix="/api/auth", tags=["advanced_auth"])  # 고급 인증 시스템
 app.include_router(admin.router, prefix="/api")  # 관리자 API 추가
 app.include_router(games.router)  # prefix 제거 (이미 /api/games로 설정됨)
 app.include_router(segments.router, prefix="/api")
