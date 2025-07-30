@@ -290,7 +290,7 @@ class Game(Base):
 
 # Note for developer:
 # After defining or updating models, an Alembic migration is needed:
-# 1. alembic revision -m "add_notifications_table" (or a more descriptive name)
+# 1. alembic revision -m "add_missions_and_profile_images" 
 # 2. Edit the generated migration script in alembic/versions/ to ensure it correctly
 #    reflects the model definitions (e.g., op.create_table(...)).
 # 3. alembic upgrade head
@@ -298,3 +298,97 @@ class Game(Base):
 # Also, ensure alembic/env.py is configured to use this Base:
 # from app.models import Base # This should already be done
 # target_metadata = Base.metadata # This should already be done
+
+
+# --- 미션 시스템 모델들 ---
+class Mission(Base):
+    """미션 정의 테이블"""
+    __tablename__ = "missions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    mission_type = Column(String(50), nullable=False, index=True)  # login, game_play, token_earn, purchase 등
+    target_value = Column(Integer, nullable=False)  # 목표값 (예: 7일 연속 로그인, 100회 게임 플레이)
+    reward_type = Column(String(50), nullable=False)  # cyber_token, premium_gem, item 등
+    reward_amount = Column(Integer, nullable=False)
+    reward_description = Column(String(200), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    is_daily = Column(Boolean, default=False, nullable=False)  # 일일 미션 여부
+    is_weekly = Column(Boolean, default=False, nullable=False)  # 주간 미션 여부
+    priority = Column(Integer, default=0)  # 표시 우선순위
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # 관계
+    user_progress = relationship("UserMissionProgress", back_populates="mission")
+
+
+class UserMissionProgress(Base):
+    """사용자별 미션 진행 상황"""
+    __tablename__ = "user_mission_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    mission_id = Column(Integer, ForeignKey("missions.id"), nullable=False, index=True)
+    current_progress = Column(Integer, default=0)  # 현재 진행도
+    is_completed = Column(Boolean, default=False, nullable=False)
+    is_claimed = Column(Boolean, default=False, nullable=False)  # 보상 수령 여부
+    completed_at = Column(DateTime, nullable=True)
+    claimed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # 관계
+    user = relationship("User", back_populates="mission_progress")
+    mission = relationship("Mission", back_populates="user_progress")
+
+    # 인덱스
+    __table_args__ = (
+        Index("ix_user_mission_progress", "user_id", "mission_id"),
+        Index("ix_user_mission_status", "user_id", "is_completed", "is_claimed"),
+    )
+
+
+# --- 프로필 이미지/아바타 시스템 모델들 ---
+class Avatar(Base):
+    """기본 아바타 정의 테이블"""
+    __tablename__ = "avatars"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    image_url = Column(String(500), nullable=False)  # 아바타 이미지 URL
+    thumbnail_url = Column(String(500), nullable=True)  # 썸네일 URL
+    category = Column(String(50), default="basic", index=True)  # basic, premium, special 등
+    unlock_condition = Column(String(200), nullable=True)  # 해금 조건 설명
+    required_rank = Column(String(20), default="STANDARD", nullable=False)
+    is_premium = Column(Boolean, default=False, nullable=False)  # 프리미엄 아바타 여부
+    is_active = Column(Boolean, default=True, nullable=False)
+    sort_order = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # 관계
+    user_profiles = relationship("UserProfileImage", back_populates="avatar")
+
+
+class UserProfileImage(Base):
+    """사용자 프로필 이미지/아바타 설정"""
+    __tablename__ = "user_profile_images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)  # 한 사용자당 하나의 프로필
+    
+    # 커스텀 이미지 or 아바타 선택
+    custom_image_url = Column(String(500), nullable=True)  # 사용자가 업로드한 이미지
+    avatar_id = Column(Integer, ForeignKey("avatars.id"), nullable=True, index=True)  # 선택한 기본 아바타
+    
+    # 메타데이터
+    image_type = Column(String(20), default="avatar", nullable=False)  # avatar, custom, default
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # 관계
+    user = relationship("User", back_populates="profile_image")
+    avatar = relationship("Avatar", back_populates="user_profiles")
