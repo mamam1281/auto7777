@@ -192,3 +192,28 @@ class TokenService:
             logger.error(f"Failed to reset tokens for user {user_id}: {exc}")
             self.db.rollback()
             return self.get_token_balance(user_id)
+
+
+# Module-level convenience functions for backward compatibility
+def add_tokens(user_id: int, amount: int) -> int:
+    """Add tokens to a user (module-level convenience function)."""
+    from app.database import SessionLocal
+    
+    db = SessionLocal()
+    try:
+        service = TokenService(db)
+        return service.add_tokens(user_id, amount)
+    finally:
+        db.close()
+
+
+def get_token_balance(user_id: int) -> int:
+    """Get user's token balance (module-level convenience function)."""
+    from app.database import SessionLocal
+    
+    db = SessionLocal()
+    try:
+        service = TokenService(db)
+        return service.get_token_balance(user_id)
+    finally:
+        db.close()

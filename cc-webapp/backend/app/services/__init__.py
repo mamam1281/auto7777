@@ -6,12 +6,12 @@ from .user_segment_service import UserSegmentService
 from .slot_service import SlotService
 from .roulette_service import RouletteService
 from .gacha_service import GachaService
+from .token_service import TokenService
 
 
 # Optionally, make other services available for easier import if structured this way
 # from .user_service import UserService
 # from .auth_service import AuthService
-# from .token_service import TokenService
 # from .age_verification_service import AgeVerificationService
 # from .adult_content_service import AdultContentService
 # from .flash_offer_service import FlashOfferService

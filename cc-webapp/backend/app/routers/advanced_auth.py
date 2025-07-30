@@ -27,6 +27,25 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
 
+def get_client_ip(request: Request) -> str:
+    """클라이언트 IP 주소 추출"""
+    # X-Forwarded-For 헤더 확인 (프록시/로드밸런서 사용 시)
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    
+    # X-Real-IP 헤더 확인
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip
+    
+    # 직접 연결된 클라이언트 IP
+    if hasattr(request, "client") and request.client:
+        return request.client.host
+    
+    return "unknown"
+
+
 # Pydantic 스키마
 class LoginRequest(BaseModel):
     site_id: str
