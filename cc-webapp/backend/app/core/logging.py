@@ -29,16 +29,10 @@ def log_service_call(service_name: str, operation: str, duration: float = None, 
     logger.info(f"Service call: {service_name}.{operation} - {status}", extra=log_data)
 
 def setup_logging(level: str = "INFO"):
-    log_handlers = [logging.StreamHandler(sys.stdout)]
-    # FileHandler 추가: Docker 환경에서 /app/logs/app.log에 로그 기록
-    log_dir = '/app/logs'
-    os.makedirs(log_dir, exist_ok=True)
-    file_handler = logging.FileHandler(f'{log_dir}/app.log', encoding='utf-8')
-    log_handlers.append(file_handler)
     logging.basicConfig(
         level=getattr(logging, level.upper()),
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=log_handlers
+        handlers=[logging.StreamHandler(sys.stdout)]
     )
 
 class LoggingContextMiddleware:

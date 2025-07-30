@@ -12,7 +12,7 @@ psycopg2-binary==2.9.9
 # Redis dependencies removed
 
 # 인증 및 보안
-PyJWT==2.10.1
+python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 
 # Kafka 및 메시징

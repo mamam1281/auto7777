@@ -29,35 +29,31 @@ export default function CasinoDashboard() {
       localStorage.setItem('splashSeen', 'true');
     }
 
-    // 모델카지노 스타일 - 깔끔한 다크네이비 + 핑크 악센트
+    // 프리미엄 그라디언트 애니메이션 스타일 추가
     const style = document.createElement('style');
     style.textContent = `
-      @keyframes model-casino-bg {
+      @keyframes premium-gradient-shift {
         0%, 100% { 
           background-position: 0% 50%; 
+          filter: hue-rotate(0deg) saturate(1.2);
+        }
+        25% { 
+          background-position: 25% 25%; 
+          filter: hue-rotate(15deg) saturate(1.3);
         }
         50% { 
           background-position: 100% 50%; 
+          filter: hue-rotate(30deg) saturate(1.4);
+        }
+        75% { 
+          background-position: 75% 75%; 
+          filter: hue-rotate(15deg) saturate(1.3);
         }
       }
 
-      @keyframes premium-pink-glow {
-        0%, 100% { 
-          text-shadow: 0 0 8px rgba(236, 72, 153, 0.7);
-        }
-        50% { 
-          text-shadow: 0 0 16px rgba(236, 72, 153, 0.9), 0 0 24px rgba(236, 72, 153, 0.5);
-        }
-      }
-
-      .model-casino-premium-bg {
-        background: linear-gradient(135deg, #000000 0%, #1a1a1a 25%, #000000 50%, #1a1a1a 75%, #000000 100%) !important;
-        background-size: 200% 200% !important;
-        animation: model-casino-bg 12s ease-in-out infinite !important;
-      }
-
-      .premium-text-glow {
-        animation: premium-pink-glow 3s ease-in-out infinite !important;
+      .cosmic-premium-bg {
+        background-size: 400% 400% !important;
+        animation: premium-gradient-shift 10s ease-in-out infinite !important;
       }
     `;
     document.head.appendChild(style);
@@ -75,34 +71,34 @@ export default function CasinoDashboard() {
     setIsLoading(false);
   };
 
-  // 빠른 시작 액션들 - 모델카지노 컬러 팔레트
+  // 빠른 시작 액션들 - 일부 팝업으로 열기
   const quickActions = [
     {
       id: 'daily-reward',
       label: '오늘보상받기',
       iconPlaceholder: '🎁',
-      iconBgColor: 'bg-gradient-to-r from-pink-500 to-pink-600', // 핑크 그라데이션
+      iconBgColor: '#f1279dff',
       onClick: () => router.push('/wallet') // 월렛 페이지로 안내 (바텀네비 "내역"과 동일)
     },
     {
       id: 'model-site',
       label: '모델사이트',
       iconPlaceholder: '💎',
-      iconBgColor: 'bg-gradient-to-r from-purple-600 to-purple-700', // 퍼플 그라데이션
+      iconBgColor: '#ffd30eff',
       onClick: () => window.open('https://md-2424.com', '_blank')
     },
     {
       id: 'popular-games',
       label: '방송보러가기',
       iconPlaceholder: '🔥',
-      iconBgColor: 'bg-gradient-to-r from-indigo-600 to-indigo-700', // 인디고 그라데이션
+      iconBgColor: '#eb2768ff',
       onClick: () => window.open('https://youtube.com', '_blank')// 게임 대시보드 페이지로 연결
     },
     {
       id: 'popular-games2',
       label: '이벤트안내',
       iconPlaceholder: '🎯',
-      iconBgColor: 'bg-gradient-to-r from-slate-700 to-slate-800', // 다크 그라데이션
+      iconBgColor: '#02ccf0ff',
       onClick: () => window.open('/promotions') // 프로필 페이지로 연결
     }
   ];
@@ -116,30 +112,42 @@ export default function CasinoDashboard() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: '#000000' }}>
+        style={{ backgroundColor: '#1a1a1a' }}>
         <LoadingSpinner size="xl" variant="ring" text="카지노 로딩 중..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full model-casino-premium-bg bg-black"
+    <div className="min-h-screen w-full cosmic-premium-bg"
       style={{
-        color: '#FFFFFF',
+        background: 'linear-gradient(135deg, #0f0f23 0%, #1a1a3a 25%, #16213e 50%, #1a1a3a 75%, #0f0f23 100%)',
+        color: '#ffffff',
         fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
         overflow: 'hidden',
         position: 'relative'
       }}>
 
-      {/* 모델카지노 스타일 오버레이 */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/30 via-pink-900/20 to-black/40"></div>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-pink-400/8 rounded-full blur-3xl"></div>
-      </div>
+      {/* 고급스러운 배경 오버레이 */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: `
+          radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+          radial-gradient(circle at 40% 60%, rgba(59, 130, 246, 0.08) 0%, transparent 50%)
+        `,
+        pointerEvents: 'none'
+      }} />
 
       {/* Main Content - 스크롤 가능한 콘텐츠 */}
-      <div className="w-full min-h-full relative z-10 bg-black/20 backdrop-blur-sm">
+      <div className="w-full min-h-full relative z-10" style={{
+        background: 'rgba(15, 15, 35, 0.3)',
+        backdropFilter: 'blur(1px)'
+      }}>
 
         <div className="py-2 sm:py-4">
 
@@ -151,24 +159,27 @@ export default function CasinoDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <h1 className="premium-text-glow" style={{
+            <h1 style={{
               fontFamily: "'Inter', sans-serif",
               fontSize: '48px',
               fontWeight: 'bold',
               lineHeight: '1.1',
-              color: '#FFFFFF',
-              marginBottom: '12px'
+              background: 'linear-gradient(135deg, #c084fc 0%, #8b5cf6 20%, #7c3aed 40%, #6366f1 60%, #3b82f6 80%, #06b6d4 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              color: 'transparent',
+              marginBottom: '12px',
+              textShadow: '0 8px 32px rgba(192, 132, 252, 0.4)'
             }}>
-              Welcome to <span style={{ color: '#EC4899' }}>MODELCASINO</span>
+              Welcome to MODELCASINO
             </h1>
             <p style={{
               fontFamily: "'Inter', sans-serif",
               fontSize: '18px',
-              color: '#94A3B8',
+              color: '#ddd6fe',
               fontWeight: '500',
               letterSpacing: '0.025em',
-              marginTop: '8px',
-              opacity: '0.9'
+              marginTop: '8px'
             }}>
               최고급 모델과 함께하는 특별한 시간
             </p>
@@ -185,11 +196,11 @@ export default function CasinoDashboard() {
             <h2 style={{
               fontSize: '24px',
               fontFamily: "'Inter', sans-serif",
-              color: '#EC4899',
+              color: '#fde047',
               fontWeight: '700',
               letterSpacing: '0.02em',
               marginBottom: '24px',
-              textShadow: '0 2px 6px rgba(236, 72, 153, 0.3)'
+              textShadow: '0 4px 16px rgba(253, 224, 71, 0.4)'
             }}>🎯 지금 바로 시작하세요</h2>
             <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 w-full max-w-full overflow-hidden">
               <Button
@@ -226,11 +237,11 @@ export default function CasinoDashboard() {
             <h2 style={{
               fontSize: '24px',
               fontFamily: "'Inter', sans-serif",
-              color: '#EC4899',
+              color: '#60a5fa',
               fontWeight: '700',
               letterSpacing: '0.02em',
               marginBottom: '16px',
-              textShadow: '0 2px 6px rgba(236, 72, 153, 0.3)'
+              textShadow: '0 4px 16px rgba(96, 165, 250, 0.4)'
             }}>⚡ 빠른 접속</h2>
             <div style={{ marginTop: '24px' }}>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-full overflow-hidden"

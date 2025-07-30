@@ -77,15 +77,6 @@ try:
 except ImportError as e:
     JWT_AUTH_AVAILABLE = False
     print(f"⚠️ Warning: JWT Auth API not available: {e}")
-
-# 고급 인증 API 임포트 추가
-try:
-    from app.routers import advanced_auth
-    ADVANCED_AUTH_AVAILABLE = True
-    print("✅ 고급 인증 API 모듈 로드 성공")
-except ImportError as e:
-    ADVANCED_AUTH_AVAILABLE = False
-    print(f"⚠️ Warning: Advanced Auth API not available: {e}")
 except Exception as e:
     JWT_AUTH_AVAILABLE = False
     print(f"❌ Error loading JWT Auth API: {e}")
@@ -196,7 +187,6 @@ app.add_middleware(
 # Register API routers
 app.include_router(auth.router, prefix="/api")
 app.include_router(auth_simple.router, prefix="/api")  # 새로운 단순 인증 시스템
-app.include_router(advanced_auth.router, prefix="/api/auth", tags=["advanced_auth"])  # 고급 인증 시스템
 app.include_router(admin.router, prefix="/api")  # 관리자 API 추가
 app.include_router(games.router)  # prefix 제거 (이미 /api/games로 설정됨)
 app.include_router(segments.router, prefix="/api")

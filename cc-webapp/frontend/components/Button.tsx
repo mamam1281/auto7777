@@ -33,7 +33,7 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const [coords, setCoords] = React.useState({ x: -1, y: -1 });
   const [isRippling, setIsRippling] = React.useState(false);
-
+  
   React.useEffect(() => {
     if (coords.x !== -1 && coords.y !== -1) {
       setIsRippling(true);
@@ -46,7 +46,7 @@ const Button: React.FC<ButtonProps> = ({
   React.useEffect(() => {
     if (!isRippling) setCoords({ x: -1, y: -1 });
   }, [isRippling]);
-
+  
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (ripple && !disabled) {
       const rect = e.currentTarget.getBoundingClientRect();
@@ -60,34 +60,34 @@ const Button: React.FC<ButtonProps> = ({
 
   // 크기별 스타일 매핑
   const sizeStyles = {
-    xs: { height: '32px', padding: '8px 12px', fontSize: '18px' },
-    sm: { height: '36px', padding: '10px 16px', fontSize: '18px' },
-    md: { height: '44px', padding: '12px 20px', fontSize: '18px' },
-    lg: { height: '56px', padding: '16px 32px', fontSize: '18px' },
+    xs: { height: '32px', padding: '8px 12px', fontSize: '12px' },
+    sm: { height: '36px', padding: '10px 16px', fontSize: '13px' },
+    md: { height: '44px', padding: '12px 20px', fontSize: '14px' },
+    lg: { height: '56px', padding: '16px 32px', fontSize: '16px' },
   };
 
-  // 변형별 스타일 매핑 - 네온 핑크/골드 테마
+  // 변형별 스타일 매핑
   const variantStyles = {
     primary: {
-      background: 'linear-gradient(135deg, rgba(255, 20, 147, 0.2) 0%, rgba(255, 105, 180, 0.15) 50%, rgba(255, 0, 128, 0.1) 100%)',
-      color: '#ffffff',
-      border: '1px solid rgba(255, 20, 147, 0.4)',
-      boxShadow: '0 0 20px rgba(255, 20, 147, 0.4), 0 8px 32px rgba(255, 20, 147, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-      hoverBackground: 'linear-gradient(135deg, rgba(255, 20, 147, 0.3) 0%, rgba(255, 105, 180, 0.25) 50%, rgba(255, 0, 128, 0.2) 100%)',
+      background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(168, 85, 247, 0.12) 50%, rgba(192, 132, 252, 0.1) 100%)',
+      color: '#f8fafc',
+      border: '1px solid rgba(255, 255, 255, 0.15)',
+      boxShadow: '0 8px 32px rgba(139, 92, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(255, 255, 255, 0.05)',
+      hoverBackground: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(168, 85, 247, 0.17) 50%, rgba(192, 132, 252, 0.15) 100%)',
     },
     secondary: {
-      background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.08) 50%, rgba(255, 215, 0, 0.05) 100%)',
-      color: '#ffffff',
-      border: '1px solid rgba(255, 215, 0, 0.3)',
-      boxShadow: '0 0 15px rgba(255, 215, 0, 0.3), 0 8px 32px rgba(255, 215, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
-      hoverBackground: 'linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 215, 0, 0.15) 50%, rgba(255, 215, 0, 0.08) 100%)',
+      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.02) 100%)',
+      color: '#e2e8f0',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(255, 255, 255, 0.03)',
+      hoverBackground: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 100%)',
     },
     accent: {
-      background: 'linear-gradient(135deg, rgba(255, 105, 180, 0.18) 0%, rgba(255, 69, 189, 0.15) 50%, rgba(255, 20, 147, 0.12) 100%)',
-      color: '#ffffff',
-      border: '1px solid rgba(255, 105, 180, 0.35)',
-      boxShadow: '0 0 18px rgba(255, 105, 180, 0.35), 0 8px 32px rgba(255, 105, 180, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-      hoverBackground: 'linear-gradient(135deg, rgba(255, 105, 180, 0.28) 0%, rgba(255, 69, 189, 0.25) 50%, rgba(255, 20, 147, 0.22) 100%)',
+      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(249, 115, 22, 0.1) 50%, rgba(239, 68, 68, 0.08) 100%)',
+      color: '#fef2f2',
+      border: '1px solid rgba(255, 255, 255, 0.12)',
+      boxShadow: '0 8px 32px rgba(245, 158, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(255, 255, 255, 0.05)',
+      hoverBackground: 'linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(249, 115, 22, 0.15) 50%, rgba(239, 68, 68, 0.12) 100%)',
     },
   };
 
@@ -121,8 +121,9 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <motion.button
       type={type}
-      className={`relative overflow-hidden font-medium transition-all duration-300 ${rounded ? 'rounded-full' : 'rounded-2xl'
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
+      className={`relative overflow-hidden font-medium transition-all duration-300 ${
+        rounded ? 'rounded-full' : 'rounded-2xl'
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
       style={{
         ...currentSizeStyle,
         ...currentVariantStyle,
@@ -133,16 +134,17 @@ const Button: React.FC<ButtonProps> = ({
       whileHover={
         !disabled
           ? {
-            scale: 1.02,
-            y: -1,
-            background: currentVariantStyle.hoverBackground,
-            boxShadow: `0 12px 40px ${variant === 'primary'
-                ? 'rgba(139, 92, 246, 0.3)'
-                : variant === 'accent'
+              scale: 1.02,
+              y: -1,
+              background: currentVariantStyle.hoverBackground,
+              boxShadow: `0 12px 40px ${
+                variant === 'primary'
+                  ? 'rgba(139, 92, 246, 0.3)'
+                  : variant === 'accent'
                   ? 'rgba(245, 158, 11, 0.25)'
                   : 'rgba(0, 0, 0, 0.25)'
               }, inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(255, 255, 255, 0.08)`,
-          }
+            }
           : {}
       }
       whileTap={!disabled ? { scale: 0.98, y: 0 } : {}}

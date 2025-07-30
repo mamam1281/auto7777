@@ -38,15 +38,16 @@ export default function ShopPage() {
   return (
     <div className="shop-dashboard w-full max-w-[420px] mx-auto min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
       <motion.header
-        className="py-[var(--app-header-padding-y)] text-center relative z-20"
+        className="pt-3 pb-4 text-center relative z-20"
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut" }}
       >
         <motion.h1
-          className="heading-h1 text-pink-400 drop-shadow-lg text-center"
+          className="text-2xl font-extrabold tracking-wide text-pink-400 drop-shadow-lg flex items-center justify-center gap-2"
           whileHover={{ scale: 1.03 }}
         >
+          <ShoppingCart className="w-7 h-7 text-pink-400" />
           상점
         </motion.h1>
       </motion.header>

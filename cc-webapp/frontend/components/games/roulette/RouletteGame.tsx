@@ -51,32 +51,29 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [nearMissEffect, setNearMissEffect] = useState(false);
 
-  // 팝업 여부 자동 감지 (props가 없을 경우)
-  const actualIsPopup = isPopup || isPopupWindow();
-
   // 팝업 크기 최적화 및 Hydration 처리
   useEffect(() => {
     setIsMounted(true);
-
-    if (actualIsPopup) {
+    
+    if (isPopup) {
       const resizeHandler = () => {
         const height = window.visualViewport?.height || window.innerHeight;
         document.documentElement.style.setProperty('--vh', `${height * 0.01}px`);
       };
-
+      
       resizeHandler();
       window.addEventListener('resize', resizeHandler);
-
+      
       return () => window.removeEventListener('resize', resizeHandler);
     }
-  }, [actualIsPopup]);
+  }, [isPopup]);
 
   // 사용자 정보 가져오기
   const fetchUserInfo = useCallback(async () => {
     try {
       const response = await fetch('/api/user/info');
       const data = await response.json();
-
+      
       if (data.success) {
         setCoins(data.coins || 1000);
         setGems(data.gems || 50);
@@ -88,7 +85,7 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
       const savedCoins = localStorage.getItem('user_coins');
       const savedGems = localStorage.getItem('user_gems');
       const savedSpins = localStorage.getItem('daily_spins');
-
+      
       if (savedCoins) setCoins(parseInt(savedCoins));
       if (savedGems) setGems(parseInt(savedGems));
       if (savedSpins) setSpinsLeft(parseInt(savedSpins));
@@ -105,12 +102,12 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
 
     setIsSpinning(true);
     setNearMissEffect(false);
-
+    
     // 실제 상금 계산 (확률 기반)
     const random = Math.random();
     let cumulativeProbability = 0;
     let selectedSegment = ROULETTE_SEGMENTS[0];
-
+    
     for (const segment of ROULETTE_SEGMENTS) {
       cumulativeProbability += segment.probability;
       if (random <= cumulativeProbability) {
@@ -122,21 +119,21 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
     // 세그먼트 각도 계산 (SVG 기반)
     const segmentAngle = 360 / ROULETTE_SEGMENTS.length;
     const segmentIndex = ROULETTE_SEGMENTS.findIndex(s => s.id === selectedSegment.id);
-
+    
     // SVG는 0도가 우측을 가리키므로, 상단 포인터 기준으로 조정
     // 포인터가 상단에 있고 시계방향으로 회전하므로 -90도 오프셋
     const targetAngle = (segmentIndex * segmentAngle) + (segmentAngle / 2) - 90;
-
+    
     // 현재 회전값을 정규화 (항상 0-360 사이의 값으로)
     const normalizedRotation = ((rotation % 360) + 360) % 360;
-
+    
     // 최소 5바퀴(1800도) + 타겟 각도로 이동
     const minRotations = 5;
     let finalRotation = (minRotations * 360) + targetAngle;
-
+    
     // 이전 회전 방향을 유지하기 위해 현재 회전값에 더하는 방식으로 계산
     finalRotation = Math.floor(rotation / 360) * 360 + finalRotation;
-
+    
     setRotation(finalRotation);
 
     // 스핀 애니메이션 완료 후 결과 처리
@@ -148,25 +145,25 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
           segment: selectedSegment,
           message: `${selectedSegment.label}에 당첨되었습니다!`,
           spins_left: spinsLeft - 1,
-          coins_won: selectedSegment.tier === 'jackpot' ? selectedSegment.value :
-            selectedSegment.label.includes('젬') ? 0 : selectedSegment.value,
+          coins_won: selectedSegment.tier === 'jackpot' ? selectedSegment.value : 
+                     selectedSegment.label.includes('젬') ? 0 : selectedSegment.value,
           animation_type: selectedSegment.tier === 'jackpot' ? 'jackpot' : 'normal'
         };
 
         setLastResult(mockResult);
         setSpinsLeft(mockResult.spins_left);
-
+        
         // 히스토리 업데이트
         const newHistory = [selectedSegment, ...spinHistory].slice(0, 10);
         setSpinHistory(newHistory);
         localStorage.setItem('roulette_history', JSON.stringify(newHistory));
-
+        
         // 상금 지급
         if (mockResult.coins_won && mockResult.coins_won > 0) {
           setCoins(prev => prev + mockResult.coins_won!);
           localStorage.setItem('user_coins', (coins + mockResult.coins_won).toString());
         }
-
+        
         if (selectedSegment.label.includes('젬')) {
           setGems(prev => prev + selectedSegment.value);
           localStorage.setItem('user_gems', (gems + selectedSegment.value).toString());
@@ -176,13 +173,13 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
         if (selectedSegment.tier === 'jackpot') {
           setNearMissEffect(true);
         }
-
+        
         setShowResultModal(true);
-
+        
       } catch (error) {
         console.error('룰렛 스핀 실패:', error);
       }
-
+      
       setIsSpinning(false);
     }, 3000); // 스핀 애니메이션 시간과 동기화
 
@@ -213,7 +210,7 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
     return <div className="roulette-loading">로딩 중...</div>;
   }
 
-  const containerClass = actualIsPopup ? "roulette-popup-container" : "roulette-game-container";
+  const containerClass = isPopup ? "roulette-popup-container" : "roulette-game-container";
 
   return (
     <div className={containerClass}>
@@ -246,7 +243,7 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
       {/* 룰렛 휠 */}
       <div className="roulette-wheel-container">
         <div className="roulette-pointer"></div>
-
+        
         <motion.div
           className={`roulette-wheel ${isSpinning ? 'spinning' : ''} ${nearMissEffect ? 'jackpot-glow' : ''}`}
           initial={false}
@@ -262,36 +259,36 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
               const segmentAngle = 360 / ROULETTE_SEGMENTS.length;
               const startAngle = index * segmentAngle;
               const endAngle = (index + 1) * segmentAngle;
-
+              
               // SVG 경로 계산
               const centerX = 200;
               const centerY = 200;
-              const radius = actualIsPopup ? 160 : 180;
-
+              const radius = 180;
+              
               const startAngleRad = (startAngle * Math.PI) / 180;
               const endAngleRad = (endAngle * Math.PI) / 180;
-
+              
               const x1 = centerX + radius * Math.cos(startAngleRad);
               const y1 = centerY + radius * Math.sin(startAngleRad);
               const x2 = centerX + radius * Math.cos(endAngleRad);
               const y2 = centerY + radius * Math.sin(endAngleRad);
-
+              
               const largeArcFlag = segmentAngle > 180 ? 1 : 0;
-
+              
               const pathData = [
                 `M ${centerX} ${centerY}`,
                 `L ${x1} ${y1}`,
                 `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
                 'Z'
               ].join(' ');
-
+              
               // 텍스트 위치 계산
               const textAngle = startAngle + segmentAngle / 2;
               const textAngleRad = (textAngle * Math.PI) / 180;
               const textRadius = radius * 0.65;
               const textX = centerX + textRadius * Math.cos(textAngleRad);
               const textY = centerY + textRadius * Math.sin(textAngleRad);
-
+              
               return (
                 <g key={segment.id} className={`segment-group ${segment.tier}`}>
                   <path
@@ -308,7 +305,7 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
                       textAnchor="middle"
                       dominantBaseline="middle"
                       className="segment-icon-text"
-                      fontSize={actualIsPopup ? "16" : "20"}
+                      fontSize="20"
                     >
                       {segment.icon}
                     </text>
@@ -318,7 +315,7 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
                       textAnchor="middle"
                       dominantBaseline="middle"
                       className="segment-label-text"
-                      fontSize={actualIsPopup ? "8" : "10"}
+                      fontSize="10"
                       fontWeight="700"
                       fill="white"
                     >
@@ -415,27 +412,27 @@ const RouletteGame: React.FC<RouletteGameProps> = ({ isPopup = false }) => {
                   ))}
                 </div>
               )}
-
+              
               <div className="result-icon">{lastResult.segment?.icon}</div>
               <h2 className="result-title">
                 {lastResult.animation_type === 'jackpot' ? '🎉 JACKPOT! 🎉' : '축하합니다!'}
               </h2>
               <p className="result-message">{lastResult.message}</p>
-
+              
               {lastResult.coins_won && lastResult.coins_won > 0 && (
                 <div className="reward-display">
                   <span className="reward-icon">🪙</span>
                   <span className="reward-amount">+{lastResult.coins_won.toLocaleString()}</span>
                 </div>
               )}
-
+              
               {lastResult.segment?.label.includes('젬') && (
                 <div className="reward-display">
                   <span className="reward-icon">💎</span>
                   <span className="reward-amount">+{lastResult.segment.value}</span>
                 </div>
               )}
-
+              
               <button className="result-close-button" onClick={closeResultModal}>
                 확인
               </button>

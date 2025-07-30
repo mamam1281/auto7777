@@ -86,7 +86,6 @@ services:
         condition: service_healthy
     environment:
       # 데이터베이스 설정
-      DATABASE_URL: postgresql://${DB_USER:-cc_user}:${DB_PASSWORD:-cc_password}@postgres:5432/${DB_NAME:-cc_webapp}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:-cc_webapp}
@@ -120,8 +119,6 @@ services:
     volumes:
       - ./cc-webapp/backend:/app
       - backend_logs:/app/logs
-    networks:
-      - ccnet
     healthcheck:
       test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')" ]
       interval: 30s
@@ -166,8 +163,6 @@ services:
     command: celery -A app.core.celery_app worker --loglevel=info
     volumes:
       - ./cc-webapp/backend:/app
-    networks:
-      - ccnet
 
   # Celery Beat (스케줄러)
   celery-beat:
@@ -188,8 +183,6 @@ services:
     command: celery -A app.core.celery_app beat --loglevel=info
     volumes:
       - ./cc-webapp/backend:/app
-    networks:
-      - ccnet
 
 volumes:
   pgdata:

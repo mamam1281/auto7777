@@ -9,7 +9,7 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
   // Mock user data
   const [user] = useState<User>({
     id: 1,
-    nickname: '모델지민',
+    nickname: 'GameMaster',
     cyber_token_balance: 1500,
     rank: 'PREMIUM',
     level: 15,
@@ -48,7 +48,7 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
       <div className="w-full max-w-[400px] min-h-[750px] mx-auto p-6 space-y-8 
                       overflow-y-auto overscroll-y-contain
                       scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
-
+        
         {/* 메인 컨텐츠 - 데일리 모달과 동일한 간격 */}
         <main className="space-y-8">
           {/* 프로필 헤더 */}

@@ -19,18 +19,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Add missing user columns."""
-    # Add cyber_token_balance column
-    op.add_column('users', sa.Column('cyber_token_balance', sa.Integer(), nullable=True, default=200))
-    
-    # Add password_changed_at column
-    op.add_column('users', sa.Column('password_changed_at', sa.DateTime(), nullable=True))
-    
-    # Update existing users to have default cyber token balance
-    op.execute("UPDATE users SET cyber_token_balance = 200 WHERE cyber_token_balance IS NULL")
+    """Upgrade schema."""
+    pass
 
 
 def downgrade() -> None:
-    """Remove added user columns."""
-    op.drop_column('users', 'password_changed_at')
-    op.drop_column('users', 'cyber_token_balance')
+    """Downgrade schema."""
+    pass

@@ -14,7 +14,7 @@ from app.schemas.admin import (
 )
 
 # JWT 인증 의존성 임포트
-from app.routers.auth import get_user_from_token
+from app.routers.auth_jwt import get_current_user
 
 router = APIRouter(
     prefix="/admin",
@@ -22,21 +22,11 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-def require_admin_user(user_id: int = Depends(get_user_from_token), db: Session = Depends(get_db)) -> Dict[str, Any]:
+def require_admin_user(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
     """관리자 권한 필요"""
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    if user.rank not in ["ADMIN", "PREMIUM"]:
+    if current_user["rank"] not in ["ADMIN", "PREMIUM"]:
         raise HTTPException(status_code=403, detail="관리자 권한이 필요합니다")
-    
-    return {
-        "id": user.id,
-        "site_id": user.site_id,
-        "nickname": user.nickname,
-        "rank": user.rank
-    }
+    return current_user
 
 @router.get("/users", response_model=List[UserAdminResponse])
 def list_users(
