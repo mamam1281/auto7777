@@ -16,7 +16,7 @@ class UserActivity(UserActivityBase):
     timestamp: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Reward schemas
 class RewardBase(BaseModel):
@@ -33,7 +33,7 @@ class Reward(RewardBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Admin dashboard schemas
 class UserActivitySummary(BaseModel):
@@ -59,7 +59,7 @@ class UserAdminResponse(BaseModel):
     rank: str
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ActivityResponse(BaseModel):
     id: int
@@ -68,7 +68,7 @@ class ActivityResponse(BaseModel):
     details: Optional[str] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserDetailResponse(UserAdminResponse):
     activities: List[ActivityResponse]
@@ -86,4 +86,4 @@ class RewardResponse(BaseModel):
     created_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True

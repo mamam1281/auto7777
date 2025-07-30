@@ -89,11 +89,6 @@ def list_invite_codes(
         "available_count": db.query(InviteCode).filter(InviteCode.is_used == False).count()
     }
 
-@router.get("/invite-codes", response_model=List[InviteCodeResponse]) 
-def list_invite_codes(db: Session = Depends(get_db)):
-    """초대코드 목록 조회"""
-    return db.query(InviteCode).all()
-
 @router.get("/users/{nickname}", response_model=UserResponse)
 def get_user_by_nickname(nickname: str, db: Session = Depends(get_db)):
     """닉네임으로 사용자 조회"""

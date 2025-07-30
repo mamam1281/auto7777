@@ -14,10 +14,7 @@ class UserCreate(UserBase):
 
 # Add UserRegister schema for registration endpoints
 class UserRegister(BaseModel):
-    site_id: str
     nickname: str
-    phone_number: str
-    password: str
     invite_code: str
 
 class UserLogin(BaseModel):

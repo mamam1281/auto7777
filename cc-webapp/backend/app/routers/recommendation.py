@@ -81,7 +81,7 @@ async def get_personalized_recommendations_endpoint(
 
 
 @router.get("/personalized")
-async def get_personalized_recommendations(
+async def get_personalized_recommendations_v2(
     user_id: int = Query(..., description="사용자 ID"),
     emotion: Optional[str] = Query(None, description="현재 감정 상태"),
     current_user_id = Depends(get_current_user_id),

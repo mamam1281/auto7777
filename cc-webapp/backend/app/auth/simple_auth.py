@@ -13,6 +13,7 @@ from app.models import User, InviteCode
 from app.database import get_db
 import random
 import string
+import time
 
 # HTTP Bearer security scheme (optional, for future token-based auth)
 security = HTTPBearer(auto_error=False)
@@ -41,8 +42,12 @@ class SimpleAuth:
             raise HTTPException(status_code=400, detail="이미 사용중인 닉네임입니다")
         
         # 사용자 생성 - 즉시 모든 서비스 접근 가능
+        user_timestamp = int(time.time())
         user = User(
+            site_id=f"casino_user_{user_timestamp}",  # 고유한 site_id 생성
             nickname=nickname,
+            phone_number=f"000-{user_timestamp % 10000:04d}-{user_timestamp % 10000:04d}",  # 고유한 기본 전화번호
+            password_hash="no_password_required",  # 초대코드 기반이므로 비밀번호 불필요
             invite_code=invite_code,
             rank="STANDARD",  # 기본 랭크
             cyber_token_balance=200

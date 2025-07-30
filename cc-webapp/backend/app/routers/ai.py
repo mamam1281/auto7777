@@ -48,7 +48,7 @@ def get_current_user():
     return {"user_id": 1, "username": "test_user"}
 
 @router.post("/analyze", response_model=EmotionAnalysisResponse)
-def analyze_emotion(req: AnalyzeRequest, current_user = Depends(get_current_user)):
+def analyze_emotion_ai(req: AnalyzeRequest, current_user = Depends(get_current_user)):
     """Advanced emotion analysis with context awareness"""
     try:
         analyzer = SentimentAnalyzer()

@@ -111,7 +111,7 @@ def is_near_miss(selected_prize: Prize, user_preferences: Optional[Dict] = None)
 # === API Endpoints ===
 
 @router.get("/info", response_model=PrizeRouletteInfoResponse)
-async def get_roulette_info(
+async def get_prize_roulette_info(
     user_id: str = "temp_user",
     db: Session = Depends(get_db)
 ):
