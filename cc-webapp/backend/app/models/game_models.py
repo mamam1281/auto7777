@@ -83,7 +83,7 @@ class UserActivity(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     activity_type = Column(String(50), nullable=False, index=True)  # LOGIN, GAME_PLAY, PURCHASE, etc.
     description = Column(String(200), nullable=True)
-    metadata = Column(Text, nullable=True)  # JSON 형태의 추가 정보
+    meta_data = Column(Text, nullable=True)  # JSON 형태의 추가 정보
     occurred_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     
     # Relationships

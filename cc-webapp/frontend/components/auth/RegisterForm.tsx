@@ -118,7 +118,7 @@ export default function RegisterForm({
       setIsLoading(true);
       try {
         // 백엔드 API 호출
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8002';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
         const response = await fetch(`${apiUrl}/api/auth/signup`, {
           method: 'POST',
           headers: {

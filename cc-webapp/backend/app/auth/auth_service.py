@@ -53,6 +53,7 @@ class AuthService:
         payload = {
             "sub": str(user_id),
             "session_id": session_id or str(uuid.uuid4()),
+            "jti": str(uuid.uuid4()),  # JWT ID 추가 (블랙리스트용)
             "iat": now.timestamp(),
             "exp": expire.timestamp(),
             "type": "access"
@@ -67,8 +68,13 @@ class AuthService:
     
     @staticmethod
     def verify_access_token(token: str) -> Optional[Dict[str, Any]]:
-        """액세스 토큰 검증"""
+        """액세스 토큰 검증 (블랙리스트 확인 포함)"""
         try:
+            # 먼저 블랙리스트 확인
+            if AuthService.is_token_blacklisted(token):
+                logger.warning("Access denied: token is blacklisted")
+                return None
+            
             payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
             
             if payload.get("type") != "access":
@@ -252,6 +258,130 @@ class AuthService:
             
         except Exception as e:
             logger.error(f"Failed to logout sessions: {str(e)}")
+    
+    @staticmethod
+    def blacklist_token(token: str, reason: str = "logout") -> bool:
+        """토큰을 블랙리스트에 추가"""
+        try:
+            # JWT 토큰에서 jti (JWT ID) 추출
+            try:
+                payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+                jti = payload.get("jti")
+                exp = payload.get("exp")
+                
+                if not jti:
+                    logger.warning("Token has no JTI, cannot blacklist")
+                    return False
+                    
+            except JWTError as e:
+                logger.warning(f"Cannot decode token for blacklisting: {e}")
+                return False
+            
+            # Redis에 블랙리스트 저장 (만료 시간까지)
+            try:
+                import redis
+                redis_client = redis.Redis(host='redis', port=6379, db=0, decode_responses=True)
+                
+                # 토큰 만료까지 블랙리스트에 보관
+                expire_time = datetime.fromtimestamp(exp) - datetime.utcnow()
+                if expire_time.total_seconds() > 0:
+                    redis_client.setex(
+                        f"blacklist_token:{jti}",
+                        int(expire_time.total_seconds()),
+                        reason
+                    )
+                    logger.info(f"Token {jti} blacklisted for {reason}")
+                    return True
+                else:
+                    logger.info(f"Token {jti} already expired, no need to blacklist")
+                    return True
+                    
+            except Exception as redis_error:
+                logger.warning(f"Redis not available, using memory fallback: {redis_error}")
+                # Redis 없을 시 메모리 기반 fallback (재시작 시 초기화됨)
+                if not hasattr(AuthService, '_memory_blacklist'):
+                    AuthService._memory_blacklist = {}
+                AuthService._memory_blacklist[jti] = {
+                    'reason': reason,
+                    'expires_at': exp
+                }
+                return True
+                
+        except Exception as e:
+            logger.error(f"Failed to blacklist token: {e}")
+            return False
+    
+    @staticmethod
+    def is_token_blacklisted(token: str) -> bool:
+        """토큰이 블랙리스트에 있는지 확인"""
+        try:
+            # JWT 토큰에서 jti 추출
+            try:
+                payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+                jti = payload.get("jti")
+                
+                if not jti:
+                    return False
+                    
+            except JWTError:
+                return True  # 유효하지 않은 토큰은 차단
+            
+            # Redis에서 확인
+            try:
+                import redis
+                redis_client = redis.Redis(host='redis', port=6379, db=0, decode_responses=True)
+                
+                blacklisted = redis_client.exists(f"blacklist_token:{jti}")
+                if blacklisted:
+                    logger.info(f"Token {jti} is blacklisted")
+                    return True
+                    
+            except Exception as redis_error:
+                logger.warning(f"Redis not available, checking memory fallback: {redis_error}")
+                # 메모리 기반 fallback 확인
+                if hasattr(AuthService, '_memory_blacklist'):
+                    if jti in AuthService._memory_blacklist:
+                        # 만료 시간 확인
+                        exp = AuthService._memory_blacklist[jti]['expires_at']
+                        if datetime.utcnow().timestamp() < exp:
+                            return True
+                        else:
+                            # 만료된 토큰은 블랙리스트에서 제거
+                            del AuthService._memory_blacklist[jti]
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Failed to check token blacklist: {e}")
+            return False  # 오류 시 허용 (보안보다 가용성 우선)
+    
+    @staticmethod
+    def logout_all_user_sessions(
+        user_id: int,
+        reason: str = "user_logout_all",
+        db: Session = None
+    ):
+        """사용자의 모든 세션 로그아웃"""
+        try:
+            from ..models.auth_clean import UserSession
+            
+            sessions = db.query(UserSession).filter(
+                UserSession.user_id == user_id,
+                UserSession.is_active == True
+            ).all()
+            
+            for session in sessions:
+                session.is_active = False
+                session.logout_at = datetime.utcnow()
+                session.logout_reason = reason
+            
+            db.commit()
+            
+            count = len(sessions)
+            logger.info(f"Logged out all {count} sessions for user {user_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to logout all sessions: {str(e)}")
 
 
 # 전역 인스턴스

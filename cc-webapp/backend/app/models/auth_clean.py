@@ -5,7 +5,7 @@
 - 로그인/인증/회원가입 기본 틀
 """
 
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Index, Text, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime

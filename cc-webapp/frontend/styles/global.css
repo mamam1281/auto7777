@@ -58,23 +58,34 @@
   모든 디자인 토큰의 기반이 되는 색상 팔레트와 그라데이션을 정의합니다.
 */
 :root {
-  /* Primary Colors */
-  --color-primary-dark-navy: #1a1a1a; /* 주로 배경색 사용 */
-  --color-primary-charcoal: #2d2d2d; /* 카드, 표면색 사용 */
+  /* NEW CUSTOM COLOR PALETTE - 사용자 지정 색상 팔레트 */
+  --color-primary-dark: #020505; /* 메인 다크 배경 */
+  --color-primary-rose: #DA919E; /* 핑크 로즈 - 카드/배경 */
+  --color-primary-pink: #C04380; /* 진한 핑크 - 액센트/버튼 */
+  --color-light-pink: #F6E5F6; /* 연한 핑크 - 텍스트/하이라이트 */
+  --color-mint: #87D7CC; /* 민트 - 성공/보조 액센트 */
+  --color-mid-pink: #CA6181; /* 미드톤 핑크 - 호버/중간 톤 */
 
-  /* Text Colors */
-  --color-text-primary: #FFFFFF; /* 기본 텍스트 색상 */
-  --color-text-secondary: #D1D5DB; /* 보조 텍스트 색상 */
-  --text-primary: #FFFFFF; /* 기본 텍스트 색상 (별칭) */
-  --text-secondary: #D1D5DB; /* 보조 텍스트 색상 (별칭) */
+  /* Primary Colors (updated) */
+  --color-primary-dark-navy: var(--color-primary-dark); /* 주로 배경색 사용 */
+  --color-primary-charcoal: var(--color-primary-rose); /* 카드, 표면색 사용 */
 
-  /* Accent Colors */
-  --color-accent-red: #FF4516; /* 강조색 - 강렬한 빨간색 */
-  --color-accent-amber: #FFD700; /* 강조색 - 황금색 */
-  --color-accent-yellow: #FFF000; /* 강조색 - 노란색 */
-  --color-accent-purple: #7C3AED; /* 강조색 - 보라색 */
-  --color-accent-blue: #3B82F6; /* 강조색 - 파란색 */
-  --color-accent-cyan: #06B6D4; /* 강조색 - 시안색 */
+  /* Text Colors (updated) */
+  --color-text-primary: var(--color-light-pink); /* 기본 텍스트 색상 */
+  --color-text-secondary: rgba(246, 229, 246, 0.7); /* 보조 텍스트 색상 */
+  --text-primary: var(--color-light-pink); /* 기본 텍스트 색상 (별칭) */
+  --text-secondary: rgba(246, 229, 246, 0.7); /* 보조 텍스트 색상 (별칭) */
+
+  /* Accent Colors (updated) */
+  --color-accent-primary: var(--color-primary-pink); /* 주 액센트 */
+  --color-accent-secondary: var(--color-mid-pink); /* 보조 액센트 */
+  --color-accent-success: var(--color-mint); /* 성공 색상 */
+  --color-accent-red: #FF4516; /* 강조색 - 강렬한 빨간색 (유지) */
+  --color-accent-amber: #FFD700; /* 강조색 - 황금색 (유지) */
+  --color-accent-yellow: #FFF000; /* 강조색 - 노란색 (유지) */
+  --color-accent-purple: var(--color-primary-pink); /* 강조색 - 핑크로 변경 */
+  --color-accent-blue: #3B82F6; /* 강조색 - 파란색 (유지) */
+  --color-accent-cyan: var(--color-mint); /* 강조색 - 민트로 변경 */
 
   /* Neutral Colors */
   --color-neutral-light: #E0E0E0; /* 밝은 중성색 */
@@ -1506,3 +1517,401 @@ h1.gradient-text {
   background-clip: text !important;
   color: transparent !important;
 }
+
+/* === AUTH SYSTEM STYLES === */
+/* 사용자 지정 색상 팔레트 기반 완전한 로그인/회원가입/관리자 시스템 */
+
+.auth-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, rgba(218, 145, 158, 0.1) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at 30% 70%, 
+    rgba(192, 67, 128, 0.15) 0%, 
+    transparent 50%
+  ),
+  radial-gradient(
+    circle at 70% 30%, 
+    rgba(135, 215, 204, 0.1) 0%, 
+    transparent 50%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.auth-form-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 400px;
+  background: rgba(218, 145, 158, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(246, 229, 246, 0.2);
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 40px rgba(2, 5, 5, 0.3),
+    0 0 30px rgba(192, 67, 128, 0.2);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.auth-form-wrapper:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 25px 50px rgba(2, 5, 5, 0.4),
+    0 0 40px rgba(192, 67, 128, 0.3);
+}
+
+.auth-header {
+  text-align: center;
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid rgba(246, 229, 246, 0.1);
+}
+
+.auth-logo {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, var(--color-primary-pink), var(--color-mid-pink));
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--color-light-pink);
+  box-shadow: 0 10px 20px rgba(192, 67, 128, 0.3);
+}
+
+.auth-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-light-pink);
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(2, 5, 5, 0.3);
+}
+
+.auth-subtitle {
+  color: rgba(246, 229, 246, 0.7);
+  font-size: 0.875rem;
+  margin-bottom: 0;
+}
+
+.auth-form {
+  padding: 2rem;
+}
+
+.auth-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.auth-label {
+  display: block;
+  color: var(--color-light-pink);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 1px 2px rgba(2, 5, 5, 0.2);
+}
+
+.auth-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: rgba(246, 229, 246, 0.1);
+  border: 1px solid rgba(246, 229, 246, 0.2);
+  border-radius: 12px;
+  color: var(--color-light-pink);
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.auth-input::placeholder {
+  color: rgba(246, 229, 246, 0.5);
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--color-primary-pink);
+  background: rgba(246, 229, 246, 0.15);
+  box-shadow: 
+    0 0 0 3px rgba(192, 67, 128, 0.2),
+    0 4px 8px rgba(2, 5, 5, 0.1);
+  transform: scale(1.02);
+}
+
+.auth-input:hover {
+  border-color: rgba(246, 229, 246, 0.3);
+  background: rgba(246, 229, 246, 0.12);
+}
+
+.auth-button {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: linear-gradient(135deg, var(--color-primary-pink), var(--color-mid-pink));
+  border: none;
+  border-radius: 12px;
+  color: var(--color-light-pink);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(192, 67, 128, 0.4);
+  text-shadow: 0 1px 2px rgba(2, 5, 5, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(246, 229, 246, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.auth-button:hover::before {
+  left: 100%;
+}
+
+.auth-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(192, 67, 128, 0.5);
+  background: linear-gradient(135deg, var(--color-mid-pink), var(--color-primary-pink));
+}
+
+.auth-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(192, 67, 128, 0.4);
+}
+
+.auth-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  background: rgba(202, 97, 129, 0.5);
+}
+
+.auth-button-secondary {
+  background: rgba(135, 215, 204, 0.2);
+  border: 1px solid var(--color-mint);
+  color: var(--color-mint);
+  box-shadow: 0 4px 15px rgba(135, 215, 204, 0.2);
+}
+
+.auth-button-secondary:hover {
+  background: rgba(135, 215, 204, 0.3);
+  box-shadow: 0 6px 20px rgba(135, 215, 204, 0.3);
+}
+
+.auth-switch-link {
+  color: var(--color-primary-pink);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.auth-switch-link:hover {
+  color: var(--color-mid-pink);
+  border-bottom-color: var(--color-mid-pink);
+  text-shadow: 0 0 5px rgba(192, 67, 128, 0.5);
+}
+
+.auth-divider {
+  text-align: center;
+  margin: 1.5rem 0;
+  position: relative;
+  color: rgba(246, 229, 246, 0.6);
+  font-size: 0.875rem;
+}
+
+.auth-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(246, 229, 246, 0.3) 20%, 
+    rgba(246, 229, 246, 0.3) 80%, 
+    transparent
+  );
+  z-index: 1;
+}
+
+.auth-divider span {
+  background: var(--color-primary-rose);
+  padding: 0 1rem;
+  position: relative;
+  z-index: 2;
+}
+
+.auth-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: #fca5a5;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.auth-success {
+  background: rgba(135, 215, 204, 0.1);
+  border: 1px solid rgba(135, 215, 204, 0.3);
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: var(--color-mint);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.auth-loading {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(246, 229, 246, 0.3);
+  border-top: 2px solid var(--color-light-pink);
+  border-radius: 50%;
+  animation: auth-spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes auth-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(246, 229, 246, 0.2);
+  margin-bottom: 2rem;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 1rem;
+  text-align: center;
+  background: none;
+  border: none;
+  color: rgba(246, 229, 246, 0.6);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.auth-tab.active {
+  color: var(--color-light-pink);
+}
+
+.auth-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-primary-pink), var(--color-mid-pink));
+}
+
+.auth-tab:hover {
+  color: var(--color-light-pink);
+  background: rgba(246, 229, 246, 0.05);
+}
+
+/* 관리자 로그인 특별 스타일 */
+.auth-admin {
+  border: 2px solid var(--color-mint);
+  box-shadow: 
+    0 20px 40px rgba(2, 5, 5, 0.3),
+    0 0 30px rgba(135, 215, 204, 0.3);
+}
+
+.auth-admin .auth-logo {
+  background: linear-gradient(135deg, var(--color-mint), var(--color-primary-pink));
+}
+
+.auth-admin .auth-title {
+  color: var(--color-mint);
+  text-shadow: 0 0 10px rgba(135, 215, 204, 0.5);
+}
+
+.auth-checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.auth-checkbox {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+  accent-color: var(--color-primary-pink);
+}
+
+.auth-checkbox-label {
+  color: rgba(246, 229, 246, 0.8);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 0.5rem;
+  }
+  
+  .auth-form-wrapper {
+    margin: 0;
+    border-radius: 16px;
+  }
+  
+  .auth-header, .auth-form {
+    padding: 1.5rem;
+  }
+  
+  .auth-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* 애니메이션 */
+@keyframes auth-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-form-wrapper {
+  animation: auth-fadeIn 0.6s ease-out;
+}
+
+/* === END AUTH SYSTEM STYLES === */

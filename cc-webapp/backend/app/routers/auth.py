@@ -268,23 +268,40 @@ async def refresh_token(
 
 @router.post("/logout")
 async def logout(
+    request: Request,
     current_user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db)
 ):
-    """로그아웃"""
+    """로그아웃 (토큰 블랙리스트 포함)"""
+    # Authorization 헤더에서 토큰 추출
+    authorization = request.headers.get("Authorization")
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        # 토큰을 블랙리스트에 추가
+        auth_service.blacklist_token(token, "user_logout")
+    
+    # 세션 로그아웃
     auth_service.logout_user_session(current_user_id, None, "user_logout", db)
-    logger.info("User %s logged out", current_user_id)
+    logger.info("User %s logged out with token blacklisted", current_user_id)
     return {"message": "Successfully logged out"}
 
 
 @router.post("/logout-all")
 async def logout_all_sessions(
+    request: Request,
     current_user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db)
 ):
-    """모든 세션에서 로그아웃"""
+    """모든 세션에서 로그아웃 (현재 토큰 블랙리스트 포함)"""
+    # 현재 토큰을 블랙리스트에 추가
+    authorization = request.headers.get("Authorization")
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        auth_service.blacklist_token(token, "user_logout_all")
+    
+    # 모든 세션 로그아웃
     auth_service.logout_all_user_sessions(current_user_id, "user_logout_all", db)
-    logger.info("All sessions logged out for user %s", current_user_id)
+    logger.info("All sessions logged out for user %s with token blacklisted", current_user_id)
     return {"message": "Successfully logged out from all sessions"}
 
 

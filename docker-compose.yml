@@ -119,6 +119,8 @@ services:
     volumes:
       - ./cc-webapp/backend:/app
       - backend_logs:/app/logs
+    networks:
+      - ccnet
     healthcheck:
       test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')" ]
       interval: 30s

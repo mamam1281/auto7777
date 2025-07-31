@@ -2,101 +2,125 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { User, Phone, Loader2, LogIn, Lock } from 'lucide-react';
 
 interface LoginFormProps {
-  onLogin?: (siteId: string, password: string) => void;
-  onSwitchToSignup?: () => void;
-  onSwitchToResetPassword?: () => void;
-  isLoading?: boolean;
-  error?: string;
-  autoFillTestAccount?: boolean;
+  onLogin: (siteId: string, password: string) => void;
+  onSwitchToSignup: () => void;
+  isLoading: boolean;
+  error: string;
 }
 
 export default function LoginForm({ 
   onLogin, 
   onSwitchToSignup,
-  onSwitchToResetPassword,
-  isLoading: propIsLoading = false, 
-  error: propError = '',
-  autoFillTestAccount = false 
+  isLoading, 
+  error
 }: LoginFormProps) {
   const [siteId, setSiteId] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(propIsLoading);
-  const [error, setError] = useState(propError);
+  const [rememberMe, setRememberMe] = useState(false);
   const searchParams = useSearchParams();
-  const router = useRouter();
   
   // 테스트 계정 자동 입력
   useEffect(() => {
-    const useTestAccount = autoFillTestAccount || searchParams?.get('test') === 'true';
+    const useTestAccount = searchParams?.get('test') === 'true';
     if (useTestAccount) {
       setSiteId('testuser');
       setPassword('testpass123');
     }
-  }, [autoFillTestAccount, searchParams]);
+  }, [searchParams]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (onLogin) {
-      onLogin(siteId, password);
-    } else {
-      setIsLoading(true);
-      try {
-        // 백엔드 API 호출
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8002';
-        const response = await fetch(`${apiUrl}/api/auth/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            site_id: siteId,
-            password: password
-          }),
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || '로그인에 실패했습니다');
-        }
-        
-        const data = await response.json();
-        console.log('로그인 성공', data);
-        
-        // JWT 토큰 저장 (localStorage 또는 쿠키)
-        if (data.access_token) {
-          localStorage.setItem('access_token', data.access_token);
-          localStorage.setItem('user_info', JSON.stringify(data.user));
-        }
-        
-        // 로그인 후 메인 페이지로 이동
-        alert(`환영합니다, ${data.user?.nickname || '사용자'}님!`);
-        router.push('/games');
-      } catch (error: any) {
-        setError(error.message || '로그인에 실패했습니다. 사이트ID와 비밀번호를 확인해주세요.');
-        console.error('로그인 실패', error);
-      } finally {
-        setIsLoading(false);
-      }
+    if (siteId.trim() && password.trim()) {
+      onLogin(siteId.trim(), password.trim());
     }
   };
 
   return (
-    <div className="auth-content">
-      <div className="auth-header-simple">
-        <div className="auth-tab active">로그인</div>
-        <div 
-          className="auth-tab inactive" 
+    <>
+      <div className="auth-header">
+        <div className="auth-logo">
+          🎰
+        </div>
+        <h1 className="auth-title">환영합니다!</h1>
+        <p className="auth-subtitle">계정에 로그인하여 게임을 시작하세요</p>
+      </div>
+
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <div className="auth-form-group">
+          <label htmlFor="siteId" className="auth-label">
+            사이트 ID
+          </label>
+          <input
+            type="text"
+            id="siteId"
+            className="auth-input"
+            placeholder="사이트 ID를 입력하세요"
+            value={siteId}
+            onChange={(e) => setSiteId(e.target.value)}
+            required
+            autoComplete="username"
+            disabled={isLoading}
+          />
+        </div>
+
+        <div className="auth-form-group">
+          <label htmlFor="password" className="auth-label">
+            비밀번호
+          </label>
+          <input
+            type="password"
+            id="password"
+            className="auth-input"
+            placeholder="비밀번호를 입력하세요"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            disabled={isLoading}
+          />
+        </div>
+
+        <div className="auth-checkbox-group">
+          <input
+            type="checkbox"
+            id="rememberMe"
+            className="auth-checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            disabled={isLoading}
+          />
+          <label htmlFor="rememberMe" className="auth-checkbox-label">
+            로그인 상태 유지
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          className="auth-button"
+          disabled={isLoading || !siteId.trim() || !password.trim()}
+        >
+          {isLoading && <span className="auth-loading"></span>}
+          {isLoading ? '로그인 중...' : '로그인'}
+        </button>
+
+        <div className="auth-divider">
+          <span>아직 계정이 없으신가요?</span>
+        </div>
+
+        <button
+          type="button"
+          className="auth-button auth-button-secondary"
           onClick={onSwitchToSignup}
-          style={{ cursor: 'pointer' }}
+          disabled={isLoading}
         >
           회원가입
-        </div>
-      </div>
+        </button>
+      </form>
+    </>
+  );
+}
       
       <div style={{ flex: 1 }}></div>
       

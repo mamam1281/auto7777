@@ -66,15 +66,15 @@ from app.routers import (
 
 # JWT 인증 API 임포트 추가
 try:
-    from app.routers import auth_jwt
-    JWT_AUTH_AVAILABLE = True
-    print("✅ JWT 인증 API 모듈 로드 성공")
+    from app.routers import simple_auth  # PostgreSQL 기반 간단한 인증 라우터
+    SIMPLE_AUTH_AVAILABLE = True
+    print("✅ Simple Auth API 모듈 로드 성공")
 except ImportError as e:
-    JWT_AUTH_AVAILABLE = False
-    print(f"⚠️ Warning: JWT Auth API not available: {e}")
+    SIMPLE_AUTH_AVAILABLE = False
+    print(f"⚠️ Warning: Simple Auth API not available: {e}")
 except Exception as e:
-    JWT_AUTH_AVAILABLE = False
-    print(f"❌ Error loading JWT Auth API: {e}")
+    SIMPLE_AUTH_AVAILABLE = False
+    print(f"❌ Error loading Simple Auth API: {e}")
 
 # Kafka API 임포트 추가
 try:
@@ -180,7 +180,9 @@ app.add_middleware(
 )
 
 # Register API routers
-app.include_router(auth.router, prefix="/api")  # 간소화된 인증 라우터
+if SIMPLE_AUTH_AVAILABLE:
+    app.include_router(simple_auth.router, prefix="/api")  # PostgreSQL 기반 간단한 인증 라우터
+    print("✅ Simple Auth API endpoints registered")
 # 다른 모든 라우터들을 임시로 비활성화 - 모델 의존성 문제 해결 후 재활성화
 # app.include_router(admin.router, prefix="/api")  # 임시 비활성화
 # app.include_router(games.router)  # 임시 비활성화
@@ -206,12 +208,12 @@ app.include_router(auth.router, prefix="/api")  # 간소화된 인증 라우터
 # app.include_router(doc_titles.router)  # prefix 없이 등록하여 /docs/titles 직접 접근 가능
 # app.include_router(invite_router.router)  # 초대코드 유효성 검증 API 추가 (이미 /api/invite prefix 포함)
 
-# JWT 인증 API 라우터 등록
-if JWT_AUTH_AVAILABLE:
-    app.include_router(auth_jwt.router)
-    print("✅ JWT 인증 API endpoints registered")
+# Simple Auth API 라우터 등록
+if SIMPLE_AUTH_AVAILABLE:
+    # app.include_router(simple_auth.router)  # 이미 위에서 /api prefix로 등록됨
+    print("✅ Simple Auth API endpoints registered (already included above)")
 else:
-    print("⚠️ JWT 인증 API endpoints not available")
+    print("⚠️ Simple Auth API endpoints not available")
 
 # Kafka API 라우터 등록 (가능한 경우에만)
 if KAFKA_AVAILABLE:
