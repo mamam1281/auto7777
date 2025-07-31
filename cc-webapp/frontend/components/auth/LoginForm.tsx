@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '../../hooks/useUser';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -9,10 +10,10 @@ interface LoginFormProps {
 
 export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
   const router = useRouter();
+  const { login } = useUser();
   const [formData, setFormData] = useState({
-    nickname: '',
-    password: '',
-    site_id: 'default'
+    site_id: '',
+    password: ''
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -32,50 +33,30 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      // useUser hook의 login 메서드 사용
+      await login({
+        site_id: formData.site_id,
+        password: formData.password
       });
 
-      const data = await response.json();
+      console.log('✅ 로그인 성공! 메인 페이지로 이동');
 
-      if (response.ok) {
-        // 🔒 토큰과 사용자 정보를 localStorage에 저장
-        localStorage.setItem('token', data.access_token);
-        localStorage.setItem('userNickname', formData.nickname);
-        localStorage.setItem('user', JSON.stringify({
-          nickname: formData.nickname,
-          site_id: formData.site_id
-        }));
-        
-        console.log('✅ 로그인 성공! 메인 페이지로 이동:', {
-          nickname: formData.nickname,
-          token: data.access_token
-        });
-        
-        // 🏠 메인 페이지(홈 대시보드)로 리다이렉트
-        router.push('/');
-      } else {
-        // 🔧 API 오류 응답 처리 개선
-        let errorMessage = '로그인에 실패했습니다.';
-        
-        if (data.detail) {
-          if (Array.isArray(data.detail)) {
-            // Pydantic validation 오류 처리
-            errorMessage = data.detail.map((err: any) => err.msg).join(', ');
-          } else if (typeof data.detail === 'string') {
-            errorMessage = data.detail;
-          }
+      // 🏠 메인 페이지(홈 대시보드)로 리다이렉트
+      router.push('/');
+    } catch (error: any) {
+      console.error('❌ 로그인 실패:', error);
+
+      // 에러 메시지 처리
+      let errorMessage = '로그인에 실패했습니다.';
+      if (error.message) {
+        if (error.message.includes('Invalid credentials')) {
+          errorMessage = '아이디 또는 비밀번호가 틀렸습니다.';
+        } else {
+          errorMessage = error.message;
         }
-        
-        setError(errorMessage);
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('네트워크 오류가 발생했습니다.');
+
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -97,17 +78,17 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
         {error && <div className="auth-error">{error}</div>}
 
         <div className="form-group">
-          <label htmlFor="nickname" className="form-label">
-            닉네임
+          <label htmlFor="site_id" className="form-label">
+            사이트 ID
           </label>
           <input
             type="text"
-            id="nickname"
-            name="nickname"
-            value={formData.nickname}
+            id="site_id"
+            name="site_id"
+            value={formData.site_id}
             onChange={handleChange}
             className="form-input"
-            placeholder="닉네임을 입력하세요"
+            placeholder="사이트 ID를 입력하세요 (예: WLTN001)"
             required
             disabled={isLoading}
           />

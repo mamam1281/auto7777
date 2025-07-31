@@ -13,11 +13,27 @@ import SplashScreen from '../components/splash/SplashScreen';
 // 게임 팝업 유틸리티
 import { openGamePopup } from '../utils/gamePopup';
 
+// 사용자 인증 hook
+import { useUser } from '../hooks/useUser';
+
 export default function CasinoDashboard() {
   const router = useRouter();
+  const { user, isLoading: userLoading } = useUser();
   const [isLoading, setIsLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
   const [hasSeenSplash, setHasSeenSplash] = useState(false);
+
+  // 로그인 상태 확인 - 안전한 방식으로 리다이렉트
+  useEffect(() => {
+    // 사용자 로딩이 완료되고 로그인되지 않은 경우 리다이렉트
+    if (!userLoading && !user) {
+      // setTimeout을 사용하여 렌더링 사이클 이후에 실행
+      setTimeout(() => {
+        router.replace('/auth');
+      }, 0);
+      return;
+    }
+  }, [user, userLoading, router]);
 
   // 스플래시 화면을 표시한 적 있는지 체크
   useEffect(() => {
@@ -103,9 +119,30 @@ export default function CasinoDashboard() {
     }
   ];
 
-  // 스플래시 화면 표시
-  if (showSplash) {
-    return <SplashScreen onComplete={handleSplashComplete} skipAuth={hasSeenSplash} />;
+  // 스플래시 화면 표시 - 로그인된 사용자만
+  if (showSplash && user && !userLoading) {
+    return <SplashScreen onComplete={handleSplashComplete} />;
+  }
+
+  // 사용자 로딩 중이거나 로그인되지 않은 경우 - 로그인 페이지로 즉시 리다이렉트
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center"
+        style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 25%, #0f0f0f 50%, #1a1a1a 75%, #0a0a0a 100%)' }}>
+        <LoadingSpinner size="xl" variant="ring" text="사용자 정보 확인 중..." />
+      </div>
+    );
+  }
+
+  // 로그인되지 않은 경우 즉시 리다이렉트 (스플래시 건너뛰기)
+  if (!user) {
+    router.replace('/auth');
+    return (
+      <div className="min-h-screen flex items-center justify-center"
+        style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 25%, #0f0f0f 50%, #1a1a1a 75%, #0a0a0a 100%)' }}>
+        <LoadingSpinner size="xl" variant="ring" text="로그인 페이지로 이동 중..." />
+      </div>
+    );
   }
 
   // 일반 로딩 화면
@@ -154,7 +191,7 @@ export default function CasinoDashboard() {
           {/* 프리미엄 웰컴 섹션 */}
           <motion.header
             className="text-center"
-            style={{ marginBottom: '24px', marginTop: '16px' }}
+            style={{ marginBottom: '30px', marginTop: '20px' }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -169,7 +206,7 @@ export default function CasinoDashboard() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               color: 'transparent',
-              marginBottom: '12px',
+              marginBottom: '20px',
               textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' // 글로우 → 부드러운 쉐도우
             }}>
               모델카지노
@@ -180,7 +217,7 @@ export default function CasinoDashboard() {
               color: 'rgba(255, 255, 255, 0.95)', // 대비 개선
               fontWeight: '500',
               letterSpacing: '0.025em',
-              marginTop: '8px',
+              marginTop: '16px',
               textShadow: '0 1px 4px rgba(0, 0, 0, 0.2)' // 글로우 → 부드러운 쉐도우
             }}>
               최고급 모델과 함께하는 특별한 시간
@@ -189,25 +226,25 @@ export default function CasinoDashboard() {
 
           {/* 프리미엄 게임 섹션 */}
           <motion.section
-            className="text-center py-8"
-            style={{ marginBottom: '32px' }}
+            className="text-center py-18"
+            style={{ marginBottom: '42px' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
             aria-labelledby="game-section-title"
           >
-            <h2 
+            <h2
               id="game-section-title"
               style={{
-              fontSize: '28px', // 24px → 28px (섹션 제목 강화)
-              fontFamily: "'Inter', sans-serif",
-              color: '#ffffff',
-              fontWeight: '700',
-              letterSpacing: '0.02em',
-              marginBottom: '24px',
-              textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' // 글로우 → 부드러운 쉐도우
-            }}>🎯 지금 바로 시작하세요</h2>
-            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 w-full max-w-full overflow-hidden">
+                fontSize: '28px', // 24px → 28px (섹션 제목 강화)
+                fontFamily: "'Inter', sans-serif",
+                color: '#ffffff',
+                fontWeight: '700',
+                letterSpacing: '0.02em',
+                marginBottom: '32px',
+                textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' // 글로우 → 부드러운 쉐도우
+              }}>🎯 지금 바로 시작하세요</h2>
+            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-1 w-full max-w-full overflow-hidden">
               <Button
                 variant="primary"
                 size="lg"
@@ -241,28 +278,28 @@ export default function CasinoDashboard() {
             aria-labelledby="quick-access-title"
             role="region"
           >
-            <h2 
+            <h2
               id="quick-access-title"
               style={{
-              fontSize: '28px', // 24px → 28px (섹션 제목 일관성)
-              fontFamily: "'Inter', sans-serif",
-              color: '#ffffff',
-              fontWeight: '700',
-              letterSpacing: '0.02em',
-              marginBottom: '16px',
-              textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' // 글로우 → 부드러운 쉐도우
-            }}>
+                fontSize: '28px', // 24px → 28px (섹션 제목 일관성)
+                fontFamily: "'Inter', sans-serif",
+                color: '#ffffff',
+                fontWeight: '700',
+                letterSpacing: '0.03em',
+                marginBottom: '18px',
+                textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' // 글로우 → 부드러운 쉐도우
+              }}>
               <span aria-hidden="true">⚡</span> 빠른 접속
             </h2>
-            
+
             {/* 스크린리더를 위한 섹션 설명 */}
             <p className="sr-only">
-              다음 4개의 빠른 접속 버튼을 사용하여 주요 기능에 바로 접근할 수 있습니다. 
+              다음 4개의 빠른 접속 버튼을 사용하여 주요 기능에 바로 접근할 수 있습니다.
               탭 키로 이동하고 엔터나 스페이스 키로 선택할 수 있습니다.
             </p>
-            
-            <div style={{ marginTop: '24px' }}>
-              <div 
+
+            <div style={{ marginTop: '28px' }}>
+              <div
                 className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-3 w-full max-w-full overflow-hidden"
                 style={{ gridAutoRows: '200px' }}
                 role="grid"

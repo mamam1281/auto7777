@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '../../hooks/useUser';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -9,6 +10,7 @@ interface RegisterFormProps {
 
 export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const router = useRouter();
+  const { signup, checkInviteCode } = useUser();
   const [formData, setFormData] = useState({
     invite_code: '',
     site_id: '',
@@ -34,62 +36,41 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     setError('');
 
     try {
-      // 🔧 간단한 초대코드 확인 (로컬 체크)
-      const validInviteCodes = ['6974', '6969', '2560'];
-      if (!validInviteCodes.includes(formData.invite_code)) {
-        setError('유효하지 않은 초대코드입니다. (6974, 6969, 2560 중 하나를 입력하세요)');
+      // 초대코드 확인
+      const isValidCode = await checkInviteCode(formData.invite_code);
+      if (!isValidCode) {
+        setError('유효하지 않은 초대코드입니다.');
         return;
       }
 
       // 회원가입 진행
       console.log('🚀 회원가입 요청 시작:', formData);
-      const signupResponse = await fetch('http://localhost:8000/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      await signup(formData);
 
-      console.log('📡 API 응답 상태:', signupResponse.status);
-      const data = await signupResponse.json();
-      console.log('📦 API 응답 데이터:', data);
+      console.log('✅ 회원가입 성공! 메인 페이지로 이동');
 
-      if (signupResponse.ok) {
-        // 🔒 토큰과 사용자 정보를 localStorage에 저장
-        localStorage.setItem('token', data.access_token);
-        localStorage.setItem('userNickname', formData.nickname);
-        localStorage.setItem('user', JSON.stringify({
-          nickname: formData.nickname,
-          invite_code: formData.invite_code,
-          site_id: formData.site_id
-        }));
-        
-        console.log('✅ 회원가입 성공! 메인 페이지로 이동:', {
-          nickname: formData.nickname,
-          token: data.access_token
-        });
-        
-        // 🏠 메인 페이지(홈 대시보드)로 리다이렉트
-        router.push('/');
-      } else {
-        // 🔧 API 오류 응답 처리 개선
-        let errorMessage = '회원가입에 실패했습니다.';
-        
-        if (data.detail) {
-          if (Array.isArray(data.detail)) {
-            // Pydantic validation 오류 처리
-            errorMessage = data.detail.map((err: any) => err.msg).join(', ');
-          } else if (typeof data.detail === 'string') {
-            errorMessage = data.detail;
-          }
+      // 🏠 메인 페이지(홈 대시보드)로 리다이렉트
+      router.push('/');
+    } catch (error: any) {
+      console.error('❌ 회원가입 실패:', error);
+
+      // 에러 메시지 처리
+      let errorMessage = '회원가입에 실패했습니다.';
+      if (error.message) {
+        if (error.message.includes('Site ID already taken')) {
+          errorMessage = '이미 사용 중인 Site ID입니다.';
+        } else if (error.message.includes('Nickname already taken')) {
+          errorMessage = '이미 사용 중인 닉네임입니다.';
+        } else if (error.message.includes('Phone number already taken')) {
+          errorMessage = '이미 등록된 전화번호입니다.';
+        } else if (error.message.includes('Invalid invite code')) {
+          errorMessage = '유효하지 않은 초대코드입니다.';
+        } else {
+          errorMessage = error.message;
         }
-        
-        setError(errorMessage);
       }
-    } catch (error) {
-      console.error('Register error:', error);
-      setError('네트워크 오류가 발생했습니다. 백엔드 서버를 확인해주세요.');
+
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -100,38 +81,29 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       {/* 🎮 플랫폼 타이틀 */}
       <div className="auth-header">
         <div className="game-platform-title">모델카지노</div>
-        <div className="game-platform-subtitle">새로운 모험의 시작</div>
+        <div className="auth-subtitle">새 계정 만들기</div>
       </div>
 
-      <div style={{ flex: 1 }}></div>
-
-      <div className="register-message" style={{ textAlign: 'center' }}> 회원님을 환영합니다</div>
-      <div className="register-help" style={{ textAlign: 'center' }}>초대코드로 가입하여 특별한 혜택을 받으세요</div>
-
-      <form className="auth-form register-form" onSubmit={handleSubmit}>
-        {error && <div className="auth-error">{error}</div>}
-
+      {/* 📝 회원가입 폼 */}
+      <form onSubmit={handleSubmit} className="auth-form">
+        {/* 초대코드 입력 */}
         <div className="form-group">
-          <label htmlFor="invite_code" className="form-label">
-            초대코드 <span className="required">*</span>
-          </label>
+          <label htmlFor="invite_code" className="form-label">초대코드</label>
           <input
             type="text"
             id="invite_code"
             name="invite_code"
             value={formData.invite_code}
             onChange={handleChange}
-            className="form-input invite-input"
+            className="form-input"
             placeholder="초대코드를 입력하세요"
             required
-            disabled={isLoading}
           />
         </div>
 
+        {/* Site ID 입력 */}
         <div className="form-group">
-          <label htmlFor="site_id" className="form-label">
-            사이트ID <span className="required">*</span>
-          </label>
+          <label htmlFor="site_id" className="form-label">Site ID</label>
           <input
             type="text"
             id="site_id"
@@ -139,16 +111,14 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             value={formData.site_id}
             onChange={handleChange}
             className="form-input"
-            placeholder="사이트ID를 입력하세요"
+            placeholder="고유한 ID를 입력하세요"
             required
-            disabled={isLoading}
           />
         </div>
 
+        {/* 닉네임 입력 */}
         <div className="form-group">
-          <label htmlFor="nickname" className="form-label">
-            닉네임 <span className="required">*</span>
-          </label>
+          <label htmlFor="nickname" className="form-label">닉네임</label>
           <input
             type="text"
             id="nickname"
@@ -156,33 +126,14 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             value={formData.nickname}
             onChange={handleChange}
             className="form-input"
-            placeholder="게임에서 사용할 닉네임"
+            placeholder="사용할 닉네임을 입력하세요"
             required
-            disabled={isLoading}
           />
         </div>
 
+        {/* 비밀번호 입력 */}
         <div className="form-group">
-          <label htmlFor="phone_number" className="form-label">
-            전화번호 <span className="required">*</span>
-          </label>
-          <input
-            type="tel"
-            id="phone_number"
-            name="phone_number"
-            value={formData.phone_number}
-            onChange={handleChange}
-            className="form-input"
-            placeholder="전화번호를 입력하세요 (예: 010-1234-5678)"
-            required
-            disabled={isLoading}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="password" className="form-label">
-            비밀번호 <span className="required">*</span>
-          </label>
+          <label htmlFor="password" className="form-label">비밀번호</label>
           <input
             type="password"
             id="password"
@@ -190,35 +141,50 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             value={formData.password}
             onChange={handleChange}
             className="form-input"
-            placeholder="안전한 비밀번호를 입력하세요"
+            placeholder="4자 이상 입력하세요"
             required
-            disabled={isLoading}
+            minLength={4}
           />
         </div>
 
+        {/* 전화번호 입력 */}
+        <div className="form-group">
+          <label htmlFor="phone_number" className="form-label">전화번호</label>
+          <input
+            type="tel"
+            id="phone_number"
+            name="phone_number"
+            value={formData.phone_number}
+            onChange={handleChange}
+            className="form-input"
+            placeholder="010-1234-5678"
+            required
+          />
+        </div>
+
+        {/* 🚨 오류 메시지 */}
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+
+        {/* 🔄 회원가입 버튼 */}
         <button
           type="submit"
-          className="auth-button primary register-button luxury-gradient"
-          disabled={isLoading || !formData.invite_code || !formData.site_id || !formData.nickname || !formData.phone_number || !formData.password}
+          className="auth-button primary"
+          disabled={isLoading}
         >
-          {isLoading ? (
-            <>
-              <span className="loading-spinner"></span>
-              가입 중...
-            </>
-          ) : (
-            <span className="luxury-text">즐거움의시작 모델카지노</span>
-          )}
+          {isLoading ? '가입 중...' : '회원가입'}
         </button>
       </form>
 
-      {/* 🔄 전환 버튼들 */}
-      <div className="auth-switches">
+      {/* 🔗 로그인으로 전환 */}
+      <div className="auth-switch">
         <button
           type="button"
-          className="auth-link"
           onClick={onSwitchToLogin}
-          disabled={isLoading}
+          className="link-button"
         >
           이미 계정이 있으신가요? <span className="link-accent">로그인</span>
         </button>

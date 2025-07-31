@@ -133,11 +133,85 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     lifespan=lifespan,
-    title="Casino Club API",
-    description="API for interactive mini-games and token-based reward system",
-    version="0.1.0",
+    title="Casino Club F2P API",
+    description="""
+## Casino Club F2P Backend API
+
+이 API는 Casino Club F2P 프로젝트의 백엔드 시스템입니다.
+
+### 🎯 주요 기능
+- **사용자 인증**: JWT 기반 회원가입/로그인 시스템
+- **프로필 관리**: 사용자 프로필 조회 및 관리
+- **실시간 이벤트**: Kafka를 통한 사용자 행동 추적
+- **토큰 시스템**: 사이버 토큰 기반 보상 시스템
+
+### 🛠 기술 스택
+- **Framework**: FastAPI
+- **Database**: PostgreSQL + SQLite (개발환경)
+- **Messaging**: Apache Kafka
+- **Caching**: Redis
+- **Authentication**: JWT
+
+### 📖 API 사용 가이드
+1. `/api/auth/signup`으로 회원가입
+2. `/api/auth/login`으로 로그인하여 JWT 토큰 획득
+3. Authorization 헤더에 `Bearer {token}` 형태로 토큰 전송
+4. 인증이 필요한 API 엔드포인트 사용
+
+### 🔗 관련 문서
+- **프로젝트 가이드**: [20250729-가이드006.md](./20250729-가이드006.md)
+- **데이터베이스 스키마**: [DATABASE_MIGRATION_GUIDE.md](./DATABASE_MIGRATION_GUIDE.md)
+- **Docker 설정**: [DOCKER_GUIDE.md](./DOCKER_GUIDE.md)
+
+### 🚀 현재 구현 상태
+- ✅ JWT 인증 시스템 (회원가입, 로그인, 토큰 검증)
+- ✅ 사용자 프로필 조회 API
+- ✅ Kafka 이벤트 발행 시스템
+- ✅ 헬스체크 API
+- ⚠️ 게임 API (슬롯, 가챠) - 개발 중
+- ⚠️ 보상 시스템 - 개발 중
+    """,
+    version="0.2.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    contact={
+        "name": "Casino Club F2P Team",
+        "email": "dev@casino-club.com",
+    },
+    license_info={
+        "name": "Private License",
+        "identifier": "Proprietary"
+    },
+    tags_metadata=[
+        {
+            "name": "Simple Auth",
+            "description": "사용자 인증 및 계정 관리 API",
+            "externalDocs": {
+                "description": "인증 시스템 가이드",
+                "url": "/docs/auth-guide",
+            },
+        },
+        {
+            "name": "Users",
+            "description": "사용자 프로필 및 정보 관리 API",
+        },
+        {
+            "name": "Kafka",
+            "description": "실시간 이벤트 발행 및 메시징 시스템",
+        },
+        {
+            "name": "Event",
+            "description": "사용자 행동 이벤트 추적",
+        },
+        {
+            "name": "Authentication",
+            "description": "로그인 및 토큰 기반 인증",
+        },
+        {
+            "name": "System",
+            "description": "시스템 상태 확인 및 모니터링",
+        },
+    ]
 )
 
 # Prometheus Instrumentation
@@ -157,6 +231,8 @@ if Instrumentator:
 # Configure CORS
 origins = [
     "http://localhost:3000",  # Assuming Next.js runs on port 3000
+    "http://localhost:3001",  # Next.js dev server on port 3001
+    "http://localhost:3002",  # Next.js dev server on port 3002 (현재 사용 중)
     "http://139.180.155.143:3000",  # 프로덕션 프론트엔드
     "https://139.180.155.143:3000",  # HTTPS 지원
     # Add other origins if needed
@@ -203,7 +279,7 @@ if SIMPLE_AUTH_AVAILABLE:
 # app.include_router(adult_content.router, prefix="/api")  # 추가
 # app.include_router(actions.router, prefix="/api")  # 추가
 # app.include_router(corporate.router, prefix="/api")  # 추가
-# app.include_router(users.router, prefix="/api")  # 추가
+app.include_router(users.router, prefix="/api")  # 🎯 프로필 조회 API 활성화
 # app.include_router(recommendation.router, prefix="/api")  # 추가된 라우터 등록
 # app.include_router(doc_titles.router)  # prefix 없이 등록하여 /docs/titles 직접 접근 가능
 # app.include_router(invite_router.router)  # 초대코드 유효성 검증 API 추가 (이미 /api/invite prefix 포함)

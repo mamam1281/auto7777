@@ -20,14 +20,26 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   useEffect(() => {
     const checkLoginStatus = () => {
       const token = localStorage.getItem('token');
-      const userNickname = localStorage.getItem('userNickname');
-      
-      // 토큰과 닉네임 둘 다 있어야 로그인된 상태로 간주
-      const isAuthenticated = !!(token && userNickname);
+      const userDataStr = localStorage.getItem('user');
+
+      // 토큰과 사용자 데이터 둘 다 있어야 로그인된 상태로 간주
+      let userData: any = null;
+      try {
+        userData = userDataStr ? JSON.parse(userDataStr) : null;
+      } catch (error) {
+        console.error('사용자 데이터 파싱 오류:', error);
+      }
+
+      const isAuthenticated = !!(token && userData && userData.nickname);
       setIsLoggedIn(isAuthenticated);
-      
-      console.log('🔒 스플래시에서 인증 상태 체크:', { token: !!token, userNickname: !!userNickname, isAuthenticated });
-      
+
+      console.log('🔒 스플래시에서 인증 상태 체크:', {
+        token: !!token,
+        userData: !!userData,
+        nickname: userData?.nickname || null,
+        isAuthenticated
+      });
+
       return isAuthenticated;
     };
 
@@ -35,7 +47,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     const splashTimer = setTimeout(() => {
       const isAuthenticated = checkLoginStatus();
       setFadeOut(true);
-      
+
       setTimeout(() => {
         if (isAuthenticated) {
           // 인증된 사용자는 메인 대시보드로
@@ -76,13 +88,13 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   // 스플래시 화면 렌더링
   if (phase === 'splash') {
     return (
-      <motion.div 
+      <motion.div
         className={`splash-screen ${fadeOut ? 'fade-out' : ''}`}
         initial={{ opacity: 0 }}
         animate={{ opacity: fadeOut ? 0 : 1 }}
         transition={{ duration: 0.6 }}
       >
-        <motion.div 
+        <motion.div
           className="splash-logo"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -99,7 +111,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   // 로그인/회원가입 유도 화면 렌더링
   if (phase === 'auth') {
     return (
-      <motion.div 
+      <motion.div
         className="auth-splash"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -119,23 +131,23 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
               <span>비밀번호: 1234</span>
             </p>
           </div>
-          
+
           <div className="auth-splash-buttons">
-            <button 
+            <button
               className="auth-splash-button login-button"
               onClick={handleLogin}
             >
               로그인
             </button>
-            <button 
+            <button
               className="auth-splash-button register-button"
               onClick={handleRegister}
             >
               회원가입
             </button>
           </div>
-          
-          <button 
+
+          <button
             className="guest-button"
             onClick={handleContinueAsGuest}
           >

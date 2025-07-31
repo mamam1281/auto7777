@@ -5,7 +5,7 @@ import useSound from 'use-sound';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChoiceButtons } from './ChoiceButtons';
 import OpponentDisplay from './OpponentDisplay';
-import ResultScreen from './ResultScreen';
+// import ResultScreen from './ResultScreen';
 import { useRPSGame } from '../../../hooks/useRPSGame';
 import './rps-compact-theme.css'; // 팝업 스타일도 함께 가져옵니다.
 
@@ -62,19 +62,24 @@ const RPSGame: React.FC<RPSGameProps> = ({ isPopup = false }) => {
     <div className={containerClassName}>
       <AnimatePresence mode="wait">
         {gameState.showResultScreen ? (
-          <ResultScreen
-            key="result"
-            result={gameState.result}
-            playerChoice={gameState.playerChoice}
-            aiChoice={gameState.aiChoice}
-            onPlayAgain={handlePlayAgainWithDelay}
-            onReset={handleResetScore}
-            cjaiMessage={gameState.cjaiMessage}
-            score={gameState.score}
-            playerWinStreak={gameState.playerWinStreak}
-            playerLossStreak={gameState.playerLossStreak}
-            isPopup={isPopup}
-          />
+          <div key="result" className="text-center text-white p-4">
+            <h2>결과 화면</h2>
+            <p>플레이어: {gameState.playerChoice}</p>
+            <p>AI: {gameState.aiChoice}</p>
+            <p>결과: {gameState.result}</p>
+            <button
+              onClick={handlePlayAgainWithDelay}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-2"
+            >
+              다시 플레이
+            </button>
+            <button
+              onClick={handleResetScore}
+              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-2"
+            >
+              점수 리셋
+            </button>
+          </div>
         ) : (
           <motion.div key="game" className="rps-game-area">
             <OpponentDisplay choice={gameState.aiChoice} isThinking={isAIThinking} />
@@ -93,7 +98,7 @@ const RPSGame: React.FC<RPSGameProps> = ({ isPopup = false }) => {
                     {sequenceLabels[sequenceStep]}
                   </motion.p>
                 ) : (
-                  <motion.p 
+                  <motion.p
                     key={gameState.cjaiMessage}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -113,10 +118,10 @@ const RPSGame: React.FC<RPSGameProps> = ({ isPopup = false }) => {
                 cooldown={showSequence}
               />
             </div>
-            <div className={`absolute top-2 right-2 text-xs ${isPopup ? 'text-gray-400' : 'text-gray-500'}`}> 
+            <div className={`absolute top-2 right-2 text-xs ${isPopup ? 'text-gray-400' : 'text-gray-500'}`}>
               <p>승: {gameState.score.player} | 패: {gameState.score.ai} | 무: {gameState.score.draws}</p>
               {gameState.playerWinStreak >= 2 && (
-                <motion.p 
+                <motion.p
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   className="text-green-400 font-bold"
@@ -125,7 +130,7 @@ const RPSGame: React.FC<RPSGameProps> = ({ isPopup = false }) => {
                 </motion.p>
               )}
               {gameState.playerLossStreak >= 3 && (
-                <motion.p 
+                <motion.p
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   className="text-red-400 font-bold"

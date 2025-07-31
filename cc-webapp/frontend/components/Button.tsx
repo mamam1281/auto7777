@@ -33,7 +33,7 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const [coords, setCoords] = React.useState({ x: -1, y: -1 });
   const [isRippling, setIsRippling] = React.useState(false);
-  
+
   React.useEffect(() => {
     if (coords.x !== -1 && coords.y !== -1) {
       setIsRippling(true);
@@ -46,7 +46,7 @@ const Button: React.FC<ButtonProps> = ({
   React.useEffect(() => {
     if (!isRippling) setCoords({ x: -1, y: -1 });
   }, [isRippling]);
-  
+
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (ripple && !disabled) {
       const rect = e.currentTarget.getBoundingClientRect();
@@ -151,9 +151,8 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <motion.button
       type={type}
-      className={`relative overflow-hidden font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-opacity-75 ${
-        rounded ? 'rounded-full' : ''
-      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
+      className={`relative overflow-hidden font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-opacity-75 ${rounded ? 'rounded-full' : ''
+        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
       style={{
         ...currentSizeStyle,
         ...currentVariantStyle,
@@ -166,20 +165,20 @@ const Button: React.FC<ButtonProps> = ({
       whileHover={
         !disabled
           ? {
-              scale: 1.02,
-              y: -2,
-              boxShadow: `
+            scale: 1.02,
+            y: -2,
+            boxShadow: `
                 16px 16px 32px rgba(0, 0, 0, 0.2),
                 -16px -16px 32px rgba(255, 255, 255, 0.15),
                 inset 3px 3px 6px rgba(255, 255, 255, 0.4),
                 inset -3px -3px 6px rgba(0, 0, 0, 0.15)
               `,
-              borderRadius: '22px',
-            }
+            borderRadius: '22px',
+          }
           : {}
       }
-      whileTap={!disabled ? { 
-        scale: 0.98, 
+      whileTap={!disabled ? {
+        scale: 0.98,
         y: 0,
         boxShadow: `
           6px 6px 12px rgba(0, 0, 0, 0.25),

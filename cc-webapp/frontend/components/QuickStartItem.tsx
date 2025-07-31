@@ -38,14 +38,14 @@ export const QuickStartItem: React.FC<QuickStartItemProps> = ({
       <div
         className="relative rounded-2xl border transition-all duration-300 h-full"
         style={{
-          padding: '20px 16px', // 더 균형잡힌 패딩
+          padding: '16px 16px', // 더 균형잡힌 패딩
           background: 'linear-gradient(135deg, rgba(255, 182, 193, 0.4) 0%, rgba(255, 160, 200, 0.3) 30%, rgba(255, 192, 203, 0.25) 70%, rgba(230, 190, 255, 0.2) 100%)',
           border: '1px solid rgba(255, 182, 193, 0.5)',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)', // 글로우 → 깊이감 있는 쉐도우
         }}
       >
         {/* 시각적 상태 표시 (색상 외 추가 정보) */}
-        <div 
+        <div
           className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-300"
           aria-hidden="true"
         >
@@ -72,10 +72,10 @@ export const QuickStartItem: React.FC<QuickStartItemProps> = ({
 
           {/* 텍스트 영역 - 가독성과 균형 개선 */}
           <div className="text-center w-full">
-            <span 
-              className="font-semibold transition-colors duration-300 leading-tight block" 
-              style={{ 
-                fontSize: '14px', // 15px → 14px (아이콘과 더 균형잡힌 크기)
+            <span
+              className="font-semibold transition-colors duration-300 leading-tight block"
+              style={{
+                fontSize: '16px', // 15px → 14px (아이콘과 더 균형잡힌 크기)
                 lineHeight: '1.3', // 1.2 → 1.3 (더 여유로운 줄간격)
                 color: 'rgba(255,255,255,0.95)',
                 fontWeight: '600',
@@ -85,7 +85,7 @@ export const QuickStartItem: React.FC<QuickStartItemProps> = ({
             >
               {label}
             </span>
-            
+
             {/* 접근성을 위한 숨겨진 설명 텍스트 */}
             <span className="sr-only">
               {label} 기능으로 이동하려면 엔터키 또는 스페이스바를 누르세요
@@ -94,7 +94,7 @@ export const QuickStartItem: React.FC<QuickStartItemProps> = ({
         </div>
 
         {/* 키보드 포커스를 위한 시각적 피드백 */}
-        <div 
+        <div
           className="absolute inset-0 rounded-2xl opacity-0 group-focus:opacity-100 transition-opacity duration-200 pointer-events-none"
           style={{
             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 182, 193, 0.1) 100%)',

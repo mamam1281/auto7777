@@ -14,7 +14,7 @@ export default function AuthPage() {
     const timer = setTimeout(() => {
       setAuthMode('login');
     }, 1500); // 1.5초 로딩
-    
+
     return () => clearTimeout(timer);
   }, []);
 

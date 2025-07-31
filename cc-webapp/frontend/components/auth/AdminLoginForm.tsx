@@ -31,22 +31,24 @@ export default function AdminLoginForm({ onSwitchToLogin }: AdminLoginFormProps)
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      // 🔒 하드코딩된 관리자 계정 확인 (개발용)
+      if (formData.admin_code === 'admin' && formData.password === 'admin1234') {
+        console.log('✅ 관리자 로그인 성공!');
 
-      const data = await response.json();
+        // 관리자 토큰을 localStorage에 저장
+        localStorage.setItem('admin_token', 'admin_authenticated_' + Date.now());
+        localStorage.setItem('admin_user', JSON.stringify({
+          id: 'admin',
+          username: 'admin',
+          role: 'super_admin',
+          permissions: ['all']
+        }));
+        localStorage.setItem('isAdmin', 'true');
 
-      if (response.ok) {
-        localStorage.setItem('admin_token', data.access_token);
-        localStorage.setItem('admin_user', JSON.stringify(data.user));
+        // 관리자 대시보드로 이동
         router.push('/admin/dashboard');
       } else {
-        setError(data.detail || '관리자 로그인에 실패했습니다.');
+        setError('잘못된 관리자 계정입니다. (개발용: admin / admin1234)');
       }
     } catch (error) {
       console.error('Admin login error:', error);

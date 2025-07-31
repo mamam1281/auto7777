@@ -19,7 +19,7 @@ export default function SettingsPage() {
   return (
     <div className="auth-container popup-mode">
       <div className="auth-content">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="w-full"
@@ -45,8 +45,8 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border">
                   <span className="text-sm text-white">비밀번호 변경</span>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={() => setShowPasswordModal(true)}
                   >
@@ -55,8 +55,8 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border">
                   <span className="text-sm text-white">알림 설정</span>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={() => setShowNotificationModal(true)}
                   >
@@ -103,10 +103,10 @@ export default function SettingsPage() {
                 </div>
               </div>
             </section>
-            
+
             <div className="text-center">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                 onClick={() => setShowLogoutModal(true)}
               >
@@ -139,8 +139,8 @@ export default function SettingsPage() {
           isOpen={showLogoutModal}
           onClose={() => setShowLogoutModal(false)}
           onConfirm={() => {
-            console.log('로그아웃 처리');
-            // 로그아웃 로직
+            console.log('✅ 로그아웃 완료');
+            // 추가 정리 작업이 필요하면 여기에
           }}
         />
       </div>
