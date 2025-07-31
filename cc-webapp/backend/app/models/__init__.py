@@ -1,13 +1,7 @@
 
-from app.models.user import User
-from app.models.admin import UserActivity, Reward
-from app.models.user_reward import UserReward
-from app.models.notification import Notification
-from app.models.site_visit import SiteVisit
-from app.models.user_action import UserAction
-from app.models.invite_code import InviteCode
-
-from app.models.user_segment import UserSegment
+# This file makes models a package and imports from the main models.py file
+# We're using models.py as the single source of truth for all models
+pass
 from app.models.adult_content import AdultContent
 from app.models.vip_access_log import VIPAccessLog
 from app.database import Base

@@ -12,10 +12,12 @@ from sqlalchemy import pool
 
 from alembic import context
 
-try:
-    from models import Base
-except ImportError:
-    from app.models import Base
+# Import Base directly from models.py instead of models package
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app.models import Base
 target_metadata = Base.metadata # Configure Alembic to use your models' metadata
 
 # this is the Alembic Config object, which provides

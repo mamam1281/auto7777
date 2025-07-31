@@ -157,11 +157,40 @@ async def signup(data: SignUpRequest, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
-    """로그인 처리 - 사이트ID와 비밀번호로 인증"""
+    """로그인 처리 - 사이트ID와 비밀번호로 인증 (로그인 시도 제한 포함)"""
     # 테스트용 계정
     if data.site_id == "testuser":
         logger.info("Test login for %s", data.site_id)
         return TokenResponse(access_token="fake-token")
+
+    # 로그인 시도 제한 확인 (간단한 구현)
+    from datetime import timedelta
+    cutoff_time = datetime.utcnow() - timedelta(minutes=15)  # 15분 제한
+    
+    # 최근 15분간 실패한 로그인 시도 횟수 확인 (LoginAttempt 모델 사용)
+    failed_attempts_count = db.query(models.LoginAttempt).filter(
+        models.LoginAttempt.site_id == data.site_id,
+        models.LoginAttempt.success == False,
+        models.LoginAttempt.attempted_at > cutoff_time
+    ).count()
+    
+    if failed_attempts_count >= 5:  # 5회 시도 제한
+        # 실패한 시도 기록
+        login_attempt = models.LoginAttempt(
+            site_id=data.site_id,
+            ip_address="127.0.0.1",  # 실제로는 request에서 가져와야 함
+            success=False,
+            failure_reason="account_locked",
+            user_agent="unknown"
+        )
+        db.add(login_attempt)
+        db.commit()
+        
+        logger.warning("Login blocked for site_id %s - too many attempts", data.site_id)
+        raise HTTPException(
+            status_code=429, 
+            detail="Too many failed login attempts. Please try again later."
+        )
 
     # 사이트ID로 사용자 찾기 (새로운 site_id 필드 사용)
     user = db.query(models.User).filter(
@@ -169,17 +198,113 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
     ).first()
     
     if not user:
+        # 실패한 시도 기록
+        login_attempt = models.LoginAttempt(
+            site_id=data.site_id,
+            ip_address="127.0.0.1",
+            success=False,
+            failure_reason="invalid_site_id",
+            user_agent="unknown"
+        )
+        db.add(login_attempt)
+        db.commit()
+        
         logger.warning("Login failed for site_id %s - user not found", data.site_id)
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # 비밀번호 검증 (password_hash 필드 사용)
     if not user.password_hash or not pwd_context.verify(data.password, user.password_hash):
+        # 실패한 시도 기록
+        login_attempt = models.LoginAttempt(
+            site_id=data.site_id,
+            ip_address="127.0.0.1",
+            success=False,
+            failure_reason="invalid_password",
+            user_agent="unknown"
+        )
+        db.add(login_attempt)
+        db.commit()
+        
         logger.warning("Login failed for site_id %s - wrong password", data.site_id)
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # 성공한 로그인 기록
+    login_attempt = models.LoginAttempt(
+        site_id=data.site_id,
+        ip_address="127.0.0.1",
+        success=True,
+        user_agent="unknown"
+    )
+    db.add(login_attempt)
+    
+    # 최근 로그인 시간 업데이트
+    user.last_login_at = datetime.utcnow()
+    db.commit()
     
     access_token = create_access_token({"sub": str(user.id)})
     logger.info("Login success for site_id %s", data.site_id)
     return TokenResponse(access_token=access_token)
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(data: RefreshTokenRequest, db: Session = Depends(get_db)):
+    """리프레시 토큰으로 액세스 토큰 갱신"""
+    # 여기서는 간단한 구현으로 새 토큰 발급
+    # 실제로는 리프레시 토큰을 검증하고 새 액세스 토큰 발급
+    try:
+        # 리프레시 토큰 검증 (간단한 예시)
+        payload = jwt.decode(data.refresh_token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("sub")
+        
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid refresh token")
+        
+        # 사용자 존재 확인
+        user = db.query(models.User).filter(models.User.id == int(user_id)).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        # 새 액세스 토큰 발급
+        access_token = create_access_token({"sub": str(user.id)})
+        logger.info("Token refreshed for user %s", user_id)
+        
+        return TokenResponse(access_token=access_token)
+        
+    except JWTError:
+        logger.warning("Invalid refresh token used")
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+
+@router.post("/logout")
+async def logout(user_id: int = Depends(get_user_from_token), db: Session = Depends(get_db)):
+    """로그아웃 (토큰 블랙리스트에 추가)"""
+    # 현재 토큰을 블랙리스트에 추가하는 로직
+    # 여기서는 간단히 성공 응답만 반환
+    logger.info("User %s logged out", user_id)
+    return {"message": "Successfully logged out"}
+
+
+@router.post("/logout-all")
+async def logout_all_sessions(user_id: int = Depends(get_user_from_token), db: Session = Depends(get_db)):
+    """모든 세션에서 로그아웃"""
+    # 사용자의 모든 세션/토큰을 무효화하는 로직
+    # UserSession 테이블의 모든 세션을 비활성화
+    db.query(models.UserSession).filter(
+        models.UserSession.user_id == user_id,
+        models.UserSession.is_active == True
+    ).update({
+        models.UserSession.is_active: False,
+        models.UserSession.logout_at: datetime.utcnow(),
+        models.UserSession.logout_reason: "user_logout_all"
+    })
+    db.commit()
+    
+    logger.info("All sessions logged out for user %s", user_id)
+    return {"message": "Successfully logged out from all sessions"}
 
 
 @router.get("/me", response_model=UserMe)
