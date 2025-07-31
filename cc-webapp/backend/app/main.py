@@ -42,23 +42,18 @@ from pydantic import BaseModel  # For request/response models
 from typing import Optional
 
 from app.routers import (
-    auth,
-    auth_simple,  # 추가
-    admin,  # 새로 추가된 관리자 라우터
-    games,
-    segments,
-    chat,
-    feedback,
-    ai,
-    analyze,
-    recommend,
-    rewards,   # 추가
-    unlock,    # 추가
-    user_segments, # 추가
-    gacha,  # 추가
-    prize_roulette,  # 추가
-    notification,  # 추가
-    tracking,  # 추가
+    auth,  # 간소화된 인증 라우터만 사용
+    # 모든 다른 라우터들을 임시로 비활성화 - 모델 의존성 해결 후 재활성화
+    # ai,
+    # analyze,
+    # recommend,
+    # rewards,   # 추가
+    # unlock,    # 추가
+    # user_segments, # 추가
+    # gacha,  # 추가
+    # prize_roulette,  # 추가
+    # notification,  # 추가
+    # tracking,  # 추가
     personalization,  # 추가
     adult_content,  # 추가
     actions,  # 추가
@@ -185,31 +180,31 @@ app.add_middleware(
 )
 
 # Register API routers
-app.include_router(auth.router, prefix="/api")
-app.include_router(auth_simple.router, prefix="/api")  # 새로운 단순 인증 시스템
-app.include_router(admin.router, prefix="/api")  # 관리자 API 추가
-app.include_router(games.router)  # prefix 제거 (이미 /api/games로 설정됨)
-app.include_router(segments.router, prefix="/api")
-app.include_router(chat.router, prefix="/api")
-app.include_router(feedback.router, prefix="/api")
-app.include_router(ai.router, prefix="/api")  # 🆕 Added AI router
-app.include_router(analyze.router, prefix="/api")  # 🆕 Added analyze router  
-app.include_router(recommend.router, prefix="/api")  # 🆕 Added recommend router
-app.include_router(rewards.router, prefix="/api")  # 추가
-app.include_router(unlock.router, prefix="/api")   # 추가
-app.include_router(user_segments.router, prefix="/api") # 추가
-app.include_router(gacha.router, prefix="/api")  # 추가
-app.include_router(prize_roulette.router, prefix="/api/games/roulette", tags=["prize_roulette"])  # 경품 룰렛 API
-app.include_router(notification.router, prefix="/api")  # 추가
-app.include_router(tracking.router, prefix="/api")  # 추가
-app.include_router(personalization.router, prefix="/api")  # 추가
-app.include_router(adult_content.router, prefix="/api")  # 추가
-app.include_router(actions.router, prefix="/api")  # 추가
-app.include_router(corporate.router, prefix="/api")  # 추가
-app.include_router(users.router, prefix="/api")  # 추가
-app.include_router(recommendation.router, prefix="/api")  # 추가된 라우터 등록
-app.include_router(doc_titles.router)  # prefix 없이 등록하여 /docs/titles 직접 접근 가능
-app.include_router(invite_router.router)  # 초대코드 유효성 검증 API 추가 (이미 /api/invite prefix 포함)
+app.include_router(auth.router, prefix="/api")  # 간소화된 인증 라우터
+# 다른 모든 라우터들을 임시로 비활성화 - 모델 의존성 문제 해결 후 재활성화
+# app.include_router(admin.router, prefix="/api")  # 임시 비활성화
+# app.include_router(games.router)  # 임시 비활성화
+# app.include_router(segments.router, prefix="/api")
+# app.include_router(chat.router, prefix="/api")
+# app.include_router(feedback.router, prefix="/api")
+# app.include_router(ai.router, prefix="/api")  # 🆕 Added AI router
+# app.include_router(analyze.router, prefix="/api")  # 🆕 Added analyze router  
+# app.include_router(recommend.router, prefix="/api")  # 🆕 Added recommend router
+# app.include_router(rewards.router, prefix="/api")  # 추가
+# app.include_router(unlock.router, prefix="/api")   # 추가
+# app.include_router(user_segments.router, prefix="/api") # 추가
+# app.include_router(gacha.router, prefix="/api")  # 추가
+# app.include_router(prize_roulette.router, prefix="/api/games/roulette", tags=["prize_roulette"])  # 경품 룰렛 API
+# app.include_router(notification.router, prefix="/api")  # 추가
+# app.include_router(tracking.router, prefix="/api")  # 추가
+# app.include_router(personalization.router, prefix="/api")  # 추가
+# app.include_router(adult_content.router, prefix="/api")  # 추가
+# app.include_router(actions.router, prefix="/api")  # 추가
+# app.include_router(corporate.router, prefix="/api")  # 추가
+# app.include_router(users.router, prefix="/api")  # 추가
+# app.include_router(recommendation.router, prefix="/api")  # 추가된 라우터 등록
+# app.include_router(doc_titles.router)  # prefix 없이 등록하여 /docs/titles 직접 접근 가능
+# app.include_router(invite_router.router)  # 초대코드 유효성 검증 API 추가 (이미 /api/invite prefix 포함)
 
 # JWT 인증 API 라우터 등록
 if JWT_AUTH_AVAILABLE:

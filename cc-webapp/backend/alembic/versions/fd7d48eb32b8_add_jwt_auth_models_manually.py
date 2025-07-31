@@ -1,4 +1,4 @@
-"""Add JWT auth models manually
+ """Add JWT auth models manually
 
 Revision ID: fd7d48eb32b8
 Revises: 359612bc3b0c

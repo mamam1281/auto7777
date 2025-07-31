@@ -14,25 +14,76 @@ Base = declarative_base()
 
 
 class User(Base):
-    """사용자 테이블 - 핵심"""
+    """사용자 테이블 - 전체 시스템용 확장"""
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
     site_id = Column(String(50), unique=True, nullable=False, index=True)
     nickname = Column(String(50), unique=True, nullable=False, index=True)
     phone_number = Column(String(20), unique=True, nullable=False, index=True)
+    email = Column(String(100), unique=True, nullable=True, index=True)
     password_hash = Column(String(100), nullable=False)
     invite_code = Column(String(6), nullable=False, index=True)
+    
+    # 게임 토큰 & 통화
     cyber_token_balance = Column(Integer, default=200)
-    rank = Column(String(20), default="STANDARD", nullable=False)
+    premium_gems = Column(Integer, default=0, nullable=False)
+    
+    # 사용자 등급 & 상태
+    rank = Column(String(20), default="STANDARD", nullable=False)  # STANDARD, VIP, PREMIUM
+    vip_tier = Column(String(20), default="STANDARD", nullable=False, index=True)
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
+    is_verified = Column(Boolean, default=False, nullable=False)
+    is_adult_verified = Column(Boolean, default=False, nullable=False)
+    
+    # 프로필 정보
+    profile_image = Column(String(500), nullable=True)
+    bio = Column(String(500), nullable=True)
+    birth_date = Column(DateTime, nullable=True)
+    gender = Column(String(10), nullable=True)
+    
+    # 게임 진행도
+    experience_points = Column(Integer, default=0, nullable=False)
+    battlepass_level = Column(Integer, default=1, nullable=False)
+    battlepass_xp = Column(Integer, default=0, nullable=False)
+    
+    # 통계
+    total_spent = Column(Integer, default=0, nullable=False)  # 총 지출 (USD cents)
+    login_count = Column(Integer, default=0, nullable=False)
+    
+    # 타임스탬프
     created_at = Column(DateTime, default=datetime.utcnow)
     last_login_at = Column(DateTime, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    # Relationships
+    # Auth Relationships
     login_attempts = relationship("LoginAttempt", back_populates="user")
     refresh_tokens = relationship("RefreshToken", back_populates="user")
     sessions = relationship("UserSession", back_populates="user")
     security_events = relationship("SecurityEvent", back_populates="user")
+    
+    # Game Relationships (lazy loading for performance)
+    actions = relationship("UserAction", back_populates="user", lazy="dynamic")
+    rewards = relationship("UserReward", back_populates="user", lazy="dynamic") 
+    game_sessions = relationship("GameSession", back_populates="user", lazy="dynamic")
+    activities = relationship("UserActivity", back_populates="user", lazy="dynamic")
+    
+    # Content Relationships
+    vip_access_logs = relationship("VIPAccessLog", back_populates="user", lazy="dynamic")
+    purchases = relationship("Purchase", back_populates="user", lazy="dynamic")
+    notifications = relationship("Notification", back_populates="user", lazy="dynamic")
+    
+    # Analytics Relationships
+    segment = relationship("UserSegment", back_populates="user", uselist=False)
+    battle_pass_progress = relationship("BattlePassProgress", back_populates="user", lazy="dynamic")
+    gacha_logs = relationship("GachaLog", back_populates="user", lazy="dynamic")
+    
+    # Indexes
+    __table_args__ = (
+        Index("ix_users_nickname_phone", "nickname", "phone_number"),
+        Index("ix_users_vip_tier_active", "vip_tier", "is_active"),
+        Index("ix_users_rank_created_at", "rank", "created_at"),
+    )
 
 
 class InviteCode(Base):
@@ -134,7 +185,7 @@ class SecurityEvent(Base):
     description = Column(String(500), nullable=False)
     ip_address = Column(String(45), nullable=False, index=True)
     user_agent = Column(String(500), nullable=True)
-    metadata = Column(String(1000), nullable=True)
+    event_metadata = Column(String(1000), nullable=True)  # metadata -> event_metadata로 변경
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     
     # Relationships

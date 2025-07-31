@@ -7,10 +7,10 @@ import os
 # Base class for all models
 Base = declarative_base()
 
-# Update this to use PostgreSQL by default
+# Update this to use auth.db for authentication
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://cc_user:cc_password@localhost/cc_webapp"
+    "sqlite:///./auth.db"  # 새로 생성한 auth.db 사용
 )
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
@@ -26,6 +26,10 @@ except Exception:
     engine = create_engine(fallback_url, connect_args={"check_same_thread": False})
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_db_url():
+    """현재 데이터베이스 URL 반환"""
+    return DATABASE_URL
 
 def get_db():
     """Database session dependency for FastAPI"""
