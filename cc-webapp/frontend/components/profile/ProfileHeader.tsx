@@ -15,7 +15,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
         borderColor: 'rgba(255, 255, 255, 0.1)'
       }}>
       {/* Background decoration - 홈 페이지와 동일한 스타일 */}
-      <div className="absolute inset-0 pointer-events-none" 
+      <div className="absolute inset-0 pointer-events-none"
         style={{
           background: `
             radial-gradient(circle at 20% 20%, rgba(218, 145, 158, 0.08) 0%, transparent 50%),
@@ -43,7 +43,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
 
           {/* 닉네임만 표시 */}
           <div>
-            <h2 className="text-2xl font-bold text-white leading-tight">
+            <h2 className="text-1xl font-bold text-white leading-tight">
               {user.nickname}
             </h2>
           </div>
@@ -51,7 +51,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
           {/* 연속 출석 정보 - 하나로 통일 */}
           <div className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500/15 to-pink-500/15 px-6 py-4 rounded-lg border border-orange-400/30">
             <div className="text-center">
-              <div className="text-base font-bold text-orange-400 leading-tight">연속 출석 {user.loginStreak || 8}일째</div>
+              <div className="text-xl font-bold text-orange-400 leading-tight">연속 출석 {user.loginStreak || 8}일째</div>
               <div className="text-base text-orange-300 leading-tight mt-1">6일 더 출석하면 특별 보상!</div>
             </div>
           </div>

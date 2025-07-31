@@ -13,7 +13,7 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
 
   // 🎯 실제 사용자 데이터 사용
   const { user: currentUser, isLoading } = useUser();
-  
+
   // 🔄 백엔드 프로필 API에서 실제 데이터 가져오기
   const [profileData, setProfileData] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -22,13 +22,13 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
   useEffect(() => {
     const fetchProfile = async () => {
       if (!currentUser) return;
-      
+
       console.log('🔍 현재 사용자 정보:', currentUser);
       console.log('🔍 사용자 ID:', currentUser.id, typeof currentUser.id);
-      
+
       // 현재 로그인한 사용자의 실제 ID 사용
       const userId = currentUser.id;
-      
+
       setProfileLoading(true);
       try {
         console.log('🔄 백엔드에서 프로필 데이터 가져오는 중...');
@@ -38,7 +38,7 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
             'Content-Type': 'application/json'
           }
         });
-        
+
         if (response.ok) {
           const profileData = await response.json();
           console.log('✅ 프로필 데이터 로드 성공:', profileData);
@@ -167,7 +167,7 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
         color: '#ffffff',
         fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
       }}>
-      
+
       {/* 부드러운 다크 배경 오버레이 */}
       <div style={{
         position: 'absolute',
@@ -187,7 +187,7 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
       <div className="w-full max-w-sm min-h-screen mx-auto px-4 pt-6 pb-8 relative z-10
                       overflow-y-auto overscroll-y-contain
                       scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
-        style={{ 
+        style={{
           maxWidth: '420px',
           background: 'rgba(15, 15, 35, 0.3)',
           backdropFilter: 'blur(1px)'
