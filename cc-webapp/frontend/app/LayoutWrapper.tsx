@@ -53,7 +53,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
       <div className="miniapp-container">
         {/* AppHeader - 고정 상단 (CSS fixed 적용) */}
         <AppHeader
-          appName="CasinoClub"
+          appName="MODEL CASINO"
           onNotificationsClick={handleNotificationsClick}
           onSettingsClick={handleSettingsClick}
           hasNotifications={false}

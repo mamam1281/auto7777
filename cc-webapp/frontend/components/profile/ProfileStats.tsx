@@ -200,7 +200,7 @@ export default function ProfileStats({ user }: ProfileStatsProps) {
           {/* 본사 사이트 바로가기 */}
           <div>
             <button 
-              onClick={() => window.open('https://casinoclub.com', '_blank')}
+              onClick={() => window.open('https://md-01.com', '_blank')}
               className="w-full flex items-center justify-center gap-3 h-14 rounded-lg
                          text-white font-bold transform hover:scale-105 active:scale-95 transition-all duration-200
                          shadow-lg hover:shadow-xl text-base"

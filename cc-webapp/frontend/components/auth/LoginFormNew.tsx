@@ -10,17 +10,17 @@ interface LoginFormProps {
   error: string;
 }
 
-export default function LoginForm({ 
-  onLogin, 
+export default function LoginForm({
+  onLogin,
   onSwitchToSignup,
-  isLoading, 
+  isLoading,
   error
 }: LoginFormProps) {
   const [siteId, setSiteId] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const searchParams = useSearchParams();
-  
+
   // 테스트 계정 자동 입력
   useEffect(() => {
     const useTestAccount = searchParams?.get('test') === 'true';

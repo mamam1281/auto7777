@@ -13,24 +13,24 @@ export function GachaContainer() {
   const [showModal, setShowModal] = useState(false);
   const [result, setResult] = useState<GachaResult | null>(null);
   const [isPopup, setIsPopup] = useState(false);
-  
+
   // 뽑기 카운트만 유지
   const [pullCount, setPullCount] = useState(0);
-  
+
   // 팝업 모드 감지
   useEffect(() => {
     setIsPopup(isPopupWindow());
-    
+
     // 팝업 크기 로그 및 최적화
     if (isPopupWindow()) {
       console.log(`🎮 랜덤뽑기 팝업 크기: 가로 ${window.innerWidth}px × 세로 ${window.innerHeight}px`);
-      
+
       // 컨텐츠 높이에 따른 스타일 조정
       const resizeObserver = new ResizeObserver((entries) => {
         const contentHeight = document.body.scrollHeight;
         const viewportHeight = window.innerHeight;
         console.log(`컨텐츠 실제 높이: ${contentHeight}px, 뷰포트 높이: ${viewportHeight}px`);
-        
+
         // 컨테이너 요소 찾기
         const containerElement = document.querySelector('.gacha-container.popup-mode');
         if (containerElement) {
@@ -44,12 +44,12 @@ export function GachaContainer() {
           }
         }
       });
-      
+
       // body와 실제 랜덤뽑기 컨테이너 모두 관찰
       resizeObserver.observe(document.body);
       const gachaContainer = document.querySelector('.gacha-container');
       if (gachaContainer) resizeObserver.observe(gachaContainer);
-      
+
       return () => resizeObserver.disconnect();
     }
   }, []);
@@ -108,7 +108,7 @@ export function GachaContainer() {
           </h1>
         </div>
       )}
-      
+
       {/* Ticket Display - 상단 영역 */}
       <div className="gacha-tickets my-2">
         <div className="flex items-center gap-2 justify-center">
@@ -124,13 +124,13 @@ export function GachaContainer() {
           📦
         </div>
         <h2 className="gacha-title">랜덤뽑기 상자</h2>
-        <p className="gacha-description">신비로운 아이템을 획득하세요!</p>
+        <p className="gacha-description"> 지민이가 준비한 선물상자!</p>
       </div>
-      
+
       {/* 상자 설명 - 가이드 텍스트 */}
       <div className="text-center max-w-[280px] px-2 mt-2 mb-4">
         <p className="text-white/80 text-sm">
-          행운의 랜덤뽑기 상자에서 다양한 등급의 아이템을 획득할 수 있습니다.
+          모델 가챠박스에서 다양한 아이템을 뽑아가세요
         </p>
       </div>
 
@@ -140,7 +140,7 @@ export function GachaContainer() {
         <div className="text-center text-sm text-white/70 mb-1">
           {tickets > 0 ? `티켓 1장으로 아이템을 뽑을 수 있습니다` : `티켓이 부족합니다`}
         </div>
-        
+
         <button
           onClick={handlePull}
           disabled={tickets <= 0 || isPlaying}
@@ -167,7 +167,7 @@ export function GachaContainer() {
           >
             <div className="flex items-center justify-center gap-2">
               <span className="text-lg">⚡</span>
-              티켓 충전
+              티켓충전
             </div>
           </button>
         </div>

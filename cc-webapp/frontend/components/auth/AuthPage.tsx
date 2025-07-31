@@ -1,14 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
-import AdminLoginForm from './AdminLoginForm';
 
-type AuthMode = 'login' | 'register' | 'admin';
+type AuthMode = 'loading' | 'login' | 'register';
 
 export default function AuthPage() {
-  const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [authMode, setAuthMode] = useState<AuthMode>('loading');
+
+  // 첫 접속시 로딩 → 로그인 → 회원가입 순서
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAuthMode('login');
+    }, 1500); // 1.5초 로딩
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSwitchToRegister = () => {
     setAuthMode('register');
@@ -18,39 +26,36 @@ export default function AuthPage() {
     setAuthMode('login');
   };
 
-  const handleSwitchToAdmin = () => {
-    setAuthMode('admin');
-  };
+  // 로딩 화면
+  if (authMode === 'loading') {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="loading-screen">
+            <div className="game-platform-title">모델카지노</div>
+            <div className="loading-spinner-big"></div>
+            <div className="loading-text">로딩 중...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-container">
-      {/* 🌌 우주 배경 효과 */}
-      <div className="space-background"></div>
-      
-      {/* 🎮 메인 인증 카드 */}
       <div className="auth-card">
         {authMode === 'login' && (
-          <LoginForm 
+          <LoginForm
             onSwitchToRegister={handleSwitchToRegister}
-            onSwitchToAdmin={handleSwitchToAdmin}
           />
         )}
-        
+
         {authMode === 'register' && (
-          <RegisterForm 
-            onSwitchToLogin={handleSwitchToLogin}
-          />
-        )}
-        
-        {authMode === 'admin' && (
-          <AdminLoginForm 
+          <RegisterForm
             onSwitchToLogin={handleSwitchToLogin}
           />
         )}
       </div>
-      
-      {/* 🔥 핫핑크 글로우 효과 */}
-      <div className="hot-pink-glow"></div>
     </div>
   );
 }

@@ -60,19 +60,18 @@ export default function AdminLoginForm({ onSwitchToLogin }: AdminLoginFormProps)
     <>
       {/* 👑 관리자 타이틀 */}
       <div className="auth-header admin-header">
-        <div className="game-platform-logo admin-logo">👑</div>
-        <div className="game-platform-title admin-title">Admin Portal</div>
+        <div className="game-platform-title admin-title">모델카지노 관리자</div>
         <div className="game-platform-subtitle admin-subtitle">관리자 전용 접근</div>
       </div>
 
       <div style={{ flex: 1 }}></div>
-      
+
       <div className="admin-message">관리자 로그인</div>
       <div className="admin-help">시스템 관리를 위한 보안 로그인</div>
-      
+
       <form className="auth-form admin-form" onSubmit={handleSubmit}>
         {error && <div className="auth-error admin-error">{error}</div>}
-        
+
         <div className="form-group">
           <label htmlFor="admin_code" className="form-label admin-label">
             관리자 코드 <span className="required">*</span>
@@ -107,9 +106,9 @@ export default function AdminLoginForm({ onSwitchToLogin }: AdminLoginFormProps)
           />
         </div>
 
-        <button 
-          type="submit" 
-          className="auth-button primary admin-button" 
+        <button
+          type="submit"
+          className="auth-button primary admin-button"
           disabled={isLoading || !formData.admin_code || !formData.password}
         >
           {isLoading ? (
@@ -127,15 +126,15 @@ export default function AdminLoginForm({ onSwitchToLogin }: AdminLoginFormProps)
       <div className="admin-warning">
         <div className="warning-icon">⚠️</div>
         <div className="warning-text">
-          관리자 계정은 시스템의 모든 기능에 접근할 수 있습니다. 
+          관리자 계정은 시스템의 모든 기능에 접근할 수 있습니다.
           보안을 위해 로그인 시도가 기록됩니다.
         </div>
       </div>
 
       {/* 🔄 전환 버튼들 */}
       <div className="auth-switches">
-        <button 
-          type="button" 
+        <button
+          type="button"
           className="auth-link admin-back-link"
           onClick={onSwitchToLogin}
           disabled={isLoading}

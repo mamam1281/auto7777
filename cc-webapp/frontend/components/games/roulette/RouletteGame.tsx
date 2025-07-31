@@ -29,13 +29,13 @@ interface RouletteGameProps {
 }
 
 const ROULETTE_SEGMENTS: RouletteSegment[] = [
-  { id: "coins_50", label: "코인 50", value: 50, color: "#9CA3AF", probability: 0.3, icon: "🪙", tier: "common" },
-  { id: "coins_100", label: "코인 100", value: 100, color: "#10B981", probability: 0.25, icon: "🪙", tier: "common" },
-  { id: "coins_200", label: "코인 200", value: 200, color: "#3B82F6", probability: 0.2, icon: "🪙", tier: "rare" },
-  { id: "coins_500", label: "코인 500", value: 500, color: "#8B5CF6", probability: 0.12, icon: "💎", tier: "rare" },
-  { id: "coins_1000", label: "코인 1000", value: 1000, color: "#F59E0B", probability: 0.08, icon: "💎", tier: "epic" },
-  { id: "gems_10", label: "젬 10개", value: 10, color: "#EF4444", probability: 0.03, icon: "💠", tier: "epic" },
-  { id: "gems_50", label: "젬 50개", value: 50, color: "#DC2626", probability: 0.015, icon: "💠", tier: "legendary" },
+  { id: "gold_50", label: "골드 50", value: 50, color: "#9CA3AF", probability: 0.3, icon: "🪙", tier: "common" },
+  { id: "gold_100", label: "골드 100", value: 100, color: "#10B981", probability: 0.25, icon: "🪙", tier: "common" },
+  { id: "gold_200", label: "골드 200", value: 200, color: "#3B82F6", probability: 0.2, icon: "🪙", tier: "rare" },
+  { id: "gold_500", label: "골드 500", value: 500, color: "#8B5CF6", probability: 0.12, icon: "💎", tier: "rare" },
+  { id: "gold_1000", label: "골드 1000", value: 1000, color: "#F59E0B", probability: 0.08, icon: "💎", tier: "epic" },
+  { id: "gold_10", label: "골드 10", value: 10, color: "#EF4444", probability: 0.03, icon: "💠", tier: "epic" },
+  { id: "gold_50", label: "골드 50", value: 50, color: "#DC2626", probability: 0.015, icon: "💠", tier: "legendary" },
   { id: "jackpot", label: "JACKPOT!", value: 10000, color: "#FFD700", probability: 0.005, icon: "🎰", tier: "jackpot" }
 ];
 

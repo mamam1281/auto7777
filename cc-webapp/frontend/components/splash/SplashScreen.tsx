@@ -8,41 +8,50 @@ import '../../styles/splash.css';
 
 interface SplashScreenProps {
   onComplete?: () => void;
-  skipAuth?: boolean;
 }
 
-export default function SplashScreen({ onComplete, skipAuth = false }: SplashScreenProps) {
+export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const router = useRouter();
   const [phase, setPhase] = useState<'splash' | 'auth' | 'done'>('splash');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [fadeOut, setFadeOut] = useState(false);
 
-  // 로그인 상태 확인
+  // 🔒 강제 인증 플로우: 무조건 로그인 상태 확인
   useEffect(() => {
     const checkLoginStatus = () => {
-      const token = localStorage.getItem('accessToken');
-      setIsLoggedIn(!!token);
+      const token = localStorage.getItem('token');
+      const userNickname = localStorage.getItem('userNickname');
+      
+      // 토큰과 닉네임 둘 다 있어야 로그인된 상태로 간주
+      const isAuthenticated = !!(token && userNickname);
+      setIsLoggedIn(isAuthenticated);
+      
+      console.log('🔒 스플래시에서 인증 상태 체크:', { token: !!token, userNickname: !!userNickname, isAuthenticated });
+      
+      return isAuthenticated;
     };
 
-    // 스플래시 화면 후 로그인 상태 확인
+    // 스플래시 화면 후 반드시 로그인 상태 확인
     const splashTimer = setTimeout(() => {
-      checkLoginStatus();
+      const isAuthenticated = checkLoginStatus();
       setFadeOut(true);
       
       setTimeout(() => {
-        // skipAuth가 true이거나 이미 로그인된 경우 바로 완료
-        if (skipAuth || isLoggedIn) {
+        if (isAuthenticated) {
+          // 인증된 사용자는 메인 대시보드로
+          console.log('✅ 인증된 사용자 → 메인 대시보드');
           setPhase('done');
           onComplete?.();
         } else {
-          setPhase('auth');
-          setFadeOut(false);
+          // 인증되지 않은 사용자는 로그인 페이지로 강제 이동
+          console.log('🔒 인증되지 않은 사용자 → 로그인 페이지 강제 이동');
+          router.push('/auth');
         }
       }, 600); // 페이드 아웃 애니메이션 시간
     }, 2200); // 스플래시 표시 시간
 
     return () => clearTimeout(splashTimer);
-  }, [skipAuth, isLoggedIn, onComplete]);
+  }, [onComplete, router]);
 
   // 로그인 페이지로 이동
   const handleLogin = () => {

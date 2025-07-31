@@ -38,7 +38,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setUser(null);
+    // 🔒 모든 인증 관련 데이터 완전 삭제
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('userNickname');
+    localStorage.removeItem('splashSeen'); // 스플래시도 다시 보여주기
+    
+    // 🔄 페이지 새로고침으로 완전 초기화
+    window.location.href = '/';
   };
 
   const handleSetUser = (newUser: User | null) => {

@@ -66,28 +66,58 @@ const Button: React.FC<ButtonProps> = ({
     lg: { height: '56px', padding: '16px 32px', fontSize: '16px' },
   };
 
-  // 변형별 스타일 매핑
+  // 변형별 스타일 매핑 - 2025 Neumorphism/Clay UI 트렌드
   const variantStyles = {
     primary: {
-      background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(168, 85, 247, 0.12) 50%, rgba(192, 132, 252, 0.1) 100%)',
-      color: '#f8fafc',
-      border: '1px solid rgba(255, 255, 255, 0.15)',
-      boxShadow: '0 8px 32px rgba(139, 92, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(255, 255, 255, 0.05)',
-      hoverBackground: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(168, 85, 247, 0.17) 50%, rgba(192, 132, 252, 0.15) 100%)',
+      background: `
+        linear-gradient(145deg, rgba(255, 182, 193, 0.9) 0%, rgba(255, 160, 200, 0.8) 50%, rgba(230, 190, 255, 0.7) 100%)
+      `,
+      color: '#ffffff',
+      border: 'none',
+      boxShadow: `
+        12px 12px 24px rgba(0, 0, 0, 0.15),
+        -12px -12px 24px rgba(255, 255, 255, 0.1),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.3),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.1)
+      `,
+      borderRadius: '20px',
+      hoverBackground: `
+        linear-gradient(145deg, rgba(255, 182, 193, 1) 0%, rgba(255, 160, 200, 0.9) 50%, rgba(230, 190, 255, 0.8) 100%)
+      `,
     },
     secondary: {
-      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.02) 100%)',
-      color: '#e2e8f0',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(255, 255, 255, 0.03)',
-      hoverBackground: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 100%)',
+      background: `
+        linear-gradient(145deg, rgba(255, 182, 193, 0.7) 0%, rgba(255, 160, 200, 0.6) 50%, rgba(230, 190, 255, 0.5) 100%)
+      `,
+      color: '#ffffff',
+      border: 'none',
+      boxShadow: `
+        10px 10px 20px rgba(0, 0, 0, 0.12),
+        -10px -10px 20px rgba(255, 255, 255, 0.08),
+        inset 1px 1px 3px rgba(255, 255, 255, 0.25),
+        inset -1px -1px 3px rgba(0, 0, 0, 0.08)
+      `,
+      borderRadius: '18px',
+      hoverBackground: `
+        linear-gradient(145deg, rgba(255, 182, 193, 0.85) 0%, rgba(255, 160, 200, 0.75) 50%, rgba(230, 190, 255, 0.65) 100%)
+      `,
     },
     accent: {
-      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(249, 115, 22, 0.1) 50%, rgba(239, 68, 68, 0.08) 100%)',
-      color: '#fef2f2',
-      border: '1px solid rgba(255, 255, 255, 0.12)',
-      boxShadow: '0 8px 32px rgba(245, 158, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(255, 255, 255, 0.05)',
-      hoverBackground: 'linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(249, 115, 22, 0.15) 50%, rgba(239, 68, 68, 0.12) 100%)',
+      background: `
+        linear-gradient(145deg, rgba(255, 192, 203, 0.8) 0%, rgba(230, 190, 255, 0.7) 50%, rgba(255, 182, 193, 0.6) 100%)
+      `,
+      color: '#ffffff',
+      border: 'none',
+      boxShadow: `
+        10px 10px 20px rgba(0, 0, 0, 0.12),
+        -10px -10px 20px rgba(255, 255, 255, 0.08),
+        inset 1px 1px 3px rgba(255, 255, 255, 0.25),
+        inset -1px -1px 3px rgba(0, 0, 0, 0.08)
+      `,
+      borderRadius: '18px',
+      hoverBackground: `
+        linear-gradient(145deg, rgba(255, 192, 203, 0.95) 0%, rgba(230, 190, 255, 0.85) 50%, rgba(255, 182, 193, 0.75) 100%)
+      `,
     },
   };
 
@@ -121,33 +151,44 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <motion.button
       type={type}
-      className={`relative overflow-hidden font-medium transition-all duration-300 ${
-        rounded ? 'rounded-full' : 'rounded-2xl'
+      className={`relative overflow-hidden font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-opacity-75 ${
+        rounded ? 'rounded-full' : ''
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
       style={{
         ...currentSizeStyle,
         ...currentVariantStyle,
         textShadow: 'none',
+        borderRadius: rounded ? '50%' : (currentVariantStyle.borderRadius || '20px'),
       }}
       onClick={handleClick}
       disabled={disabled}
+      aria-label={typeof children === 'string' ? children : undefined}
       whileHover={
         !disabled
           ? {
               scale: 1.02,
-              y: -1,
-              background: currentVariantStyle.hoverBackground,
-              boxShadow: `0 12px 40px ${
-                variant === 'primary'
-                  ? 'rgba(139, 92, 246, 0.3)'
-                  : variant === 'accent'
-                  ? 'rgba(245, 158, 11, 0.25)'
-                  : 'rgba(0, 0, 0, 0.25)'
-              }, inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(255, 255, 255, 0.08)`,
+              y: -2,
+              boxShadow: `
+                16px 16px 32px rgba(0, 0, 0, 0.2),
+                -16px -16px 32px rgba(255, 255, 255, 0.15),
+                inset 3px 3px 6px rgba(255, 255, 255, 0.4),
+                inset -3px -3px 6px rgba(0, 0, 0, 0.15)
+              `,
+              borderRadius: '22px',
             }
           : {}
       }
-      whileTap={!disabled ? { scale: 0.98, y: 0 } : {}}
+      whileTap={!disabled ? { 
+        scale: 0.98, 
+        y: 0,
+        boxShadow: `
+          6px 6px 12px rgba(0, 0, 0, 0.25),
+          -6px -6px 12px rgba(255, 255, 255, 0.05),
+          inset 4px 4px 8px rgba(0, 0, 0, 0.2),
+          inset -2px -2px 4px rgba(255, 255, 255, 0.1)
+        `,
+        borderRadius: '18px',
+      } : {}}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >
       {/* 컨텐츠 */}

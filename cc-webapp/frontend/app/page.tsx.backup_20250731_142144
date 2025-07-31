@@ -162,7 +162,7 @@ export default function CasinoDashboard() {
           >
             <h1 style={{
               fontFamily: "'Inter', sans-serif",
-              fontSize: '56px', // 42px → 56px (더 크게)
+              fontSize: '36px', // 48px → 36px (타이포그래피 스케일 개선)
               fontWeight: 'bold',
               lineHeight: '1.1',
               background: 'linear-gradient(135deg, var(--color-primary-pink) 0%, #ffffff 100%)',
@@ -172,7 +172,7 @@ export default function CasinoDashboard() {
               marginBottom: '12px',
               textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' // 글로우 → 부드러운 쉐도우
             }}>
-              모델카지노
+              Welcome to MODELCASINO
             </h1>
             <p style={{
               fontFamily: "'Inter', sans-serif",
@@ -263,7 +263,7 @@ export default function CasinoDashboard() {
             
             <div style={{ marginTop: '24px' }}>
               <div 
-                className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-3 w-full max-w-full overflow-hidden"
+                className="grid grid-cols-2 md:grid-cols-4 gap-1 md:gap-2 w-full max-w-full overflow-hidden"
                 style={{ gridAutoRows: '200px' }}
                 role="grid"
                 aria-label="빠른 접속 메뉴"
