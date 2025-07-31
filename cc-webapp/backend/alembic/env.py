@@ -39,7 +39,23 @@ if config.config_file_name is not None:
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-db_url = os.getenv("DATABASE_URL", "sqlite:///dev.db")
+
+def get_database_url():
+    """환경에 따른 데이터베이스 URL 반환"""
+    # Docker/Production 환경 - PostgreSQL
+    if os.getenv('DB_HOST'):
+        db_host = os.getenv('DB_HOST', 'localhost')
+        db_port = os.getenv('DB_PORT', '5432')
+        db_name = os.getenv('DB_NAME', 'cc_webapp')
+        db_user = os.getenv('DB_USER', 'cc_user')
+        db_password = os.getenv('DB_PASSWORD', 'cc_password')
+        return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    
+    # 개발 환경 fallback - SQLite
+    return os.getenv("DATABASE_URL", "sqlite:///./auth.db")
+
+db_url = get_database_url()
+print(f"🗄️ Alembic 데이터베이스 URL: {db_url.split('@')[-1] if '@' in db_url else db_url}")
 
 
 def run_migrations_offline() -> None:

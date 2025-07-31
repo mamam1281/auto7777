@@ -12,8 +12,21 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 앱 코드 복사
 COPY . .
 
+# 실행 권한 부여
+RUN chmod +x db_auto_init.py
+
 # 포트 노출
 EXPOSE 8000
 
-# 서버 실행
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# 데이터베이스 초기화 및 서버 실행 스크립트 생성
+RUN echo '#!/bin/bash\n\
+echo "🚀 Starting Casino-Club Backend..."\n\
+echo "📋 Database Auto-Initialization"\n\
+python db_auto_init.py\n\
+echo "🌟 Starting FastAPI Server..."\n\
+exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload' > /app/start.sh
+
+RUN chmod +x /app/start.sh
+
+# 자동 마이그레이션 후 서버 실행
+CMD ["/app/start.sh"]
