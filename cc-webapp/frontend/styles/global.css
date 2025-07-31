@@ -4,6 +4,7 @@
 @tailwind utilities;
 
 /* 컴포넌트별 스타일 시트 */
+@import './auth.css';
 
 /* Custom variants for theming will be handled in tailwind.config.js */
 
