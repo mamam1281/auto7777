@@ -81,7 +81,14 @@ export default function MissionCards({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ 
+                scale: 1.02,
+                rotate: [0, -1, 1, -1, 0], // 떨림 애니메이션
+                transition: { 
+                  rotate: { duration: 0.5, repeat: Infinity, repeatType: "reverse" },
+                  scale: { duration: 0.2 }
+                }
+              }}
               className="w-full"
             >
               {/* 데일리 모달과 동일한 카드 스타일 - 고정 높이 적용 */}

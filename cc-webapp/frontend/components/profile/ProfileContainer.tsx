@@ -23,10 +23,16 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
     const fetchProfile = async () => {
       if (!currentUser) return;
       
+      console.log('🔍 현재 사용자 정보:', currentUser);
+      console.log('🔍 사용자 ID:', currentUser.id, typeof currentUser.id);
+      
+      // 현재 로그인한 사용자의 실제 ID 사용
+      const userId = currentUser.id;
+      
       setProfileLoading(true);
       try {
         console.log('🔄 백엔드에서 프로필 데이터 가져오는 중...');
-        const response = await fetch(`http://localhost:8000/api/users/${currentUser.id}/profile`, {
+        const response = await fetch(`http://localhost:8000/api/users/${userId}/profile`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json'
@@ -39,6 +45,8 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
           setProfileData(profileData);
         } else {
           console.error('❌ 프로필 데이터 로드 실패:', response.status);
+          const errorText = await response.text();
+          console.error('❌ 에러 내용:', errorText);
         }
       } catch (error) {
         console.error('❌ 프로필 API 오류:', error);
@@ -153,12 +161,37 @@ export default function ProfileContainer({ className = '' }: ProfileContainerPro
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+    <div className="min-h-screen w-full"
+      style={{
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 25%, #0f0f0f 50%, #1a1a1a 75%, #0a0a0a 100%)',
+        color: '#ffffff',
+        fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
+      }}>
+      
+      {/* 부드러운 다크 배경 오버레이 */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: `
+          radial-gradient(circle at 20% 20%, rgba(50, 50, 50, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(30, 30, 30, 0.08) 0%, transparent 50%),
+          radial-gradient(circle at 40% 60%, rgba(40, 40, 40, 0.06) 0%, transparent 50%)
+        `,
+        pointerEvents: 'none'
+      }} />
+
       {/* 420px 모바일 최적화 컨테이너 */}
-      <div className="w-full max-w-sm min-h-screen mx-auto px-4 pt-6 pb-8 
+      <div className="w-full max-w-sm min-h-screen mx-auto px-4 pt-6 pb-8 relative z-10
                       overflow-y-auto overscroll-y-contain
                       scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
-        style={{ maxWidth: '420px' }}>
+        style={{ 
+          maxWidth: '420px',
+          background: 'rgba(15, 15, 35, 0.3)',
+          backdropFilter: 'blur(1px)'
+        }}>
 
         {/* 메인 컨텐츠 - 더 넓은 간격 */}
         <main className="space-y-8">
