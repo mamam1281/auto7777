@@ -8,7 +8,7 @@ import random
 import string
 import hashlib
 import secrets
-from app.models import InviteCode  # 수정된 import
+from app.models.invite_code import InviteCode
 from app.core.error_handlers import UserServiceException
 
 class InviteService:

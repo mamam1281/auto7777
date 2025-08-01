@@ -8,62 +8,41 @@ import '../../styles/splash.css';
 
 interface SplashScreenProps {
   onComplete?: () => void;
+  skipAuth?: boolean;
 }
 
-export default function SplashScreen({ onComplete }: SplashScreenProps) {
+export default function SplashScreen({ onComplete, skipAuth = false }: SplashScreenProps) {
   const router = useRouter();
   const [phase, setPhase] = useState<'splash' | 'auth' | 'done'>('splash');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [fadeOut, setFadeOut] = useState(false);
 
-  // 🔒 강제 인증 플로우: 무조건 로그인 상태 확인
+  // 로그인 상태 확인
   useEffect(() => {
     const checkLoginStatus = () => {
-      const token = localStorage.getItem('token');
-      const userDataStr = localStorage.getItem('user');
-
-      // 토큰과 사용자 데이터 둘 다 있어야 로그인된 상태로 간주
-      let userData: any = null;
-      try {
-        userData = userDataStr ? JSON.parse(userDataStr) : null;
-      } catch (error) {
-        console.error('사용자 데이터 파싱 오류:', error);
-      }
-
-      const isAuthenticated = !!(token && userData && userData.nickname);
-      setIsLoggedIn(isAuthenticated);
-
-      console.log('🔒 스플래시에서 인증 상태 체크:', {
-        token: !!token,
-        userData: !!userData,
-        nickname: userData?.nickname || null,
-        isAuthenticated
-      });
-
-      return isAuthenticated;
+      const token = localStorage.getItem('accessToken');
+      setIsLoggedIn(!!token);
     };
 
-    // 스플래시 화면 후 반드시 로그인 상태 확인
+    // 스플래시 화면 후 로그인 상태 확인
     const splashTimer = setTimeout(() => {
-      const isAuthenticated = checkLoginStatus();
+      checkLoginStatus();
       setFadeOut(true);
-
+      
       setTimeout(() => {
-        if (isAuthenticated) {
-          // 인증된 사용자는 메인 대시보드로
-          console.log('✅ 인증된 사용자 → 메인 대시보드');
+        // skipAuth가 true이거나 이미 로그인된 경우 바로 완료
+        if (skipAuth || isLoggedIn) {
           setPhase('done');
           onComplete?.();
         } else {
-          // 인증되지 않은 사용자는 로그인 페이지로 강제 이동
-          console.log('🔒 인증되지 않은 사용자 → 로그인 페이지 강제 이동');
-          router.push('/auth');
+          setPhase('auth');
+          setFadeOut(false);
         }
       }, 600); // 페이드 아웃 애니메이션 시간
     }, 2200); // 스플래시 표시 시간
 
     return () => clearTimeout(splashTimer);
-  }, [onComplete, router]);
+  }, [skipAuth, isLoggedIn, onComplete]);
 
   // 로그인 페이지로 이동
   const handleLogin = () => {
@@ -88,13 +67,13 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   // 스플래시 화면 렌더링
   if (phase === 'splash') {
     return (
-      <motion.div
+      <motion.div 
         className={`splash-screen ${fadeOut ? 'fade-out' : ''}`}
         initial={{ opacity: 0 }}
         animate={{ opacity: fadeOut ? 0 : 1 }}
         transition={{ duration: 0.6 }}
       >
-        <motion.div
+        <motion.div 
           className="splash-logo"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -111,7 +90,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   // 로그인/회원가입 유도 화면 렌더링
   if (phase === 'auth') {
     return (
-      <motion.div
+      <motion.div 
         className="auth-splash"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -131,23 +110,23 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
               <span>비밀번호: 1234</span>
             </p>
           </div>
-
+          
           <div className="auth-splash-buttons">
-            <button
+            <button 
               className="auth-splash-button login-button"
               onClick={handleLogin}
             >
               로그인
             </button>
-            <button
+            <button 
               className="auth-splash-button register-button"
               onClick={handleRegister}
             >
               회원가입
             </button>
           </div>
-
-          <button
+          
+          <button 
             className="guest-button"
             onClick={handleContinueAsGuest}
           >

@@ -4,40 +4,20 @@
 :root {
   --font-family: 'Exo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   
-  /* 🔥 섹시한 핫핑크 다크 테마 컬러 팔레트 */
-  --hot-pink-primary: #DA919E;    /* 핫핑크 로즈 - 메인 */
-  --hot-pink-accent: #C04380;     /* 진한 핑크 - 액센트 */
-  --dark-black: #020505;          /* 다크 블랙 - 배경 */
-  --soft-pink: #F6E5F6;           /* 연한 핑크 - 텍스트 */
-  --mint-fresh: #87D7CC;          /* 민트 - 보조 */
-  --mid-pink: #CA6181;            /* 미드톤 핑크 - 호버 */
-  
-  /* 그라데이션 조합 */
-  --hot-gradient-1: linear-gradient(135deg, #DA919E 0%, #C04380 100%);
-  --hot-gradient-2: linear-gradient(135deg, #C04380 0%, #CA6181 100%);
-  --hot-gradient-3: linear-gradient(135deg, #CA6181 0%, #87D7CC 100%);
-  --sexy-gradient: linear-gradient(45deg, #DA919E 0%, #C04380 50%, #CA6181 100%);
-  
-  /* 배경 및 카드 */
-  --bright-white: #F6E5F6;
-  --dark-bg: #020505;
-  --darker-bg: #010202;
-  --card-bg: rgba(2, 5, 5, 0.95);
-  --border-glow: rgba(218, 145, 158, 0.6);
-  
-  /* 호버 및 인터랙션 */
-  --hover-pink: rgba(192, 67, 128, 0.8);
-  --active-pink: rgba(202, 97, 129, 0.9);
-  
-  /* 간격 시스템 */
-  --spacing-1: 8px;
-  --spacing-2: 16px;
-  --spacing-3: 24px;
-  --spacing-4: 32px;
-  --spacing-5: 40px;
+  /* 네온 컬러 팔레트 */
+  --neon-purple: #8b5cf6;
+  --neon-blue: #3b82f6;
+  --neon-cyan: #06b6d4;
+  --neon-green: #10b981;
+  --neon-pink: #ec4899;
+  --bright-white: #ffffff;
+  --dark-bg: #0f0f23;
+  --darker-bg: #050514;
+  --card-bg: rgba(15, 15, 35, 0.85);
+  --border-glow: rgba(139, 92, 246, 0.5);
 }
 
-/* 인증 페이지 컨테이너 - 섹시한 핫핑크 다크 테마 */
+/* 인증 페이지 컨테이너 - 우주 테마 */
 .auth-container {
   width: 100%;
   height: 100vh;
@@ -48,13 +28,13 @@
   padding: 0;
   margin: 0;
   background: 
-    radial-gradient(ellipse at top, rgba(218, 145, 158, 0.2) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom, rgba(192, 67, 128, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at center, rgba(202, 97, 129, 0.1) 0%, transparent 70%),
+    radial-gradient(ellipse at top, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at center, rgba(6, 182, 212, 0.08) 0%, transparent 70%),
     linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
-  color: var(--soft-pink);
+  color: var(--bright-white);
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* 전체 컨테이너는 숨김 처리 */
   font-family: var(--font-family);
 }
 
@@ -79,22 +59,31 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* 가벼운 배경 효과 */
+/* 우주 배경 애니메이션 효과 */
 .auth-container::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
   background: 
-    linear-gradient(135deg, rgba(218, 145, 158, 0.1) 0%, transparent 40%),
-    linear-gradient(45deg, rgba(192, 67, 128, 0.05) 0%, transparent 50%);
+    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(139, 92, 246, 0.8), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(59, 130, 246, 0.8), transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(6, 182, 212, 0.8), transparent),
+    radial-gradient(2px 2px at 160px 30px, rgba(255, 255, 255, 0.6), transparent);
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  animation: sparkle 20s linear infinite;
   z-index: 1;
   pointer-events: none;
 }
 
-/* sparkle 애니메이션 제거 */
+@keyframes sparkle {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(-200px) rotate(360deg); }
+}
 
 .auth-container::after {
   content: '';
@@ -205,23 +194,23 @@
   transform: translateX(-50%);
   width: 60px;
   height: 3px;
-  background: var(--hot-gradient-1);
+  background: var(--neon-gradient-2);
   border-radius: 2px;
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 .auth-title {
   font-size: 1.9rem;
   font-weight: 800;
-  color: var(--soft-pink);
+  color: var(--bright-white);
   margin-bottom: var(--spacing-1);
   font-family: var(--font-family);
   letter-spacing: -0.01em;
   text-shadow: 
-    0 0 20px rgba(218, 145, 158, 0.9),
-    0 0 40px rgba(192, 67, 128, 0.7),
-    0 2px 4px rgba(0, 0, 0, 0.6);
-  background: var(--sexy-gradient);
+    0 0 20px rgba(139, 92, 246, 0.8),
+    0 0 40px rgba(59, 130, 246, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, var(--bright-white) 0%, var(--neon-cyan) 50%, var(--neon-purple) 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -239,13 +228,19 @@
 
 /* 간소화된 로그인 및 회원가입 스타일 */
 .game-platform-title {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 1.9rem;
+  font-weight: 800;
   color: var(--bright-white);
   margin-bottom: 4px;
   text-align: center;
   font-family: var(--font-family);
-  /* 블러 효과 제거하고 선명하게 */
+  text-shadow: 
+    0 0 20px rgba(139, 92, 246, 0.8),
+    0 0 40px rgba(59, 130, 246, 0.6);
+  background: linear-gradient(135deg, var(--bright-white) 0%, var(--neon-cyan) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .game-platform-subtitle {
@@ -727,65 +722,6 @@
 
 .auth-link:hover {
   text-decoration: underline;
-}
-
-/* 🔄 로딩 스크린 */
-.loading-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  gap: var(--spacing-4);
-}
-
-.loading-spinner-big {
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(218, 145, 158, 0.3);
-  border-top: 4px solid var(--hot-pink-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-text {
-  color: var(--soft-pink);
-  font-size: 1.1rem;
-  font-weight: 500;
-}
-
-/* 🔄 전환 버튼들 - 행으로 구분 */
-.auth-switches {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-  margin-top: var(--spacing-4);
-  text-align: center;
-}
-
-.auth-switches .auth-link {
-  display: block;
-  padding: var(--spacing-2);
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-
-.link-accent {
-  color: var(--hot-pink-accent);
-  font-weight: 600;
-}
-
-.admin-link {
-  color: var(--mint-fresh) !important;
-}
-
-.admin-back-link {
-  color: var(--mid-pink) !important;
 }
 
 /* 로딩 인디케이터 */

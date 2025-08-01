@@ -1,143 +1,178 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUser } from '../../hooks/useUser';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { User, Phone, Loader2, LogIn, Lock } from 'lucide-react';
 
 interface LoginFormProps {
-  onSwitchToRegister: () => void;
+  onLogin?: (siteId: string, password: string) => void;
+  onSwitchToSignup?: () => void;
+  onSwitchToResetPassword?: () => void;
+  isLoading?: boolean;
+  error?: string;
+  autoFillTestAccount?: boolean;
 }
 
-export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
+export default function LoginForm({ 
+  onLogin, 
+  onSwitchToSignup,
+  onSwitchToResetPassword,
+  isLoading: propIsLoading = false, 
+  error: propError = '',
+  autoFillTestAccount = false 
+}: LoginFormProps) {
+  const [siteId, setSiteId] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(propIsLoading);
+  const [error, setError] = useState(propError);
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const { login } = useUser();
-  const [formData, setFormData] = useState({
-    site_id: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    if (error) setError('');
-  };
+  
+  // 테스트 계정 자동 입력
+  useEffect(() => {
+    const useTestAccount = autoFillTestAccount || searchParams?.get('test') === 'true';
+    if (useTestAccount) {
+      setSiteId('testuser');
+      setPassword('testpass123');
+    }
+  }, [autoFillTestAccount, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    try {
-      // useUser hook의 login 메서드 사용
-      await login({
-        site_id: formData.site_id,
-        password: formData.password
-      });
-
-      console.log('✅ 로그인 성공! 메인 페이지로 이동');
-
-      // 🏠 메인 페이지(홈 대시보드)로 리다이렉트
-      router.push('/');
-    } catch (error: any) {
-      console.error('❌ 로그인 실패:', error);
-
-      // 에러 메시지 처리
-      let errorMessage = '로그인에 실패했습니다.';
-      if (error.message) {
-        if (error.message.includes('Invalid credentials')) {
-          errorMessage = '아이디 또는 비밀번호가 틀렸습니다.';
-        } else {
-          errorMessage = error.message;
+    
+    if (onLogin) {
+      onLogin(siteId, password);
+    } else {
+      setIsLoading(true);
+      try {
+        // 백엔드 API 호출
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8002';
+        const response = await fetch(`${apiUrl}/api/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            site_id: siteId,
+            password: password
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || '로그인에 실패했습니다');
         }
+        
+        const data = await response.json();
+        console.log('로그인 성공', data);
+        
+        // JWT 토큰 저장 (localStorage 또는 쿠키)
+        if (data.access_token) {
+          localStorage.setItem('access_token', data.access_token);
+          localStorage.setItem('user_info', JSON.stringify(data.user));
+        }
+        
+        // 로그인 후 메인 페이지로 이동
+        alert(`환영합니다, ${data.user?.nickname || '사용자'}님!`);
+        router.push('/games');
+      } catch (error: any) {
+        setError(error.message || '로그인에 실패했습니다. 사이트ID와 비밀번호를 확인해주세요.');
+        console.error('로그인 실패', error);
+      } finally {
+        setIsLoading(false);
       }
-
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
-    <>
-      {/* 🎮 플랫폼 타이틀 */}
-      <div className="auth-header">
-        <div className="game-platform-title">모델카지노</div>
+    <div className="auth-content">
+      <div className="auth-header-simple">
+        <div className="auth-tab active">로그인</div>
+        <div 
+          className="auth-tab inactive" 
+          onClick={onSwitchToSignup}
+          style={{ cursor: 'pointer' }}
+        >
+          회원가입
+        </div>
       </div>
-
+      
       <div style={{ flex: 1 }}></div>
-
+      
+      <div className="game-platform-title">Game Platform</div>
+      <div className="game-platform-subtitle">차세대 게임 경험의 시작</div>
+      
       <div className="login-message">다시 오신 것을 환영합니다</div>
       <div className="login-help">게임에 로그인하여 시작하세요</div>
-
+      
       <form className="auth-form" onSubmit={handleSubmit}>
         {error && <div className="auth-error">{error}</div>}
-
+        
         <div className="form-group">
-          <label htmlFor="site_id" className="form-label">
-            사이트 ID
+          <label htmlFor="siteId" className="form-label">
+            사이트ID
           </label>
-          <input
-            type="text"
-            id="site_id"
-            name="site_id"
-            value={formData.site_id}
-            onChange={handleChange}
-            className="form-input"
-            placeholder="사이트 ID를 입력하세요 (예: WLTN001)"
-            required
-            disabled={isLoading}
-          />
+          <div className="email-input-container">
+            <User className="email-icon" size={16} />
+            <input
+              type="text"
+              id="siteId"
+              className="form-input email-input"
+              value={siteId}
+              onChange={(e) => setSiteId(e.target.value)}
+              placeholder="사이트ID를 입력하세요"
+              required
+              disabled={isLoading}
+              autoComplete="username"
+            />
+          </div>
         </div>
-
+        
         <div className="form-group">
           <label htmlFor="password" className="form-label">
             비밀번호
           </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            className="form-input"
-            placeholder="비밀번호를 입력하세요"
-            required
-            disabled={isLoading}
-          />
+          <div className="email-input-container">
+            <Lock className="email-icon" size={16} />
+            <input
+              type={showPassword ? "text" : "password"}
+              id="password"
+              className="form-input email-input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="비밀번호를 입력하세요"
+              required
+              disabled={isLoading}
+              autoComplete="current-password"
+            />
+          </div>
         </div>
-
+        
         <button
           type="submit"
-          className="auth-button primary"
-          disabled={isLoading}
+          className="auth-button"
+          disabled={isLoading || !siteId || !password}
         >
           {isLoading ? (
             <>
-              <span className="loading-spinner"></span>
+              <Loader2 size={18} className="animate-spin mr-2" />
               로그인 중...
             </>
           ) : (
-            '🔥 로그인'
+            <>
+              <LogIn size={18} />
+              로그인
+            </>
           )}
         </button>
       </form>
-
-      {/* 🔄 전환 버튼들 */}
-      <div className="auth-switches">
-        <button
-          type="button"
-          className="auth-link"
-          onClick={onSwitchToRegister}
-          disabled={isLoading}
-        >
-          계정이 없으신가요? <span className="link-accent">회원가입</span>
-        </button>
+      
+      <div style={{ flex: 1 }}></div>
+      
+      <div className="bottom-info">
+        안전하고 신뢰할 수 있는 게임 플랫폼
       </div>
-    </>
+    </div>
   );
 }

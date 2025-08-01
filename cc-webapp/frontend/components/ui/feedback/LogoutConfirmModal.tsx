@@ -4,26 +4,24 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, AlertTriangle } from 'lucide-react';
 import { Button } from '../basic/button';
-import { useUser } from '../../../hooks/useUser';
 
 interface LogoutConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm?: () => void;
+  onConfirm: () => void;
 }
 
-const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
-  isOpen,
-  onClose,
-  onConfirm
+const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm 
 }) => {
-  const { logout } = useUser();
-
   const handleLogout = () => {
-    console.log('🚪 로그아웃 확인 - 실제 로그아웃 함수 호출');
-    logout(); // useUser의 logout 함수 호출
-    onConfirm?.(); // 추가 콜백이 있으면 실행
-    onClose(); // 모달 닫기
+    // 실제 로그아웃 로직 (토큰 삭제, 상태 초기화 등)
+    localStorage.removeItem('authToken');
+    sessionStorage.clear();
+    onConfirm();
+    onClose();
   };
 
   return (
@@ -48,7 +46,7 @@ const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="fixed inset-0 flex items-center justify-center z-50 p-4"
           >
-            <div
+            <div 
               className="w-full max-w-sm rounded-2xl p-6"
               style={{
                 background: 'linear-gradient(145deg, rgba(26,26,26,0.98) 0%, rgba(20,20,35,0.98) 100%)',
@@ -78,14 +76,14 @@ const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
 
               {/* 버튼들 */}
               <div className="flex gap-3">
-                <Button
-                  variant="outline"
+                <Button 
+                  variant="outline" 
                   onClick={onClose}
                   className="flex-1 text-gray-300 border-gray-600 hover:bg-gray-700/50"
                 >
                   취소
                 </Button>
-                <Button
+                <Button 
                   onClick={handleLogout}
                   className="flex-1 bg-red-500 hover:bg-red-600 text-white"
                 >
