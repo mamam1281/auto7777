@@ -1,7 +1,8 @@
 // cc-webapp/frontend/app/layout.tsx
-import React from 'react';
 import type { Metadata } from 'next';
-import { Epilogue, Exo, IBM_Plex_Sans_KR } from 'next/font/google';
+import { Epilogue, Exo } from 'next/font/google';
+import localFont from 'next/font/local';
+import React from 'react';
 
 // 1. 글로벌 CSS 임포트
 import '../styles/global.css'; // 올바른 경로로 수정
@@ -27,9 +28,8 @@ const exo = Exo({
   display: 'swap',
 });
 
-const ibmPlexSansKR = IBM_Plex_Sans_KR({
-  subsets: ['latin'],
-  weight: ['400', '700'],
+const ibmPlexSansKR = localFont({
+  src: '../public/fonts/IBMPlexSansKR-Regular.woff2',
   variable: '--font-ibm-plex-sans-kr',
   display: 'swap',
 });

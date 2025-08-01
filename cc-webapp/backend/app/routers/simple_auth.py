@@ -226,6 +226,8 @@ async def verify_invite(req: VerifyInviteRequest):
 @router.post("/signup", response_model=TokenResponse)
 async def signup(data: SignUpRequest):
     """회원가입"""
+    logger.info(f"Signup request received: {data}")
+    
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
@@ -276,9 +278,9 @@ async def signup(data: SignUpRequest):
         if data.invite_code not in ['6974', '6969', '2560']:
             cursor.execute("""
                 UPDATE invite_codes 
-                SET use_count = use_count + 1, last_used_at = CURRENT_TIMESTAMP, used_by_user_id = %s
+                SET use_count = use_count + 1, last_used_at = CURRENT_TIMESTAMP
                 WHERE code = %s
-            """, (user_id, data.invite_code))
+            """, (data.invite_code,))
         
         conn.commit()
         

@@ -75,6 +75,14 @@ export interface RegisterRequest {
   nickname?: string;
 }
 
+export interface SignUpRequest {
+  site_id: string;
+  nickname: string;
+  phone_number: string;
+  password: string;
+  invite_code: string;
+}
+
 export interface ContentUnlockRequest {
   content_id: number;
   stage_to_unlock: number;

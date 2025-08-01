@@ -7,11 +7,10 @@ import type {
   GamePlayRequest,
   GameResponse,
   LoginRequest,
-  RegisterRequest,
+  SignUpRequest,
   SlotSpinResponse,
   User
 } from '../types/api';
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 const apiClient = axios.create({
@@ -47,8 +46,8 @@ export const authAPI = {
   login: (data: LoginRequest) => 
     apiClient.post<{ access_token: string; user: User }>('/api/auth/login', data),
   
-  register: (data: RegisterRequest) => 
-    apiClient.post<{ access_token: string; user: User }>('/api/auth/register', data),
+  register: (data: SignUpRequest) => 
+    apiClient.post<{ access_token: string; user: User }>('/api/auth/signup', data),
   
   getCurrentUser: () => 
     apiClient.get<User>('/api/auth/me'),

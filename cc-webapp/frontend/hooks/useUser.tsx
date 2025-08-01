@@ -303,7 +303,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
         // 사용자 정보를 별도로 가져오기
         try {
-          const userData = await apiClient.getMe() as any;
+          const response = await authAPI.getCurrentUser();
+          const userData = response.data || response;
           console.log('👤 사용자 정보 가져오기 성공:', userData);
 
           const formattedUser: User = {

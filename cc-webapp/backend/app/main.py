@@ -42,12 +42,14 @@ from pydantic import BaseModel  # For request/response models
 from typing import Optional
 
 from app.routers import (
-    auth,  # 간소화된 인증 라우터만 사용
+    auth,  # 간소화된 인증 라우터
+    games,  # 게임 API 활성화
+    game_api_v2,  # 인증 연동된 새로운 게임 API 라우터
     # 모든 다른 라우터들을 임시로 비활성화 - 모델 의존성 해결 후 재활성화
     # ai,
     # analyze,
     # recommend,
-    # rewards,   # 추가
+    rewards,   # 추가
     # unlock,    # 추가
     # user_segments, # 추가
     # gacha,  # 추가
@@ -261,14 +263,15 @@ if SIMPLE_AUTH_AVAILABLE:
     print("✅ Simple Auth API endpoints registered")
 # 다른 모든 라우터들을 임시로 비활성화 - 모델 의존성 문제 해결 후 재활성화
 # app.include_router(admin.router, prefix="/api")  # 임시 비활성화
-# app.include_router(games.router)  # 임시 비활성화
+app.include_router(games.router)  # 게임 API 라우터 활성화
+app.include_router(game_api_v2.router)  # 인증 연동된 새로운 게임 API 라우터 추가
 # app.include_router(segments.router, prefix="/api")
 # app.include_router(chat.router, prefix="/api")
 # app.include_router(feedback.router, prefix="/api")
 # app.include_router(ai.router, prefix="/api")  # 🆕 Added AI router
 # app.include_router(analyze.router, prefix="/api")  # 🆕 Added analyze router  
 # app.include_router(recommend.router, prefix="/api")  # 🆕 Added recommend router
-# app.include_router(rewards.router, prefix="/api")  # 추가
+app.include_router(rewards.router, prefix="/api")  # 추가
 # app.include_router(unlock.router, prefix="/api")   # 추가
 # app.include_router(user_segments.router, prefix="/api") # 추가
 # app.include_router(gacha.router, prefix="/api")  # 추가
