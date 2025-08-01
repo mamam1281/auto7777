@@ -149,7 +149,31 @@ async def record_game_session(
         return False
 
 # 게임 엔드포인트들
-@router.post("/slot/spin", response_model=SlotSpinResponse, summary="슬롯 머신 스핀", description="슬롯 머신을 돌려 결과에 따라 토큰을 획득하거나 잃습니다.")
+@router.post(
+    "/slot/spin", 
+    response_model=SlotSpinResponse, 
+    summary="🎰 슬롯 머신 스핀", 
+    description="""
+    **슬롯 머신 게임을 플레이합니다.**
+    
+    ### 🎮 게임 특징:
+    - Variable-Ratio Reward 시스템으로 중독성 있는 게임플레이
+    - 연패 시 보상 확률 증가 (심리적 보상 메커니즘)
+    - 잭팟 시 특별 애니메이션 효과
+    
+    ### 💰 토큰 시스템:
+    - 기본 베팅: 10토큰 
+    - 승리 시: 20-200토큰 획득 (확률별 차등)
+    - 잭팟: 최대 500토큰 획득
+    
+    ### 📊 응답 정보:
+    - `result`: 게임 결과 ("win", "lose", "jackpot")
+    - `tokens_change`: 토큰 변화량 (음수=차감, 양수=획득)
+    - `balance`: 현재 토큰 잔고
+    - `streak`: 연속 플레이 횟수
+    - `animation`: UI 애니메이션 키 (선택사항)
+    """
+)
 async def spin_slot(
     current_user_id: int = Depends(require_user),  # 인증 의존성 활성화
     db: Session = Depends(get_db),
@@ -205,7 +229,31 @@ async def spin_slot(
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@router.post("/roulette/spin", response_model=PrizeRouletteSpinResponse, summary="경품 룰렛 스핀", description="경품 룰렛을 돌려 다양한 경품 아이템을 획득할 수 있습니다. 일일 사용 횟수 제한과 쿨다운이 적용됩니다.")
+@router.post(
+    "/roulette/spin", 
+    response_model=PrizeRouletteSpinResponse, 
+    summary="🎡 경품 룰렛 스핀", 
+    description="""
+    **경품 룰렛을 돌려 다양한 경품을 획득합니다.**
+    
+    ### 🎁 경품 시스템:
+    - 일일 3회 무료 스핀 제공
+    - 10분 쿨다운 시간 적용
+    - 등급별 차등 경품 (일반/레어/에픽/레전더리)
+    
+    ### 🏆 획득 가능 경품:
+    - **토큰**: 50-500개 (확률 50%)
+    - **포인트**: 100-1000점 (확률 30%) 
+    - **쿠폰**: 할인쿠폰, 무료게임권 (확률 15%)
+    - **레어 아이템**: 특별 아바타, 테마 (확률 5%)
+    
+    ### 📊 응답 정보:
+    - `success`: 스핀 성공 여부
+    - `prize`: 획득한 경품 정보 (아이템명, 수량, 등급)
+    - `spins_left`: 남은 스핀 횟수
+    - `cooldown_expires`: 다음 스핀 가능 시간
+    """
+)
 async def spin_prize_roulette(
     current_user_id: int = Depends(require_user),  # 인증 의존성 활성화
     db: Session = Depends(get_db),
@@ -335,7 +383,30 @@ async def get_roulette_info(
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@router.post("/gacha/pull", response_model=GachaPullResponse, summary="가챠 뽑기", description="토큰을 사용하여 가챠 아이템을 뽑습니다. 단일 또는 다중 뽑기를 지원합니다.")
+@router.post(
+    "/gacha/pull", 
+    response_model=GachaPullResponse, 
+    summary="🎁 가챠 뽑기", 
+    description="""
+    **토큰을 사용하여 가챠 아이템을 뽑습니다.**
+    
+    ### 🎲 가챠 시스템:
+    - 단일 뽑기: 50토큰
+    - 10연속 뽑기: 450토큰 (10% 할인)
+    - 근접 실패 메커니즘: 고급 아이템이 나올 뻔한 연출 포함
+    
+    ### 🌟 아이템 등급:
+    - **일반 (60%)**: 기본 아이템, 소량 토큰
+    - **레어 (25%)**: 중급 아이템, 아바타 파츠
+    - **에픽 (12%)**: 고급 아이템, 특별 효과
+    - **레전더리 (3%)**: 최고급 아이템, 한정판
+    
+    ### 💰 비용 & 보상:
+    - 뽑기당 기본 50토큰 소모
+    - 10연속 시 1개 레어 이상 보장
+    - 100회 뽑기 시 레전더리 확정 (천장 시스템)
+    """
+)
 async def pull_gacha(
     request: GachaPullRequest,
     current_user_id: int = Depends(require_user),  # 인증 의존성 활성화
@@ -398,7 +469,33 @@ async def pull_gacha(
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@router.post("/rps/play", response_model=RPSPlayResponse, summary="가위바위보 게임", description="가위바위보 게임을 플레이하고 결과에 따라 토큰을 획득하거나 잃습니다.")
+@router.post(
+    "/rps/play", 
+    response_model=RPSPlayResponse, 
+    summary="✂️ 가위바위보 게임", 
+    description="""
+    **가위바위보 게임을 플레이하고 베팅합니다.**
+    
+    ### 🎮 게임 규칙:
+    - 가위(scissors), 바위(rock), 보(paper) 중 선택
+    - 이기면 베팅금액의 2배 획득
+    - 비기면 베팅금액 반환
+    - 지면 베팅금액 잃음
+    
+    ### 💰 베팅 시스템:
+    - 최소 베팅: 10토큰
+    - 최대 베팅: 100토큰
+    - 승리 시: 베팅금액 × 2 획득
+    - 무승부: 베팅금액 반환
+    
+    ### 📊 응답 정보:
+    - `user_choice`: 사용자 선택 (rock/paper/scissors)
+    - `computer_choice`: 컴퓨터 선택
+    - `result`: 게임 결과 (win/lose/draw)
+    - `tokens_change`: 토큰 변화량
+    - `balance`: 현재 토큰 잔고
+    """
+)
 async def play_rps(
     request: RPSPlayRequest,
     current_user_id: int = Depends(require_user),  # 인증 의존성 활성화

@@ -41,7 +41,34 @@ class PaginatedRewardsResponse(BaseModel):
 @router.get(
     "/users/{user_id}/rewards",
     response_model=PaginatedRewardsResponse,
-    tags=["users", "rewards"]
+    tags=["Rewards"],
+    summary="🎁 사용자 보상 목록 조회",
+    description="""
+**사용자가 획득한 모든 보상 내역을 페이지네이션으로 조회합니다.**
+
+### 🎮 보상 유형:
+- **slot_win**: 슬롯 머신 승리 보상
+- **gacha_item**: 가챠에서 획득한 아이템  
+- **roulette_prize**: 룰렛 경품
+- **daily_bonus**: 일일 접속 보상
+- **achievement**: 도전과제 완료 보상
+
+### 📊 응답 정보:
+- **rewards**: 보상 아이템 목록
+- **page**: 현재 페이지 번호
+- **page_size**: 페이지당 아이템 수
+- **total_rewards**: 전체 보상 개수
+- **total_pages**: 전체 페이지 수
+
+### 🔍 페이지네이션:
+- 기본 페이지 크기: 20개
+- 최대 페이지 크기: 100개
+- 1-indexed 페이지 번호 사용
+
+### 💡 사용 예시:
+- 첫 페이지: `/users/1/rewards?page=1&page_size=20`
+- 특정 페이지: `/users/1/rewards?page=3&page_size=50`
+    """
 )
 async def get_user_rewards(
     user_id: int = Path(..., title="The ID of the user to get rewards for", ge=1),

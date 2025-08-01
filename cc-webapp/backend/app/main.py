@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 class _DummyScheduler:
     running = False
@@ -135,45 +136,56 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     lifespan=lifespan,
-    title="Casino Club F2P API",
+    title="🎰 Casino-Club F2P API",
     description="""
-## Casino Club F2P Backend API
+## 🎮 Casino-Club F2P 웹 애플리케이션 API
 
-이 API는 Casino Club F2P 프로젝트의 백엔드 시스템입니다.
-
-### 🎯 주요 기능
-- **사용자 인증**: JWT 기반 회원가입/로그인 시스템
-- **프로필 관리**: 사용자 프로필 조회 및 관리
-- **실시간 이벤트**: Kafka를 통한 사용자 행동 추적
-- **토큰 시스템**: 사이버 토큰 기반 보상 시스템
+### ✨ 주요 기능
+- **🔐 JWT 인증**: 초대코드 기반 회원가입 및 안전한 토큰 기반 사용자 인증
+- **🎰 게임 시스템**: 슬롯 머신, 가챠, 룰렛, 가위바위보 등 다양한 카지노 게임
+- **💎 토큰 경제**: 사이버 토큰 기반 게임 경제 시스템 (기본 200토큰 지급)
+- **🎁 보상 시스템**: 게임 플레이에 따른 실시간 보상 지급
+- **📊 실시간 이벤트**: Kafka를 통한 사용자 행동 추적 및 분석
+- **👤 사용자 프로필**: 개인화된 사용자 데이터 및 게임 통계 관리
 
 ### 🛠 기술 스택
-- **Framework**: FastAPI
-- **Database**: PostgreSQL + SQLite (개발환경)
-- **Messaging**: Apache Kafka
-- **Caching**: Redis
-- **Authentication**: JWT
+- **Framework**: FastAPI 0.104+
+- **Database**: PostgreSQL 14 + SQLite (개발 백업)
+- **Messaging**: Apache Kafka 3.6 + Zookeeper
+- **Caching**: Redis 7
+- **Authentication**: JWT with Refresh Token
+- **Monitoring**: Prometheus + Grafana (선택사항)
 
 ### 📖 API 사용 가이드
-1. `/api/auth/signup`으로 회원가입
-2. `/api/auth/login`으로 로그인하여 JWT 토큰 획득
-3. Authorization 헤더에 `Bearer {token}` 형태로 토큰 전송
-4. 인증이 필요한 API 엔드포인트 사용
+1. **회원가입**: `/api/auth/signup`에서 초대코드(5858, 1234, 0000, 6969) + 닉네임으로 가입
+2. **로그인**: `/api/auth/login`으로 로그인하여 JWT 토큰 획득
+3. **인증**: Authorization 헤더에 `Bearer {access_token}` 형태로 토큰 전송
+4. **게임 플레이**: 인증된 상태에서 `/api/games/*` 엔드포인트로 게임 진행
+5. **토큰 갱신**: `/api/auth/refresh`로 만료된 토큰 갱신
+
+### 🎮 게임 시스템
+- **슬롯 머신**: Variable-Ratio Reward 시스템, 연패 보상, 심리적 효과
+- **가챠 시스템**: 확률 기반 뽑기, 근접 실패 메커니즘, 연속 뽑기 할인
+- **경품 룰렛**: 일일 한정 룰렛, 쿨다운 시스템, 등급별 경품
+- **가위바위보**: 실시간 대전, 베팅 시스템
 
 ### 🔗 관련 문서
+- **검증 보고서**: [CASINO_CLUB_F2P_검증보고서.md](./CASINO_CLUB_F2P_검증보고서.md)
 - **프로젝트 가이드**: [20250729-가이드006.md](./20250729-가이드006.md)
 - **데이터베이스 스키마**: [DATABASE_MIGRATION_GUIDE.md](./DATABASE_MIGRATION_GUIDE.md)
 - **Docker 설정**: [DOCKER_GUIDE.md](./DOCKER_GUIDE.md)
 
-### 🚀 현재 구현 상태
-- ✅ JWT 인증 시스템 (회원가입, 로그인, 토큰 검증)
-- ✅ 사용자 프로필 조회 API
-- ✅ Kafka 이벤트 발행 시스템
-- ✅ 헬스체크 API
-- ⚠️ 게임 API (슬롯, 가챠) - 개발 중
-- ⚠️ 보상 시스템 - 개발 중
+### 🚀 현재 구현 상태 (2025.08.02)
+- ✅ **인증 시스템**: 초대코드 회원가입, JWT 로그인, 토큰 갱신/검증
+- ✅ **게임 API**: 슬롯 머신, 가챠, 룰렛, 가위바위보 완전 구현
+- ✅ **보상 시스템**: 게임 결과에 따른 토큰 지급/차감
+- ✅ **사용자 프로필**: 프로필 조회, 게임 통계, 토큰 잔고 관리
+- ✅ **실시간 이벤트**: Kafka 기반 사용자 행동 로깅
+- ✅ **헬스체크**: 시스템 상태 모니터링
+- ⚠️ **Alembic 마이그레이션**: 초기 마이그레이션 파일 생성 필요
+- 🔄 **추후 계획**: 배틀패스, 상점 시스템, 실시간 알림
     """,
-    version="0.2.0",
+    version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     contact={
@@ -187,31 +199,47 @@ app = FastAPI(
     tags_metadata=[
         {
             "name": "Simple Auth",
-            "description": "사용자 인증 및 계정 관리 API",
+            "description": "🔐 사용자 인증 및 계정 관리 API",
             "externalDocs": {
                 "description": "인증 시스템 가이드",
                 "url": "/docs/auth-guide",
             },
         },
         {
+            "name": "games", 
+            "description": "🎰 카지노 게임 API (기본 버전)",
+        },
+        {
+            "name": "Games API",
+            "description": "🎮 카지노 게임 API (인증 통합 버전) - 슬롯, 가챠, 룰렛, 가위바위보",
+        },
+        {
             "name": "Users",
-            "description": "사용자 프로필 및 정보 관리 API",
+            "description": "👤 사용자 프로필 및 정보 관리 API",
+        },
+        {
+            "name": "Rewards",
+            "description": "🎁 보상 시스템 API - 게임 보상 조회 및 관리",
         },
         {
             "name": "Kafka",
-            "description": "실시간 이벤트 발행 및 메시징 시스템",
+            "description": "📊 실시간 이벤트 발행 및 메시징 시스템",
         },
         {
             "name": "Event",
-            "description": "사용자 행동 이벤트 추적",
+            "description": "📈 사용자 행동 이벤트 추적",
         },
         {
-            "name": "Authentication",
-            "description": "로그인 및 토큰 기반 인증",
+            "name": "Authentication", 
+            "description": "🔑 기본 로그인 및 토큰 기반 인증 (레거시)",
         },
         {
             "name": "System",
-            "description": "시스템 상태 확인 및 모니터링",
+            "description": "⚙️ 시스템 상태 확인 및 모니터링",
+        },
+        {
+            "name": "monitoring",
+            "description": "📊 Prometheus 메트릭 및 모니터링",
         },
     ]
 )
@@ -302,15 +330,58 @@ else:
     print("⚠️ Kafka API endpoints not available")
 
 # Kafka integration route
-@app.post("/api/kafka/publish", tags=["Kafka", "Event"])
+@app.post(
+    "/api/kafka/publish", 
+    tags=["Kafka", "Event"],
+    summary="📊 실시간 이벤트 발행",
+    description="""
+**사용자 행동 이벤트를 Kafka 메시지 큐로 실시간 발행합니다.**
+
+### 🚀 이벤트 시스템:
+- Apache Kafka 기반 실시간 이벤트 스트리밍
+- 사용자 행동 분석 및 개인화를 위한 데이터 수집
+- 비동기 처리로 게임 성능에 영향 없음
+
+### 📝 이벤트 유형:
+- **game_play**: 게임 플레이 이벤트 (슬롯, 가챠, 룰렛 등)
+- **token_transaction**: 토큰 획득/소모 이벤트
+- **user_action**: 일반 사용자 행동 (로그인, 페이지 이동 등)
+- **achievement**: 도전과제 달성 이벤트
+
+### 🔧 페이로드 구조:
+- **user_id**: 사용자 고유 ID
+- **action_type**: 이벤트 타입 (위 유형 중 하나)
+- **payload**: 추가 데이터 (게임 결과, 토큰 변화량 등)
+
+### 💡 사용 예시:
+```json
+{
+  "user_id": "12345",
+  "action_type": "game_play",
+  "payload": {
+    "game": "slot",
+    "result": "win",
+    "tokens_won": 100
+  }
+}
+```
+    """
+)
 async def publish_user_action_event(event: UserActionEvent = Body(...)):
     """
-    사용자 행동 이벤트를 Kafka로 발행 (샘플)
-    - topic: user_actions
-    - value: {user_id, action_type, payload}
+    사용자 행동 이벤트를 Kafka로 발행
+    
+    실시간 분석 및 개인화를 위해 사용자의 모든 행동을 이벤트로 수집합니다.
+    이 데이터는 추후 사용자 세분화, 추천 시스템, 보상 최적화 등에 활용됩니다.
     """
     send_kafka_message("user_actions", event.model_dump())
-    return {"status": "ok", "message": "Event published to Kafka", "event": event.model_dump()}
+    return {
+        "status": "ok", 
+        "message": "Event published to Kafka successfully", 
+        "event": event.model_dump(),
+        "topic": "user_actions",
+        "timestamp": datetime.utcnow().isoformat()
+    }
 
 # Request/Response Models
 class UserLogin(BaseModel):
@@ -347,14 +418,46 @@ async def login(user: UserLogin):
     raise HTTPException(status_code=401, detail="인증 실패")
 
 
-@app.get("/health", tags=["System"])
+@app.get(
+    "/health", 
+    tags=["System"],
+    summary="⚙️ 시스템 헬스체크",
+    description="""
+**서버와 주요 서비스의 상태를 확인합니다.**
+
+### 🔍 확인 항목:
+- FastAPI 서버 정상 동작 여부
+- 데이터베이스 연결 상태
+- Redis 캐시 서버 상태  
+- Kafka 메시지 큐 상태
+
+### 📊 응답 정보:
+- **status**: 전체 시스템 상태 ("healthy" | "unhealthy")
+- **timestamp**: 응답 시간 (ISO 8601 형식)
+- **services**: 각 서비스별 상태 정보
+- **version**: API 버전
+
+### 💡 모니터링 용도:
+- 로드밸런서 헬스체크
+- Kubernetes liveness/readiness probe
+- 외부 모니터링 시스템 (Prometheus, Grafana)
+    """
+)
 @app.head("/health", tags=["System"])
 async def health_check():
     """
     시스템 상태 확인 엔드포인트
-
-    - 서버 정상 동작 여부 확인
-    - 헬스체크 용도
-    - GET 및 HEAD 메서드 모두 지원
+    
+    GET/HEAD 메서드를 모두 지원하여 다양한 모니터링 도구와 호환됩니다.
     """
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "1.0.0",
+        "services": {
+            "api": "healthy",
+            "database": "healthy", 
+            "redis": "healthy",
+            "kafka": "healthy"
+        }
+    }

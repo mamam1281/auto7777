@@ -108,7 +108,32 @@ async def verify_invite(req: VerifyInviteRequest, db: Session = Depends(get_db))
     return {"valid": is_valid}
 
 
-@router.post("/signup", response_model=TokenResponse)
+@router.post(
+    "/signup", 
+    response_model=TokenResponse,
+    summary="🔐 회원가입",
+    description="""
+    **초대코드를 사용하여 새 계정을 생성합니다.**
+    
+    ### ✨ 가입 특징:
+    - 초대코드 + 닉네임만으로 간편 가입
+    - 가입 즉시 200개 사이버 토큰 지급
+    - 모든 게임 서비스 즉시 이용 가능
+    
+    ### 🎫 사용 가능한 초대코드:
+    - `5858`: 일반 초대코드
+    - `1234`: 테스트 초대코드  
+    - `0000`: 개발자 초대코드
+    - `6969`: 특별 초대코드
+    
+    ### 📝 필수 정보:
+    - `site_id`: 사용자 고유 ID (3-20자)
+    - `nickname`: 닉네임 (2-20자)
+    - `phone_number`: 휴대폰 번호 (인증용)
+    - `password`: 비밀번호 (8자 이상)
+    - `invite_code`: 초대코드 (4자리)
+    """
+)
 async def signup(
     request: Request,
     data: SignUpRequest,
@@ -171,7 +196,29 @@ async def signup(
     )
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post(
+    "/login", 
+    response_model=TokenResponse,
+    summary="🔑 로그인",
+    description="""
+    **사용자 계정으로 로그인하여 인증 토큰을 발급받습니다.**
+    
+    ### 🔒 보안 기능:
+    - 로그인 시도 제한 (5회 실패 시 10분 제한)
+    - IP 기반 접근 제한
+    - JWT 액세스 토큰 + 리프레시 토큰 발급
+    
+    ### 📝 필수 정보:
+    - `site_id`: 회원가입 시 설정한 사용자 ID
+    - `password`: 계정 비밀번호
+    
+    ### 🎫 응답 토큰:
+    - `access_token`: API 접근용 토큰 (60분 유효)
+    - `refresh_token`: 토큰 갱신용 토큰 (7일 유효)
+    - `token_type`: "bearer" (Authorization 헤더 형식)
+    - `expires_in`: 토큰 만료 시간 (초 단위)
+    """
+)
 async def login(
     request: Request,
     data: LoginRequest,
