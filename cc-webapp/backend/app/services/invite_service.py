@@ -15,7 +15,7 @@ class InviteService:
     """초대코드 서비스"""
     
     # 항상 사용 가능한 고정 코드 정의
-    FIXED_CODES = ["6969", "6974", "2560"]
+    FIXED_CODES = ["5858", "1234", "0000", "6969"]
     
     def __init__(self, db: Session):
         self.db = db

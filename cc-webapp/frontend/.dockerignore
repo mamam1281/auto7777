@@ -1,5 +1,60 @@
+# Node modules
 node_modules
+npm-debug.log*
+
+# Next.js build output
 .next
-npm-debug.log
+out
+
+# Environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage
+.nyc_output
+cypress/screenshots
+cypress/videos
+
+# Editor directories and files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Git
+.git
+.gitignore
+
+# Docker
 Dockerfile
 .dockerignore
+
+# IDE
+.idea
+*.iml
+
+# Misc
+.cache
