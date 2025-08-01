@@ -1,18 +1,18 @@
 import axios from 'axios';
-import type { 
-  User, 
-  AdultContentGalleryItem, 
-  GameResponse, 
-  ContentUnlockResponse, 
+import type {
+  AdultContentGalleryItem,
+  ContentUnlockRequest,
+  ContentUnlockResponse,
   FlashOfferResponseItem,
+  GamePlayRequest,
+  GameResponse,
   LoginRequest,
   RegisterRequest,
-  ContentUnlockRequest,
-  GamePlayRequest,
-  SlotSpinResponse
+  SlotSpinResponse,
+  User
 } from '../types/api';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://139.180.155.143:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -45,13 +45,17 @@ apiClient.interceptors.response.use(
 
 export const authAPI = {
   login: (data: LoginRequest) => 
-    apiClient.post<{ access_token: string; user: User }>('/auth/login', data),
+    apiClient.post<{ access_token: string; user: User }>('/api/auth/login', data),
   
   register: (data: RegisterRequest) => 
-    apiClient.post<{ access_token: string; user: User }>('/auth/register', data),
+    apiClient.post<{ access_token: string; user: User }>('/api/auth/register', data),
   
   getCurrentUser: () => 
-    apiClient.get<User>('/auth/me'),
+    apiClient.get<User>('/api/auth/me'),
+    
+  // 초대코드 검증 API 추가 (올바른 경로로 수정)
+  checkInviteCode: (code: string) => 
+    apiClient.post<{ valid: boolean; message?: string }>('/api/auth/verify-invite', { code }),
 };
 
 export const gameAPI = {

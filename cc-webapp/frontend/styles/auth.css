@@ -40,13 +40,14 @@
 /* 인증 페이지 컨테이너 - 섹시한 핫핑크 다크 테마 */
 .auth-container {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 0;
+  justify-content: flex-start;
+  padding: 20px;
   margin: 0;
+  box-sizing: border-box;
   background: 
     radial-gradient(ellipse at top, rgba(218, 145, 158, 0.2) 0%, transparent 50%),
     radial-gradient(ellipse at bottom, rgba(192, 67, 128, 0.15) 0%, transparent 50%),
@@ -62,8 +63,8 @@
 .auth-container.popup-mode {
   width: 400px;
   max-width: 400px;
-  min-height: 800px; /* 🔧 800px로 변경 */
-  max-height: 800px; /* 🔧 800px로 변경 */
+  min-height: 100vh; /* 🔧 뷰포트 높이 전체 사용 */
+  max-height: none; /* 🔧 최대 높이 제한 완전 제거 */
   margin: 0 auto;
   padding: var(--spacing-3) var(--spacing-2);
   position: relative;
@@ -75,7 +76,7 @@
   border: 1px solid var(--border-glow);
   border-radius: 20px;
   box-shadow: 
-    0 0 30px rg다ba(139, 92, 246, 0.3),
+    0 0 30px rgba(139, 92, 246, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -153,8 +154,9 @@
 /* 회원가입 2단계에서의 스타일 최적화 */
 @media (max-height: 850px) { /* 🔧 미디어 쿼리 조건 변경 */
   .auth-container.popup-mode {
-    max-height: 800px; /* 🔧 800px 유지 */
-    min-height: 800px; /* 🔧 800px 유지 */
+    max-height: none; /* 🔧 최대 높이 제한 완전 제거 */
+    min-height: 900px; /* 🔧 최소 높이 900px로 증가 */
+    overflow-y: auto; /* 🔧 스크롤 허용 */
   }
   
   .register-content {
@@ -1477,4 +1479,34 @@
   color: rgba(255, 255, 255, 0.7);
   text-align: center;
   margin-top: var(--spacing-2);
+}
+
+/* 🎴 Auth Card - 인증 폼 카드 컨테이너 */
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 20px;
+  background: rgba(2, 5, 5, 0.95);
+  border: 1px solid rgba(218, 145, 158, 0.3);
+  border-radius: 16px;
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(218, 145, 158, 0.2);
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(218, 145, 158, 0.1) 0%, rgba(192, 67, 128, 0.05) 100%);
+  border-radius: 16px;
+  pointer-events: none;
+  z-index: -1;
 }

@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import RegisterForm from '../../../components/auth/RegisterForm';
-import { isPopupWindow } from '../../../utils/gamePopup';
 import '../../../styles/auth.css';
+import { isPopupWindow } from '../../../utils/gamePopup';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -55,13 +54,24 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className={`auth-container ${initialized ? (isPopup ? 'popup-mode' : '') : ''} ${initialized ? 'auth-initialized' : 'auth-initializing'}`}>
-      <RegisterForm 
-        onRegister={handleRegister} 
-        isLoading={isLoading} 
-        error={error} 
-        onSwitchToLogin={() => router.push('/auth/login')}
-      />
+    <div className="w-full max-w-[420px] mx-auto min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-auto">
+      <div className={`auth-container ${initialized ? (isPopup ? 'popup-mode' : '') : ''} ${initialized ? 'auth-initialized' : 'auth-initializing'}`}
+           style={{
+             width: '100%',
+             maxWidth: '420px',
+             minHeight: 'auto',
+             height: 'auto',
+             overflow: 'visible',
+             padding: '20px',
+             boxSizing: 'border-box'
+           }}>
+        <RegisterForm 
+          onRegister={handleRegister} 
+          isLoading={isLoading} 
+          error={error} 
+          onSwitchToLogin={() => router.push('/auth/login')}
+        />
+      </div>
     </div>
   );
 }

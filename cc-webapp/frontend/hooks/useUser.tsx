@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext } from 'react';
-import { apiClient, User as ApiUser, LoginResponse } from '@/lib/api';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { authAPI } from '../utils/api';
 
 interface User {
   id: string;
@@ -163,23 +163,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           }
 
           console.log('🔄 저장된 토큰으로 사용자 정보 복원 시도...');
-          const userData = await apiClient.getMe() as ApiUser;
+          const userData = await authAPI.getCurrentUser();
 
           // API 응답을 User 타입으로 변환
           const formattedUser: User = {
-            id: userData.id,
-            nickname: userData.nickname,
-            rank: userData.vip_tier as 'VIP' | 'PREMIUM' | 'STANDARD',
-            cyber_token_balance: userData.cyber_tokens,
-            created_at: userData.created_at,
-            site_id: userData.site_id,
-            phone_number: userData.phone_number,
-            vip_tier: userData.vip_tier,
-            battlepass_level: userData.battlepass_level,
-            total_spent: userData.total_spent,
-            cyber_tokens: userData.cyber_tokens,
-            regular_coins: userData.regular_coins,
-            premium_gems: userData.premium_gems,
+            id: userData.data.id.toString(),
+            nickname: userData.data.nickname || 'Unknown',
+            rank: 'STANDARD' as 'VIP' | 'PREMIUM' | 'STANDARD',
+            cyber_token_balance: userData.data.cyber_token_balance || 0,
+            created_at: userData.data.created_at || new Date().toISOString(),
+            site_id: userData.data.email || '',
+            phone_number: userData.data.email || '',
+            vip_tier: 'STANDARD',
+            battlepass_level: 1,
+            total_spent: 0,
+            cyber_tokens: userData.data.cyber_token_balance || 0,
+            regular_coins: userData.data.cyber_token_balance || 0,
+            premium_gems: 0,
           };
 
           setUser(formattedUser);
@@ -210,14 +210,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const login = async (credentials: { site_id: string; password: string }) => {
     try {
       setIsLoading(true);
-      const response = await apiClient.login(credentials) as LoginResponse;
+      // LoginRequest 형식에 맞게 변환
+      const loginData = {
+        email: credentials.site_id, // site_id를 email로 사용
+        password: credentials.password
+      };
+      const response = await authAPI.login(loginData);
 
       console.log('🔍 로그인 API 응답:', response);
       console.log('🔍 응답 타입:', typeof response);
       console.log('🔍 응답 키들:', Object.keys(response));
 
       // 토큰 저장
-      localStorage.setItem('token', response.access_token);
+      localStorage.setItem('token', response.data.access_token);
 
       // 사용자 정보가 없으면 별도로 조회
       if (!response.user) {
@@ -283,7 +288,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       console.log('🚀 회원가입 API 호출 시작:', userData);
 
-      const response: any = await apiClient.signup(userData);
+      const response: any = await authAPI.register(userData);
       console.log('📦 회원가입 API 응답:', response);
 
       // 회원가입 응답 검증
@@ -292,8 +297,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 토큰이 있으면 자동 로그인 처리
-      if (response.access_token) {
-        localStorage.setItem('token', response.access_token);
+      if (response.data?.access_token) {
+        localStorage.setItem('token', response.data.access_token);
         console.log('✅ 회원가입 성공, 토큰 저장 완료');
 
         // 사용자 정보를 별도로 가져오기
@@ -339,8 +344,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const checkInviteCode = async (code: string): Promise<boolean> => {
     try {
-      const response = await apiClient.checkInviteCode(code) as { valid: boolean };
-      return response.valid === true;
+      const response = await authAPI.checkInviteCode(code);
+      return response.data.valid === true;
     } catch (error) {
       console.error('초대코드 확인 실패:', error);
       return false;

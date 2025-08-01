@@ -134,9 +134,8 @@ export default function CasinoDashboard() {
     );
   }
 
-  // 로그인되지 않은 경우 즉시 리다이렉트 (스플래시 건너뛰기)
+  // 로그인되지 않은 경우 로딩 화면 표시
   if (!user) {
-    router.replace('/auth');
     return (
       <div className="min-h-screen flex items-center justify-center"
         style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 25%, #0f0f0f 50%, #1a1a1a 75%, #0a0a0a 100%)' }}>

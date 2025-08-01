@@ -104,6 +104,53 @@ body {
   padding-bottom: 100px !important;
 }
 
+/* 🔧 인증 페이지에서는 패딩 제거 - 회원가입/로그인 페이지 전용 스타일 */
+.auth-container ~ * .miniapp-content,
+.miniapp-content:has(.auth-container),
+body:has(.auth-container) .miniapp-content {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* 🔧 더 강력한 인증 페이지 스타일 - URL 기반 */
+body[class*="auth"] .miniapp-content,
+.miniapp-content[class*="auth"],
+[data-page="auth"] .miniapp-content,
+[data-page="register"] .miniapp-content,
+[data-page="login"] .miniapp-content {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 🎯 인증 페이지들을 다른 게임/상점 페이지와 동일한 스크롤 패턴으로 수정 */
+.auth-page-container,
+.w-full.max-w-\[420px\].mx-auto.min-h-screen {
+  width: 100% !important;
+  max-width: 420px !important;
+  margin: 0 auto !important;
+  min-height: 100vh !important;
+  background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a) !important;
+  position: relative !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-gutter: stable !important;
+}
+
+/* 인증 페이지에서 헤더/네비 패딩 제거 */
+body[class*="auth"] .miniapp-content,
+.miniapp-content[class*="auth"],
+[data-page="auth"] .miniapp-content,
+[data-page="register"] .miniapp-content,
+[data-page="login"] .miniapp-content {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
 /* 바텀 네비 - 완전히 고정되어 항상 보이도록 */
 .miniapp-bottom-nav {
   position: fixed !important;

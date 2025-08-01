@@ -94,6 +94,12 @@ class InviteCode(Base):
     code = Column(String(6), unique=True, nullable=False, index=True)
     is_used = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=True)  # 만료일시 (NULL이면 무제한)
+    max_uses = Column(Integer, nullable=True)     # 최대 사용 횟수 (NULL이면 무제한)
+    use_count = Column(Integer, default=0)        # 현재 사용 횟수
+    created_by_user_id = Column(Integer, nullable=True)  # 생성자 user ID (NULL이면 시스템 생성)
+    used_by_user_id = Column(Integer, nullable=True)     # 사용한 user ID
+    last_used_at = Column(DateTime, nullable=True)       # 마지막 사용 시각
 
 
 class LoginAttempt(Base):

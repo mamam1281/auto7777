@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 
@@ -29,7 +29,7 @@ export default function AuthPage() {
   // 로딩 화면
   if (authMode === 'loading') {
     return (
-      <div className="auth-container">
+      <div className="w-full max-w-[420px] mx-auto min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-auto flex items-center justify-center">
         <div className="auth-card">
           <div className="loading-screen">
             <div className="game-platform-title">모델카지노</div>
@@ -42,8 +42,8 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
+    <div className="w-full max-w-[420px] mx-auto min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-auto">
+      <div className="auth-card" style={{ padding: '20px', boxSizing: 'border-box' }}>
         {authMode === 'login' && (
           <LoginForm
             onSwitchToRegister={handleSwitchToRegister}

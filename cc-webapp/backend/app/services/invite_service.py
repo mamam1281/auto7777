@@ -114,7 +114,7 @@ class InviteService:
             
             # 사용 카운트만 증가시키고 is_used는 변경하지 않음
             invite_code.use_count += 1
-            invite_code.used_at = datetime.utcnow()
+            invite_code.last_used_at = datetime.utcnow()
             invite_code.used_by_user_id = user_id
             self.db.commit()
             return True
@@ -140,7 +140,7 @@ class InviteService:
             invite_code.is_used = True
         
         # 초대코드 사용 처리
-        invite_code.used_at = datetime.utcnow()
+        invite_code.last_used_at = datetime.utcnow()
         invite_code.use_count += 1
         invite_code.used_by_user_id = user_id
         self.db.commit()
