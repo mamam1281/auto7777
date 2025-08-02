@@ -8,17 +8,18 @@ from . import gacha  # 가챠 API
 from . import rewards  # 보상 API
 from . import shop  # 상점 API
 from . import missions  # 미션 API
-# from . import quiz  # 퀴즈 API - 임시 비활성화 (Quiz 모델 누락)
+from . import quiz_router as quiz  # 퀴즈 API - 새로 추가
 from . import dashboard  # 대시보드 API
 from . import rps  # 가위바위보 API
 from . import prize_roulette  # 프라이즈 룰렛 API
 from . import notifications  # 알림 API
 
 # 추후 단계별로 활성화할 라우터들
+from . import ai_router  # AI 추천 시스템 - 새로 추가
 # from . import adult_content  # 성인 콘텐츠 API (모델 누락)
 # from . import ai  # AI 기능 API
 from . import analyze  # 분석 API - 6단계 활성화
-# from . import chat  # 채팅 API
+from . import chat_router as chat  # 채팅 API - 새로 추가
 # from . import corporate  # 기업 API
 from . import doc_titles  # 문서 제목 API - 1단계 활성화
 from . import feedback  # 피드백 API - 2단계 활성화

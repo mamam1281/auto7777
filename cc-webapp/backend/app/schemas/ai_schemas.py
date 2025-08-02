@@ -1,49 +1,79 @@
 """
-🤖 Casino-Club F2P - AI Schemas
-==============================
+🤖 Casino-Club F2P - AI Recommendation Schemas
+============================================
 AI 추천 시스템 Pydantic 스키마 정의
 """
 
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any
 from datetime import datetime
+from enum import Enum
 
 
-class RecommendationTemplateBase(BaseModel):
+class RecommendationType(str, Enum):
+    GAME = "game"
+    REWARD = "reward"
+    MISSION = "mission"
+    CONTENT = "content"
+
+
+class RecommendationStatus(str, Enum):
+    PENDING = "pending"
+    SHOWN = "shown"
+    CLICKED = "clicked"
+    DISMISSED = "dismissed"
+    EXPIRED = "expired"
+
+
+class InteractionType(str, Enum):
+    VIEW = "view"
+    CLICK = "click"
+    DISMISS = "dismiss"
+    COMPLETE = "complete"
+
+
+class RecommendationTemplateResponse(BaseModel):
+    id: int
     name: str
-    template_type: str
+    template_type: RecommendationType
     target_segment: Optional[str] = None
     trigger_conditions: Dict[str, Any] = {}
     content_template: Dict[str, Any] = {}
     priority: int = 1
+    is_active: bool = True
+    
+    class Config:
+        from_attributes = True
 
 
-class RecommendationCreate(BaseModel):
+class UserRecommendationCreate(BaseModel):
     template_id: Optional[int] = None
-    recommendation_type: str
+    recommendation_type: RecommendationType
     title: str
     description: Optional[str] = None
-    content_data: Dict[str, Any] = {}
-    priority_score: float = 0.5
+    content_data: Optional[Dict[str, Any]] = None
+    priority_score: float = Field(default=0.5, ge=0.0, le=1.0)
+    confidence_score: float = Field(default=0.5, ge=0.0, le=1.0)
+    personalization_factors: Optional[Dict[str, Any]] = None
+    expires_at: Optional[datetime] = None
 
 
-class RecommendationResponse(BaseModel):
+class UserRecommendationResponse(BaseModel):
     id: int
     user_id: int
-    template_id: Optional[int] = None
-    recommendation_type: str
+    recommendation_type: RecommendationType
     title: str
     description: Optional[str] = None
-    content_data: Dict[str, Any]
-    priority_score: float
-    confidence_score: float
+    content_data: Optional[Dict[str, Any]] = None
+    priority_score: float = 0.5
+    confidence_score: float = 0.5
     personalization_factors: Optional[Dict[str, Any]] = None
-    status: str
+    status: RecommendationStatus = RecommendationStatus.PENDING
     shown_at: Optional[datetime] = None
     clicked_at: Optional[datetime] = None
     dismissed_at: Optional[datetime] = None
     expires_at: Optional[datetime] = None
-    source: str
+    source: str = "ai_engine"
     algorithm_version: Optional[str] = None
     created_at: datetime
     
@@ -51,35 +81,54 @@ class RecommendationResponse(BaseModel):
         from_attributes = True
 
 
-class InteractionCreate(BaseModel):
-    interaction_type: str = Field(..., description="view, click, dismiss, complete")
+class RecommendationInteractionCreate(BaseModel):
+    interaction_type: InteractionType
     interaction_data: Optional[Dict[str, Any]] = None
     duration: Optional[int] = None
     result_data: Optional[Dict[str, Any]] = None
 
 
-class UserPreferenceBase(BaseModel):
-    preferred_games: Dict[str, Any] = {}
-    game_difficulty_preference: str = "medium"
-    risk_tolerance: float = 0.5
-    preferred_reward_types: Dict[str, Any] = {}
-    spending_pattern: Dict[str, Any] = {}
-    active_hours: Dict[str, Any] = {}
+class RecommendationInteractionResponse(BaseModel):
+    id: int
+    recommendation_id: int
+    user_id: int
+    interaction_type: InteractionType
+    interaction_data: Optional[Dict[str, Any]] = None
+    duration: Optional[int] = None
+    result_data: Optional[Dict[str, Any]] = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class UserPreferenceUpdate(BaseModel):
+    preferred_games: Optional[Dict[str, Any]] = None
+    game_difficulty_preference: Optional[str] = None
+    risk_tolerance: Optional[float] = Field(None, ge=0.0, le=1.0)
+    preferred_reward_types: Optional[Dict[str, Any]] = None
+    spending_pattern: Optional[Dict[str, Any]] = None
+    active_hours: Optional[Dict[str, Any]] = None
     session_duration_preference: Optional[int] = None
-    content_categories: Dict[str, Any] = {}
+    content_categories: Optional[Dict[str, Any]] = None
     interaction_style: Optional[str] = None
 
 
-class PreferenceUpdate(UserPreferenceBase):
-    pass
-
-
-class UserPreferenceResponse(UserPreferenceBase):
+class UserPreferenceResponse(BaseModel):
     id: int
     user_id: int
-    learning_rate: float
+    preferred_games: Optional[Dict[str, Any]] = None
+    game_difficulty_preference: str = "medium"
+    risk_tolerance: float = 0.5
+    preferred_reward_types: Optional[Dict[str, Any]] = None
+    spending_pattern: Optional[Dict[str, Any]] = None
+    active_hours: Optional[Dict[str, Any]] = None
+    session_duration_preference: Optional[int] = None
+    content_categories: Optional[Dict[str, Any]] = None
+    interaction_style: Optional[str] = None
+    learning_rate: float = 0.1
     last_model_update: Optional[datetime] = None
-    preference_accuracy: float
+    preference_accuracy: float = 0.5
     created_at: datetime
     updated_at: datetime
     
@@ -87,73 +136,33 @@ class UserPreferenceResponse(UserPreferenceBase):
         from_attributes = True
 
 
-class PersonalizationResponse(BaseModel):
-    content_type: str
-    personalization_data: Dict[str, Any]
-    effectiveness_score: float
-    last_applied: Optional[datetime] = None
-    recommendations: List[Dict[str, Any]] = []
-
-
-class AIModelBase(BaseModel):
-    name: str
-    model_type: str
-    version: str
-    description: Optional[str] = None
-    algorithm: Optional[str] = None
-    hyperparameters: Optional[Dict[str, Any]] = None
-
-
-class AIModelResponse(AIModelBase):
-    id: int
-    accuracy: Optional[float] = None
-    precision: Optional[float] = None
-    recall: Optional[float] = None
-    f1_score: Optional[float] = None
-    status: str
-    is_production: bool
-    trained_at: Optional[datetime] = None
-    deployed_at: Optional[datetime] = None
-    created_at: datetime
-    
-    class Config:
-        from_attributes = True
-
-
-class PredictionRequest(BaseModel):
-    prediction_type: str
-    input_features: Dict[str, Any]
-
-
-class PredictionResponse(BaseModel):
+class ModelPredictionResponse(BaseModel):
     id: int
     model_id: int
     user_id: int
     prediction_type: str
-    input_features: Dict[str, Any]
-    prediction_result: Dict[str, Any]
-    confidence_score: Optional[float] = None
+    input_features: Dict[str, Any] = {}
+    prediction_result: Dict[str, Any] = {}
+    confidence_score: float = 0.5
+    actual_result: Optional[Dict[str, Any]] = None
+    is_correct: Optional[bool] = None
     created_at: datetime
+    validated_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
 
 
-class PersonalizationRuleBase(BaseModel):
-    name: str
-    rule_type: str
-    conditions: Dict[str, Any]
-    actions: Dict[str, Any]
-    priority: int = 1
+class PersonalizationRequest(BaseModel):
+    user_id: int
+    content_type: str
+    context_data: Optional[Dict[str, Any]] = None
+    max_recommendations: int = Field(default=5, ge=1, le=20)
 
 
-class PersonalizationRuleResponse(PersonalizationRuleBase):
-    id: int
-    is_active: bool
-    execution_count: int
-    success_rate: float
-    created_at: datetime
-    updated_at: datetime
-    
-    class Config:
-        from_attributes = True
+class PersonalizationResponse(BaseModel):
+    recommendations: List[UserRecommendationResponse]
+    personalization_factors: Dict[str, Any]
+    confidence_score: float
+    algorithm_version: str
+    generated_at: datetime

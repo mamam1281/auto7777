@@ -34,7 +34,7 @@ from app.routers import (
     rewards,
     shop,
     missions,
-    # quiz,  # 임시 비활성화 - Quiz 모델 누락
+    quiz,        # 퀴즈 시스템 활성화
     dashboard,
     prize_roulette,
     rps,
@@ -49,29 +49,11 @@ from app.routers import (
     segments,    # Phase 8 추가
     tracking,    # Phase 9 추가
     unlock,      # Phase 10 추가
+    chat,        # 채팅 시스템 추가
 )
 
-# New advanced feature routers
-try:
-    from app.routers import quiz_router
-    QUIZ_AVAILABLE = True
-except ImportError:
-    QUIZ_AVAILABLE = False
-    print("Quiz router unavailable - check dependencies")
-
-try:
-    from app.routers import ai_router
-    AI_AVAILABLE = True
-except ImportError:
-    AI_AVAILABLE = False
-    print("AI router unavailable - check dependencies")
-
-try:
-    from app.routers import chat_router
-    CHAT_AVAILABLE = True
-except ImportError:
-    CHAT_AVAILABLE = False
-    print("Chat router unavailable - check dependencies")
+# AI 추천 시스템 라우터 별도 import
+from app.routers import ai_router
 
 # Scheduler setup
 class _DummyScheduler:
@@ -159,7 +141,11 @@ app.include_router(gacha.router, prefix="/api/gacha", tags=["Gacha"])
 app.include_router(rewards.router, prefix="/api/rewards", tags=["Rewards"])
 app.include_router(shop.router, prefix="/api/shop", tags=["Shop"])
 app.include_router(missions.router, prefix="/api/missions", tags=["Missions"])
-# app.include_router(quiz.router, prefix="/api/quiz", tags=["Quiz"])  # 임시 비활성화
+# 새로 추가된 주요 기능들
+app.include_router(quiz.router, prefix="/api/quiz", tags=["Quiz"])  # 퀴즈 시스템
+app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])  # 채팅 시스템
+app.include_router(ai_router.router, prefix="/api/ai", tags=["AI Recommendation"])  # AI 추천
+
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(prize_roulette.router, prefix="/api/games/roulette", tags=["Prize Roulette"])
 app.include_router(rps.router, prefix="/api/games/rps", tags=["Rock Paper Scissors"])
@@ -195,22 +181,7 @@ app.include_router(tracking.router, prefix="/api/tracking", tags=["Tracking"])
 # ===== Progressive Expansion - Phase 10 =====
 app.include_router(unlock.router, prefix="/api/unlock", tags=["Unlock"])
 
-# ===== Advanced Features - Phase 11 (Quiz System) =====
-if QUIZ_AVAILABLE:
-    app.include_router(quiz_router.router, tags=["Quiz System"])
-    print("✅ Quiz system enabled")
-
-# ===== Advanced Features - Phase 12 (AI Recommendation) =====
-if AI_AVAILABLE:
-    app.include_router(ai_router.router, tags=["AI Recommendation"])
-    print("✅ AI recommendation system enabled")
-
-# ===== Advanced Features - Phase 13 (Chat System) =====
-if CHAT_AVAILABLE:
-    app.include_router(chat_router.router, tags=["Chat System"])
-    print("✅ Chat system enabled")
-
-print("✅ Core API endpoints registered + Progressive Expansion Phase 1-13 Complete")
+print("✅ Core API endpoints registered + Progressive Expansion Phase 1-10 Complete")
 
 # ===== Core API Endpoints =====
 
