@@ -13,7 +13,7 @@ class InviteCode(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     code = Column(String(50), unique=True, index=True, nullable=False)
-    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # 시스템 생성 코드는 null 허용
     used_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     max_uses = Column(Integer, default=1)
     current_uses = Column(Integer, default=0)

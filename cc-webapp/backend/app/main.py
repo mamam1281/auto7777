@@ -42,39 +42,22 @@ from pydantic import BaseModel  # For request/response models
 from typing import Optional
 
 from app.routers import (
-    auth,  # 간소화된 인증 라우터만 사용
-    # 모든 다른 라우터들을 임시로 비활성화 - 모델 의존성 해결 후 재활성화
-    # ai,
-    # analyze,
-    # recommend,
-    # rewards,   # 추가
-    # unlock,    # 추가
-    # user_segments, # 추가
-    # gacha,  # 추가
-    # prize_roulette,  # 추가
-    # notification,  # 추가
-    # tracking,  # 추가
-    personalization,  # 추가
-    adult_content,  # 추가
-    actions,  # 추가
-    corporate,  # 추가
-    users,  # 추가
-    recommendation,  # 추가된 임포트
-    doc_titles,  # 추가
-    invite_router  # 초대코드 관련 API 추가
+    auth,  # 우리의 완전한 인증 라우터
+    users,  # 사용자 API
 )
 
-# JWT 인증 API 임포트 추가
-try:
-    from app.routers import simple_auth  # PostgreSQL 기반 간단한 인증 라우터
-    SIMPLE_AUTH_AVAILABLE = True
-    print("✅ Simple Auth API 모듈 로드 성공")
-except ImportError as e:
-    SIMPLE_AUTH_AVAILABLE = False
-    print(f"⚠️ Warning: Simple Auth API not available: {e}")
-except Exception as e:
-    SIMPLE_AUTH_AVAILABLE = False
-    print(f"❌ Error loading Simple Auth API: {e}")
+# JWT 인증 API 임포트 추가 - 사용자 요구사항에 맞는 auth.py만 사용
+# try:
+#     from app.routers import simple_auth  # PostgreSQL 기반 간단한 인증 라우터
+#     SIMPLE_AUTH_AVAILABLE = True
+#     print("✅ Simple Auth API 모듈 로드 성공")
+# except ImportError as e:
+#     SIMPLE_AUTH_AVAILABLE = False
+#     print(f"⚠️ Warning: Simple Auth API not available: {e}")
+# except Exception as e:
+#     SIMPLE_AUTH_AVAILABLE = False
+#     print(f"❌ Error loading Simple Auth API: {e}")
+SIMPLE_AUTH_AVAILABLE = False  # 중복 제거를 위해 비활성화
 
 # Kafka API 임포트 추가
 try:

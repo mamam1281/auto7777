@@ -28,317 +28,105 @@ oauth2_scheme = HTTPBearer()
 JWT_EXPIRE_MINUTES = settings.jwt_expire_minutes
 INITIAL_CYBER_TOKENS = getattr(settings, 'initial_cyber_tokens', 200)
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+router = APIRouter(tags=["authentication"])
 
 
-# Pydantic 모델들
-class LoginRequest(BaseModel):
-    site_id: str
-    password: str
-
-
-class SignUpRequest(BaseModel):
-    site_id: str
-    nickname: str
-    phone_number: str
-    password: str
-    invite_code: str
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    refresh_token: Optional[str] = None
-    token_type: str = "bearer"
-    expires_in: int = JWT_EXPIRE_MINUTES * 60
-
-
-class UserInfo(BaseModel):
-    id: int
-    site_id: str
-    nickname: str
-    phone_number: str
-    cyber_token_balance: int
-    rank: str
-    last_login_at: Optional[datetime] = None
-
-
-class VerifyInviteRequest(BaseModel):
-    code: str
-
-
-class RefreshTokenRequest(BaseModel):
-    refresh_token: str
-
-
-# 유틸리티 함수들
-def get_client_ip(request: Request) -> str:
-    """클라이언트 IP 주소 추출"""
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
-    return request.client.host if request.client else "127.0.0.1"
-
-
-def get_user_agent(request: Request) -> str:
-    """User-Agent 헤더 추출"""
-    return request.headers.get("User-Agent", "unknown")
-
-
-def get_current_user_id(token: str = Depends(oauth2_scheme)) -> int:
-    """토큰에서 사용자 ID 추출"""
-    payload = auth_service.verify_access_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return int(payload.get("sub"))
-
-
-# API 엔드포인트들
-@router.post("/verify-invite")
-async def verify_invite(req: VerifyInviteRequest, db: Session = Depends(get_db)):
-    """초대 코드 검증 (5858은 항상 유효)"""
-    # 5858은 무한재사용 가능한 초대코드
-    if req.code == "5858":
-        logger.info("Invite code %s validity: %s", req.code, True)
-        return {"valid": True}
-    
-    # 다른 초대코드는 기존 로직 적용
-    code = db.query(InviteCode).filter(
-        InviteCode.code == req.code,
-        InviteCode.is_used == False
-    ).first()
-    
-    is_valid = bool(code)
-    logger.info("Invite code %s validity: %s", req.code, is_valid)
-    return {"valid": is_valid}
-
-
-@router.post("/signup", response_model=TokenResponse)
+@router.post("/signup", response_model=Token)
 async def signup(
-    request: Request,
-    data: SignUpRequest,
+    data: UserCreate,
     db: Session = Depends(get_db)
 ):
-    """회원가입"""
-    ip_address = get_client_ip(request)
-    user_agent = get_user_agent(request)
-    
-    # 중복 검사들
-    if db.query(User).filter(User.site_id == data.site_id).first():
-        logger.warning("Signup failed: site_id %s already taken", data.site_id)
-        raise HTTPException(status_code=400, detail="Site ID already taken")
-    
-    if db.query(User).filter(User.nickname == data.nickname).first():
-        logger.warning("Signup failed: nickname %s already taken", data.nickname)
-        raise HTTPException(status_code=400, detail="Nickname already taken")
-
-    if db.query(User).filter(User.phone_number == data.phone_number).first():
-        logger.warning("Signup failed: phone number %s already taken", data.phone_number)
-        raise HTTPException(status_code=400, detail="Phone number already taken")
-
-    # 초대코드 검증 (5858은 무한재사용 가능)
-    if data.invite_code != "5858":
-        invite = db.query(InviteCode).filter(InviteCode.code == data.invite_code).first()
-        if not invite:
-            logger.warning("Signup failed: invalid invite code %s", data.invite_code)
-            raise HTTPException(status_code=400, detail="Invalid invite code")
+    """사용자 회원가입 (필수 5개 입력: 사이트아이디, 닉네임, 전화번호, 초대코드, 비밀번호)"""
+    try:
+        logger.info(f"회원가입 시도: site_id={data.site_id}, nickname={data.nickname}")
         
-        # 5858이 아닌 경우에만 사용 처리
-        if invite.is_used:
-            logger.warning("Signup failed: invite code %s already used", data.invite_code)
-            raise HTTPException(status_code=400, detail="Invite code already used")
-
-    # 비밀번호 검증
-    if len(data.password) < 4:
-        logger.warning("Signup failed: password too short")
-        raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
-
-    # 사용자 생성
-    password_hash = auth_service.hash_password(data.password)
-    user = User(
-        site_id=data.site_id,
-        nickname=data.nickname,
-        phone_number=data.phone_number,
-        password_hash=password_hash,
-        invite_code=data.invite_code,
-        cyber_token_balance=INITIAL_CYBER_TOKENS
-    )
-    
-    db.add(user)
-    
-    # 5858이 아닌 경우에만 사용 처리
-    if data.invite_code != "5858":
-        invite.is_used = True
-    
-    db.commit()
-    db.refresh(user)
-
-    # 토큰 생성
-    session_id = auth_service.create_user_session(user.id, ip_address, user_agent, db)
-    access_token = auth_service.create_access_token(user.id, session_id)
-    refresh_token = auth_service.create_refresh_token()
-    auth_service.save_refresh_token(user.id, refresh_token, ip_address, user_agent, db)
-
-    logger.info("Signup success for site_id %s, nickname %s", data.site_id, data.nickname)
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token
-    )
+        # AuthService를 통한 사용자 생성
+        user = auth_service.create_user(data, db)
+        
+        # 토큰 생성
+        access_token = auth_service.create_access_token(
+            data={"sub": user.site_id, "user_id": user.id}
+        )
+        
+        # 사용자 응답 데이터 생성
+        user_response = UserResponse(
+            id=user.id,
+            site_id=user.site_id,
+            nickname=user.nickname,
+            phone_number=user.phone_number,
+            cyber_token_balance=user.cyber_token_balance,
+            created_at=user.created_at,
+            last_login=user.last_login,
+            is_admin=user.is_admin,
+            is_active=user.is_active
+        )
+        
+        logger.info(f"회원가입 성공: user_id={user.id}")
+        
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            user=user_response
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Signup error: {e}")
+        raise HTTPException(status_code=500, detail="회원가입 처리 중 오류가 발생했습니다")
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=Token)
 async def login(
-    request: Request,
-    data: LoginRequest,
+    form_data: UserLogin,
     db: Session = Depends(get_db)
 ):
-    """로그인 (시도 제한 포함)"""
-    ip_address = get_client_ip(request)
-    user_agent = get_user_agent(request)
-    
-    # 로그인 시도 제한 확인
-    is_allowed, remaining = auth_service.check_login_attempts(data.site_id, ip_address, db)
-    if not is_allowed:
-        auth_service.record_login_attempt(
-            data.site_id, ip_address, user_agent, False, None, "account_locked", db
+    """사용자 로그인"""
+    try:
+        logger.info(f"로그인 시도: site_id={form_data.site_id}")
+        
+        # 사용자 인증
+        user = auth_service.authenticate_user(form_data.site_id, form_data.password, db)
+        if not user:
+            logger.warning(f"로그인 실패: 잘못된 자격 증명 - site_id={form_data.site_id}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="잘못된 사이트 ID 또는 비밀번호입니다",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # 토큰 생성
+        access_token = auth_service.create_access_token(
+            data={"sub": user.site_id, "user_id": user.id}
         )
-        raise HTTPException(
-            status_code=429,
-            detail=f"Too many failed login attempts. Try again later."
+        
+        # 마지막 로그인 시간 업데이트
+        user.last_login = datetime.utcnow()
+        db.commit()
+        
+        # 사용자 응답 데이터 생성
+        user_response = UserResponse(
+            id=user.id,
+            site_id=user.site_id,
+            nickname=user.nickname,
+            phone_number=user.phone_number,
+            cyber_token_balance=user.cyber_token_balance,
+            created_at=user.created_at,
+            last_login=user.last_login,
+            is_admin=user.is_admin,
+            is_active=user.is_active
         )
-
-    # 사용자 찾기
-    user = db.query(User).filter(User.site_id == data.site_id).first()
-    if not user:
-        auth_service.record_login_attempt(
-            data.site_id, ip_address, user_agent, False, None, "invalid_site_id", db
+        
+        logger.info(f"로그인 성공: user_id={user.id}")
+        
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            user=user_response
         )
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    # 비밀번호 검증
-    if not auth_service.verify_password(data.password, user.password_hash):
-        auth_service.record_login_attempt(
-            data.site_id, ip_address, user_agent, False, user.id, "invalid_password", db
-        )
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    # 성공 처리
-    auth_service.record_login_attempt(
-        data.site_id, ip_address, user_agent, True, user.id, None, db
-    )
-    
-    # 최근 로그인 시간 업데이트
-    user.last_login_at = datetime.utcnow()
-    db.commit()
-
-    # 토큰 생성
-    session_id = auth_service.create_user_session(user.id, ip_address, user_agent, db)
-    access_token = auth_service.create_access_token(user.id, session_id)
-    refresh_token = auth_service.create_refresh_token()
-    auth_service.save_refresh_token(user.id, refresh_token, ip_address, user_agent, db)
-
-    logger.info("Login success for site_id %s", data.site_id)
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token
-    )
-
-
-@router.post("/refresh", response_model=TokenResponse)
-async def refresh_token(
-    data: RefreshTokenRequest,
-    request: Request,
-    db: Session = Depends(get_db)
-):
-    """리프레시 토큰으로 액세스 토큰 갱신"""
-    ip_address = get_client_ip(request)
-    user_agent = get_user_agent(request)
-    
-    payload = auth_service.verify_refresh_token(data.refresh_token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
-    
-    user_id = int(payload.get("sub"))
-    refresh_jti = payload.get("jti")
-    
-    # 리프레시 토큰 유효성 확인
-    if not auth_service.is_refresh_token_valid(user_id, refresh_jti, ip_address, db):
-        raise HTTPException(status_code=401, detail="Refresh token not valid")
-    
-    # 새 토큰들 생성
-    session_id = auth_service.create_user_session(user_id, ip_address, user_agent, db)
-    access_token = auth_service.create_access_token(user_id, session_id)
-    new_refresh_token = auth_service.create_refresh_token()
-    
-    # 기존 리프레시 토큰 무효화 및 새 토큰 저장
-    auth_service.invalidate_refresh_token(user_id, refresh_jti, db)
-    auth_service.save_refresh_token(user_id, new_refresh_token, ip_address, user_agent, db)
-    
-    logger.info("Token refreshed for user %s", user_id)
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=new_refresh_token
-    )
-
-
-@router.post("/logout")
-async def logout(
-    request: Request,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
-    """로그아웃 (토큰 블랙리스트 포함)"""
-    # Authorization 헤더에서 토큰 추출
-    authorization = request.headers.get("Authorization")
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
-        # 토큰을 블랙리스트에 추가
-        auth_service.blacklist_token(token, "user_logout")
-    
-    # 세션 로그아웃
-    auth_service.logout_user_session(current_user_id, None, "user_logout", db)
-    logger.info("User %s logged out with token blacklisted", current_user_id)
-    return {"message": "Successfully logged out"}
-
-
-@router.post("/logout-all")
-async def logout_all_sessions(
-    request: Request,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
-    """모든 세션에서 로그아웃 (현재 토큰 블랙리스트 포함)"""
-    # 현재 토큰을 블랙리스트에 추가
-    authorization = request.headers.get("Authorization")
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
-        auth_service.blacklist_token(token, "user_logout_all")
-    
-    # 모든 세션 로그아웃
-    auth_service.logout_all_user_sessions(current_user_id, "user_logout_all", db)
-    logger.info("All sessions logged out for user %s with token blacklisted", current_user_id)
-    return {"message": "Successfully logged out from all sessions"}
-
-
-@router.get("/me", response_model=UserInfo)
-async def get_me(
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
-    """현재 사용자 정보"""
-    user = db.query(User).filter(User.id == current_user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return UserInfo(
-        id=user.id,
-        site_id=user.site_id,
-        nickname=user.nickname,
-        phone_number=user.phone_number,
-        cyber_token_balance=user.cyber_token_balance,
-        rank=user.rank,
-        last_login_at=user.last_login_at
-    )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail="로그인 처리 중 오류가 발생했습니다")

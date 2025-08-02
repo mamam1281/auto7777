@@ -7,15 +7,15 @@ from pydantic import BaseModel, Field
 class UserBase(BaseModel):
     """사용자 기본 스키마"""
     site_id: str = Field(..., min_length=3, max_length=50, description="사이트 아이디")
+
+
+class UserCreate(BaseModel):
+    """사용자 생성 스키마 - 회원가입 필수 입력사항"""
+    site_id: str = Field(..., min_length=3, max_length=50, description="사이트 아이디")
     nickname: str = Field(..., min_length=2, max_length=50, description="닉네임")
-    phone_number: str = Field(..., min_length=10, max_length=15, description="폰번호")
-    full_name: Optional[str] = Field(None, max_length=100, description="전체 이름")
-
-
-class UserCreate(UserBase):
-    """사용자 생성 스키마"""
-    password: str = Field(..., min_length=6, description="비밀번호")
+    phone_number: str = Field(..., min_length=10, max_length=15, description="전화번호")
     invite_code: str = Field(..., description="초대코드 (5858)")
+    password: str = Field(..., min_length=6, description="비밀번호생성")
     
     class Config:
         json_schema_extra = {
@@ -23,9 +23,8 @@ class UserCreate(UserBase):
                 "site_id": "testuser123",
                 "nickname": "테스터",
                 "phone_number": "01012345678",
-                "password": "password123",
-                "full_name": "홍길동",
-                "invite_code": "5858"
+                "invite_code": "5858",
+                "password": "password123"
             }
         }
 
@@ -58,9 +57,12 @@ class AdminLogin(BaseModel):
         }
 
 
-class UserResponse(UserBase):
+class UserResponse(BaseModel):
     """사용자 응답 스키마"""
     id: int
+    site_id: str
+    nickname: str
+    phone_number: str
     is_active: bool
     is_admin: bool
     created_at: datetime

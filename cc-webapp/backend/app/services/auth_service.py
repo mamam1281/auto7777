@@ -94,8 +94,8 @@ class AuthService:
     
     @staticmethod
     def create_user(db: Session, user_create: UserCreate) -> User:
-        """사용자 생성"""
-        # 초대코드 검증
+        """사용자 생성 - 회원가입 필수 입력사항"""
+        # 초대코드 검증 (5858은 항상 허용)
         if user_create.invite_code != "5858":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -116,11 +116,11 @@ class AuthService:
                 detail="이미 존재하는 닉네임입니다"
             )
         
-        # 폰번호 중복 검사
+        # 전화번호 중복 검사
         if db.query(User).filter(User.phone_number == user_create.phone_number).first():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="이미 등록된 폰번호입니다"
+                detail="이미 등록된 전화번호입니다"
             )
         
         # 사용자 생성
@@ -130,7 +130,6 @@ class AuthService:
             nickname=user_create.nickname,
             phone_number=user_create.phone_number,
             hashed_password=hashed_password,
-            full_name=user_create.full_name,
             invite_code=user_create.invite_code,
             is_admin=False
         )

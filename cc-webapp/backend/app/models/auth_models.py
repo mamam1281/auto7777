@@ -13,16 +13,15 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     site_id = Column(String(50), unique=True, index=True, nullable=False)  # 사이트 아이디
-    nickname = Column(String(50), nullable=False)  # 닉네임 (필수)
-    phone_number = Column(String(20), nullable=False)  # 폰번호 (필수)
+    nickname = Column(String(50), unique=True, nullable=False)  # 닉네임 (필수, 중복불가)
+    phone_number = Column(String(20), unique=True, nullable=False)  # 전화번호 (필수, 중복불가)
     hashed_password = Column(String(255), nullable=False)  # 비밀번호
-    full_name = Column(String(100))  # 전체 이름 (선택)
+    invite_code = Column(String(10), nullable=False)  # 초대코드 (5858)
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)  # 관리자 여부
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_login = Column(DateTime, nullable=True)
-    invite_code = Column(String(10), nullable=False)  # 초대코드 (5858 고정)
     
     # 프로필 관련
     avatar_url = Column(String(255))
