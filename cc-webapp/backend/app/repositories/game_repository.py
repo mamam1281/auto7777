@@ -7,9 +7,12 @@ from datetime import datetime, timedelta
 import redis
 
 from .. import models
-from ..core.config import settings
+from ..config import get_settings
 
 logger = logging.getLogger(__name__)
+
+# Settings 인스턴스 가져오기
+settings = get_settings()
 
 class GameRepository:
     """Data access layer for game state using DB and Redis."""
