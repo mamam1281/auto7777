@@ -4,10 +4,10 @@
 """
 
 # Base 클래스 먼저 import
-from .auth_clean import Base
+from .auth_models import Base
 
 # Auth 모델들
-from .auth_clean import (
+from .auth_models import (
     User,
     InviteCode,
     LoginAttempt,

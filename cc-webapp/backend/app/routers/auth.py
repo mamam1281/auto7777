@@ -41,7 +41,7 @@ async def signup(
         logger.info(f"회원가입 시도: site_id={data.site_id}, nickname={data.nickname}")
         
         # AuthService를 통한 사용자 생성
-        user = auth_service.create_user(data, db)
+        user = auth_service.create_user(db, data)
         
         # 토큰 생성
         access_token = auth_service.create_access_token(
