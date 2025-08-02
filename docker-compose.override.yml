@@ -17,11 +17,13 @@ services:
 
   # 프론트엔드 개발 설정
   frontend:
+    build:
+      context: ./cc-webapp/frontend
+      dockerfile: Dockerfile.dev
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT:-8000}
       NEXT_PUBLIC_WS_URL: ws://localhost:${BACKEND_PORT:-8000}
-    command: npm run dev
     volumes:
       - ./cc-webapp/frontend:/app:cached
       - /app/node_modules
@@ -32,7 +34,7 @@ services:
     environment:
       DEBUG: true
       APP_ENV: development
-    command: celery -A app.core.celery_app worker --loglevel=debug --reload
+    command: celery -A app.core.celery_app worker --loglevel=debug
 
   # 개발용 Celery Beat
   celery-beat:

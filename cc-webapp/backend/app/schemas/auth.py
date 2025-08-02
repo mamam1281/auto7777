@@ -1,0 +1,80 @@
+"""인증 관련 Pydantic 스키마"""
+from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel, Field
+
+
+class UserBase(BaseModel):
+    """사용자 기본 스키마"""
+    site_id: str = Field(..., min_length=3, max_length=50, description="사이트 아이디")
+    full_name: Optional[str] = Field(None, max_length=100, description="전체 이름")
+
+
+class UserCreate(UserBase):
+    """사용자 생성 스키마"""
+    password: str = Field(..., min_length=6, description="비밀번호")
+    invite_code: str = Field(..., description="초대코드 (5858)")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "site_id": "testuser123",
+                "password": "password123",
+                "full_name": "홍길동",
+                "invite_code": "5858"
+            }
+        }
+
+
+class UserLogin(BaseModel):
+    """사용자 로그인 스키마"""
+    site_id: str = Field(..., description="사이트 아이디")
+    password: str = Field(..., description="비밀번호")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "site_id": "testuser123",
+                "password": "password123"
+            }
+        }
+
+
+class AdminLogin(BaseModel):
+    """관리자 로그인 스키마"""
+    site_id: str = Field(..., description="관리자 사이트 아이디")
+    password: str = Field(..., description="관리자 비밀번호")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "site_id": "admin",
+                "password": "admin123"
+            }
+        }
+
+
+class UserResponse(UserBase):
+    """사용자 응답 스키마"""
+    id: int
+    is_active: bool
+    is_admin: bool
+    created_at: datetime
+    last_login: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class Token(BaseModel):
+    """토큰 응답 스키마"""
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+
+class TokenData(BaseModel):
+    """토큰 데이터 스키마"""
+    site_id: Optional[str] = None
+    user_id: Optional[int] = None
+    is_admin: bool = False

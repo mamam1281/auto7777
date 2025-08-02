@@ -1,32 +1,34 @@
-"""
-간소화된 인증 라우터
-- 회원가입, 로그인, 토큰 갱신, 로그아웃
-- 로그인 시도 제한 포함
-- 중복 제거된 버전
-"""
-
-from datetime import datetime, timedelta
-import os
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+"""인증 관련 API 라우터"""
 import logging
-from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from datetime import datetime
 from typing import Optional
 
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
 from ..database import get_db
-from ..models.auth_clean import User, InviteCode  # 우리가 만든 모델 사용
-from ..auth.auth_service import auth_service  # 우리가 만든 서비스 사용
+from ..schemas.auth import UserCreate, UserLogin, AdminLogin, UserResponse, Token
+from ..services.auth_service import AuthService, security
+from ..models.auth_models import User
+from ..models.invite_code import InviteCode
+from ..config import settings
 
-# 설정
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "casino-club-secret-key-2024")
-JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
-INITIAL_CYBER_TOKENS = int(os.getenv("INITIAL_CYBER_TOKENS", "200"))
-
-router = APIRouter(prefix="/auth", tags=["auth"])
+# 로거 설정
 logger = logging.getLogger(__name__)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+# Auth service 인스턴스
+auth_service = AuthService()
+
+# OAuth2 스키마
+oauth2_scheme = HTTPBearer()
+
+# 설정값들
+JWT_EXPIRE_MINUTES = settings.jwt_expire_minutes
+INITIAL_CYBER_TOKENS = getattr(settings, 'initial_cyber_tokens', 200)
+
+router = APIRouter(prefix="/auth", tags=["authentication"])
 
 
 # Pydantic 모델들
@@ -97,7 +99,13 @@ def get_current_user_id(token: str = Depends(oauth2_scheme)) -> int:
 # API 엔드포인트들
 @router.post("/verify-invite")
 async def verify_invite(req: VerifyInviteRequest, db: Session = Depends(get_db)):
-    """초대 코드 검증"""
+    """초대 코드 검증 (5858은 항상 유효)"""
+    # 5858은 무한재사용 가능한 초대코드
+    if req.code == "5858":
+        logger.info("Invite code %s validity: %s", req.code, True)
+        return {"valid": True}
+    
+    # 다른 초대코드는 기존 로직 적용
     code = db.query(InviteCode).filter(
         InviteCode.code == req.code,
         InviteCode.is_used == False
@@ -131,11 +139,17 @@ async def signup(
         logger.warning("Signup failed: phone number %s already taken", data.phone_number)
         raise HTTPException(status_code=400, detail="Phone number already taken")
 
-    # 초대코드 검증
-    invite = db.query(InviteCode).filter(InviteCode.code == data.invite_code).first()
-    if not invite:
-        logger.warning("Signup failed: invalid invite code %s", data.invite_code)
-        raise HTTPException(status_code=400, detail="Invalid invite code")
+    # 초대코드 검증 (5858은 무한재사용 가능)
+    if data.invite_code != "5858":
+        invite = db.query(InviteCode).filter(InviteCode.code == data.invite_code).first()
+        if not invite:
+            logger.warning("Signup failed: invalid invite code %s", data.invite_code)
+            raise HTTPException(status_code=400, detail="Invalid invite code")
+        
+        # 5858이 아닌 경우에만 사용 처리
+        if invite.is_used:
+            logger.warning("Signup failed: invite code %s already used", data.invite_code)
+            raise HTTPException(status_code=400, detail="Invite code already used")
 
     # 비밀번호 검증
     if len(data.password) < 4:
@@ -154,7 +168,11 @@ async def signup(
     )
     
     db.add(user)
-    invite.is_used = True
+    
+    # 5858이 아닌 경우에만 사용 처리
+    if data.invite_code != "5858":
+        invite.is_used = True
+    
     db.commit()
     db.refresh(user)
 
