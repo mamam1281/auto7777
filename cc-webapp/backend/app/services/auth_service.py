@@ -109,10 +109,26 @@ class AuthService:
                 detail="이미 존재하는 사이트 아이디입니다"
             )
         
+        # 닉네임 중복 검사
+        if db.query(User).filter(User.nickname == user_create.nickname).first():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="이미 존재하는 닉네임입니다"
+            )
+        
+        # 폰번호 중복 검사
+        if db.query(User).filter(User.phone_number == user_create.phone_number).first():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="이미 등록된 폰번호입니다"
+            )
+        
         # 사용자 생성
         hashed_password = AuthService.get_password_hash(user_create.password)
         db_user = User(
             site_id=user_create.site_id,
+            nickname=user_create.nickname,
+            phone_number=user_create.phone_number,
             hashed_password=hashed_password,
             full_name=user_create.full_name,
             invite_code=user_create.invite_code,

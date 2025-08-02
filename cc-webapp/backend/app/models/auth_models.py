@@ -12,9 +12,11 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    site_id = Column(String(50), unique=True, index=True, nullable=False)  # 사이트 아이디로 변경
-    hashed_password = Column(String(255), nullable=False)
-    full_name = Column(String(100))
+    site_id = Column(String(50), unique=True, index=True, nullable=False)  # 사이트 아이디
+    nickname = Column(String(50), nullable=False)  # 닉네임 (필수)
+    phone_number = Column(String(20), nullable=False)  # 폰번호 (필수)
+    hashed_password = Column(String(255), nullable=False)  # 비밀번호
+    full_name = Column(String(100))  # 전체 이름 (선택)
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)  # 관리자 여부
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -25,7 +27,6 @@ class User(Base):
     # 프로필 관련
     avatar_url = Column(String(255))
     bio = Column(Text)
-    phone_number = Column(String(20))
     
     # 게임 관련 관계
     actions = relationship("UserAction", back_populates="user")

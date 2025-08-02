@@ -256,9 +256,8 @@ app.add_middleware(
 )
 
 # Register API routers
-if SIMPLE_AUTH_AVAILABLE:
-    app.include_router(simple_auth.router, prefix="/api")  # PostgreSQL 기반 간단한 인증 라우터
-    print("✅ Simple Auth API endpoints registered")
+app.include_router(auth.router, prefix="/auth", tags=["authentication"])  # 완전한 인증 시스템
+print("✅ Auth API endpoints registered")
 # 다른 모든 라우터들을 임시로 비활성화 - 모델 의존성 문제 해결 후 재활성화
 # app.include_router(admin.router, prefix="/api")  # 임시 비활성화
 # app.include_router(games.router)  # 임시 비활성화

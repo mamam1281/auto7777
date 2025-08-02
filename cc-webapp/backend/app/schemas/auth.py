@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field
 class UserBase(BaseModel):
     """사용자 기본 스키마"""
     site_id: str = Field(..., min_length=3, max_length=50, description="사이트 아이디")
+    nickname: str = Field(..., min_length=2, max_length=50, description="닉네임")
+    phone_number: str = Field(..., min_length=10, max_length=15, description="폰번호")
     full_name: Optional[str] = Field(None, max_length=100, description="전체 이름")
 
 
@@ -19,6 +21,8 @@ class UserCreate(UserBase):
         json_schema_extra = {
             "example": {
                 "site_id": "testuser123",
+                "nickname": "테스터",
+                "phone_number": "01012345678",
                 "password": "password123",
                 "full_name": "홍길동",
                 "invite_code": "5858"
