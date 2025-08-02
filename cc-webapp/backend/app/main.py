@@ -51,6 +51,28 @@ from app.routers import (
     unlock,      # Phase 10 추가
 )
 
+# New advanced feature routers
+try:
+    from app.routers import quiz_router
+    QUIZ_AVAILABLE = True
+except ImportError:
+    QUIZ_AVAILABLE = False
+    print("Quiz router unavailable - check dependencies")
+
+try:
+    from app.routers import ai_router
+    AI_AVAILABLE = True
+except ImportError:
+    AI_AVAILABLE = False
+    print("AI router unavailable - check dependencies")
+
+try:
+    from app.routers import chat_router
+    CHAT_AVAILABLE = True
+except ImportError:
+    CHAT_AVAILABLE = False
+    print("Chat router unavailable - check dependencies")
+
 # Scheduler setup
 class _DummyScheduler:
     running = False
@@ -173,7 +195,22 @@ app.include_router(tracking.router, prefix="/api/tracking", tags=["Tracking"])
 # ===== Progressive Expansion - Phase 10 =====
 app.include_router(unlock.router, prefix="/api/unlock", tags=["Unlock"])
 
-print("✅ Core API endpoints registered + Progressive Expansion Phase 1-10 Complete")
+# ===== Advanced Features - Phase 11 (Quiz System) =====
+if QUIZ_AVAILABLE:
+    app.include_router(quiz_router.router, tags=["Quiz System"])
+    print("✅ Quiz system enabled")
+
+# ===== Advanced Features - Phase 12 (AI Recommendation) =====
+if AI_AVAILABLE:
+    app.include_router(ai_router.router, tags=["AI Recommendation"])
+    print("✅ AI recommendation system enabled")
+
+# ===== Advanced Features - Phase 13 (Chat System) =====
+if CHAT_AVAILABLE:
+    app.include_router(chat_router.router, tags=["Chat System"])
+    print("✅ Chat system enabled")
+
+print("✅ Core API endpoints registered + Progressive Expansion Phase 1-13 Complete")
 
 # ===== Core API Endpoints =====
 

@@ -36,6 +36,42 @@ from .game_models import (
 # User Segment 모델 추가
 from .user_models import UserSegment
 
+# Quiz 모델들 추가
+from .quiz_models import (
+    QuizCategory,
+    Quiz,
+    QuizQuestion,
+    QuizAnswer,
+    UserQuizAttempt,
+    UserQuizAnswer,
+    QuizLeaderboard,
+)
+
+# AI 추천 시스템 모델들 추가
+from .ai_models import (
+    RecommendationTemplate,
+    UserRecommendation,
+    RecommendationInteraction,
+    UserPreference,
+    AIModel,
+    ModelPrediction,
+    PersonalizationRule,
+    ContentPersonalization,
+)
+
+# 채팅 시스템 모델들 추가
+from .chat_models import (
+    ChatRoom,
+    ChatParticipant,
+    ChatMessage,
+    MessageReaction,
+    AIAssistant,
+    AIConversation,
+    AIMessage,
+    EmotionProfile,
+    ChatModeration,
+)
+
 # 모든 모델 클래스들을 리스트로 정의
 __all__ = [
     # Base
@@ -60,5 +96,35 @@ __all__ = [
 
     # User
     "UserSegment",
+    
+    # Quiz
+    "QuizCategory",
+    "Quiz", 
+    "QuizQuestion",
+    "QuizAnswer",
+    "UserQuizAttempt",
+    "UserQuizAnswer",
+    "QuizLeaderboard",
+    
+    # AI Recommendation
+    "RecommendationTemplate",
+    "UserRecommendation",
+    "RecommendationInteraction", 
+    "UserPreference",
+    "AIModel",
+    "ModelPrediction",
+    "PersonalizationRule",
+    "ContentPersonalization",
+    
+    # Chat System
+    "ChatRoom",
+    "ChatParticipant",
+    "ChatMessage",
+    "MessageReaction",
+    "AIAssistant",
+    "AIConversation",
+    "AIMessage",
+    "EmotionProfile",
+    "ChatModeration",
 ]
 
