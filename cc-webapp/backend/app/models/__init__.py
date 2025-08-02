@@ -27,25 +27,8 @@ from .game_models import (
     UserProgress,
 )
 
-# Content 모델들
-from .content_models import (
-    AdultContent,
-    ContentView,
-    ContentLike,
-    ContentPurchase,
-    ContentCategory,
-    ContentTag,
-)
-
-# Analytics 모델들
-from .analytics_models import (
-    UserAnalytics,
-    PageView,
-    ConversionEvent,
-    UserSegment,
-    ABTestParticipant,
-    CustomEvent,
-)
+# User Segment 모델 추가
+from .user_models import UserSegment
 
 # 모든 모델 클래스들을 리스트로 정의
 __all__ = [
@@ -66,22 +49,10 @@ __all__ = [
     "GameSession", 
     "UserActivity",
     "Reward",
-    
-    # Content
-    "AdultContent",
-    "VIPAccessLog",
-    "Purchase",
-    "Shop",
-    "Notification",
-    
-    # Analytics
+    "GachaResult",
+    "UserProgress",
+
+    # User
     "UserSegment",
-    "BattlePass",
-    "BattlePassProgress",
-    "BattlePassReward",
-    "BattlePassClaimed",
-    "GachaPool",
-    "GachaItem",
-    "GachaLog",
 ]
 

@@ -16,10 +16,22 @@ export function GachaContainer() {
 
   // 뽑기 카운트만 유지
   const [pullCount, setPullCount] = useState(0);
+  const [socialStats, setSocialStats] = useState({ gacha_spins_today: 0 });
 
-  // 팝업 모드 감지
+  // 팝업 모드 및 소셜 증명 데이터 감지
   useEffect(() => {
     setIsPopup(isPopupWindow());
+
+    const fetchSocialStats = async () => {
+        try {
+            const stats = await ApiClient.getSocialProofStats();
+            setSocialStats(stats);
+        } catch (error) {
+            console.error("Failed to fetch social proof stats:", error);
+        }
+    };
+
+    fetchSocialStats();
 
     // 팝업 크기 로그 및 최적화
     if (isPopupWindow()) {
@@ -54,20 +66,6 @@ export function GachaContainer() {
     }
   }, []);
 
-  const performGacha = (): GachaItem => {
-    const random = Math.random() * 100;
-    let cumulativeProbability = 0;
-
-    for (const item of SAMPLE_ITEMS) {
-      cumulativeProbability += item.probability;
-      if (random <= cumulativeProbability) {
-        return item;
-      }
-    }
-
-    return SAMPLE_ITEMS[0]; // fallback
-  };
-
   const handlePull = async () => {
     if (tickets <= 0 || isPlaying) return;
 
@@ -75,18 +73,34 @@ export function GachaContainer() {
     setTickets(prev => prev - 1);
     setPullCount(prev => prev + 1);
 
-    // 뽑기 애니메이션을 위한 지연
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    try {
+      // Assuming user_id is available, e.g. from a context
+      const userId = 1; // Replace with actual user ID from auth context
+      const gachaResult = await ApiClient.pullGacha(userId);
 
-    const item = performGacha();
-    const gachaResult: GachaResult = {
-      item,
-      isNew: Math.random() > 0.7 // 30% chance for new
-    };
+      // The API response should be shaped like GachaResult
+      // We might need to map the API response to the GachaResult type
+      const resultToDisplay: GachaResult = {
+          item: {
+              id: gachaResult.type, // or some other unique id from response
+              name: gachaResult.type, // or a mapping from type to name
+              rarity: gachaResult.rarity || 'Common', // Assuming rarity is returned
+              probability: 0 // Not needed on client side anymore
+          },
+          isNew: gachaResult.isNew || false // Assuming isNew is returned
+      };
 
-    setResult(gachaResult);
-    setShowModal(true);
-    setIsPlaying(false);
+      setResult(resultToDisplay);
+      setShowModal(true);
+
+    } catch (error) {
+        console.error('Gacha pull failed:', error);
+        alert('랜덤뽑기에 실패했습니다. 다시 시도해주세요.');
+        // Revert ticket count on failure
+        setTickets(prev => prev + 1);
+    } finally {
+        setIsPlaying(false);
+    }
   };
 
   const handleCloseModal = () => {
@@ -132,6 +146,11 @@ export function GachaContainer() {
         <p className="text-white/80 text-sm">
           모델 가챠박스에서 다양한 아이템을 뽑아가세요
         </p>
+        {socialStats.gacha_spins_today > 0 && (
+            <p className="text-cyan-300 text-xs mt-1 animate-pulse">
+                오늘 {socialStats.gacha_spins_today}명이 도전했습니다!
+            </p>
+        )}
       </div>
 
       {/* Buttons - 하단 영역 */}

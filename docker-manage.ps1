@@ -1,372 +1,189 @@
-# Casino-Club F2P - Enhanced Docker Development Environment Manager
-# PowerShell Script for Windows Development
-
+# Casino-Club F2P Docker 관리 스크립트 v2.0
 param(
     [Parameter(Position=0)]
     [string]$Command = "help",
+
+    [Parameter(Position=1)]
     [string]$Service = "",
-    [switch]$Tools = $false,
-    [switch]$VerboseOutput = $false
+
+    [switch]$Tools,
+    [switch]$Force
 )
 
-# Helper function for colored output
+$ErrorActionPreference = "Stop"
+
+# 컬러 출력 함수
 function Write-ColoredOutput {
-    param([string]$Text, [string]$Color = "White")
-    
-    $ConsoleColor = switch ($Color) {
-        "Red" { [System.ConsoleColor]::Red }
-        "Green" { [System.ConsoleColor]::Green }
-        "Yellow" { [System.ConsoleColor]::Yellow }
-        "Blue" { [System.ConsoleColor]::Blue }
-        "Cyan" { [System.ConsoleColor]::Cyan }
-        "Magenta" { [System.ConsoleColor]::Magenta }
-        default { [System.ConsoleColor]::White }
-    }
-    
-    Write-Host $Text -ForegroundColor $ConsoleColor
+    param([string]$Message, [string]$Color = "White")
+    Write-Host $Message -ForegroundColor $Color
 }
 
-# Header display
-function Show-Header {
-    Write-ColoredOutput "================================================================" "Cyan"
-    Write-ColoredOutput " Casino-Club F2P - Docker Development Environment Manager" "Yellow"
-    Write-ColoredOutput "================================================================" "Cyan"
-    Write-ColoredOutput "Version: 2.0 | Environment: Development | Platform: Windows" "Blue"
-    Write-ColoredOutput "" "White"
+function Show-Help {
+    Write-ColoredOutput "🎰 Casino-Club F2P Docker 관리 도구" "Cyan"
+    Write-ColoredOutput "=" * 50 "Gray"
+    Write-ColoredOutput "사용법: .\docker-manage.ps1 <명령어> [옵션]" "Yellow"
+    Write-ColoredOutput ""
+    Write-ColoredOutput "📋 주요 명령어:" "Green"
+    Write-ColoredOutput "  setup        - 초기 환경 설정" "White"
+    Write-ColoredOutput "  start        - 서비스 시작" "White"
+    Write-ColoredOutput "  stop         - 서비스 정지" "White"
+    Write-ColoredOutput "  restart      - 서비스 재시작" "White"
+    Write-ColoredOutput "  status       - 서비스 상태 확인" "White"
+    Write-ColoredOutput "  logs         - 로그 확인" "White"
+    Write-ColoredOutput "  clean        - 정리 작업" "White"
+    Write-ColoredOutput "  reset        - 완전 초기화" "White"
+    Write-ColoredOutput ""
+    Write-ColoredOutput "🔧 옵션:" "Green"
+    Write-ColoredOutput "  --tools      - 개발 도구 포함 (pgAdmin, Redis Commander)" "White"
+    Write-ColoredOutput "  --force      - 강제 실행" "White"
+    Write-ColoredOutput ""
+    Write-ColoredOutput "📚 예제:" "Green"
+    Write-ColoredOutput "  .\docker-manage.ps1 start --tools" "Gray"
+    Write-ColoredOutput "  .\docker-manage.ps1 logs backend" "Gray"
+    Write-ColoredOutput "  .\docker-manage.ps1 reset --force" "Gray"
 }
 
-# Environment check
-function Test-Environment {
-    Write-ColoredOutput "[*] Checking development environment..." "Blue"
-    
-    # Check Docker
+function Test-DockerRunning {
     try {
-        $dockerVersion = docker --version
-        Write-ColoredOutput "[+] Docker: $dockerVersion" "Green"
+        docker info | Out-Null
+        return $true
     } catch {
-        Write-ColoredOutput "[!] Docker not found or not running" "Red"
+        Write-ColoredOutput "❌ Docker가 실행되지 않았습니다. Docker Desktop을 시작해주세요." "Red"
         exit 1
     }
-    
-    # Check Docker Compose
-    try {
-        $composeVersion = docker-compose --version
-        Write-ColoredOutput "[+] Docker Compose: $composeVersion" "Green"
-    } catch {
-        Write-ColoredOutput "[!] Docker Compose not found" "Red"
-        exit 1
-    }
-    
-    # Check required files
-    $requiredFiles = @("docker-compose.yml", ".env.development")
-    foreach ($file in $requiredFiles) {
-        if (Test-Path $file) {
-            Write-ColoredOutput "[+] Found: $file" "Green"
-        } else {
-            Write-ColoredOutput "[!] Missing: $file" "Red"
-        }
-    }
-    
-    Write-ColoredOutput "[*] Environment check completed!" "Green"
-    Write-ColoredOutput "" "White"
 }
 
-# Service health check
-function Test-ServiceHealth {
-    Write-ColoredOutput "🏥 Checking service health..." "Blue"
+function Setup-Environment {
+    Write-ColoredOutput "🚀 Casino-Club F2P 환경 설정 시작..." "Cyan"
     
-    $services = @(
-        @{Name="Backend API"; URL="http://localhost:8000/docs"; Container="cc_backend_dev"},
-        @{Name="Frontend"; URL="http://localhost:3000"; Container="cc_frontend_dev"},
-        @{Name="PostgreSQL"; Container="cc_postgres_dev"},
-        @{Name="Redis"; Container="cc_redis_dev"},
-        @{Name="Kafka"; Container="cc_kafka_dev"}
+    # Docker 상태 확인
+    Test-DockerRunning
+    
+    # 필수 디렉토리 생성
+    $directories = @(
+        "logs/backend",
+        "logs/frontend",
+        "logs/postgres",
+        "logs/celery",
+        "data/init",
+        "data/backup"
     )
     
-    foreach ($service in $services) {
-        $status = docker ps --filter "name=$($service.Container)" --format "{{.Status}}"
-        if ($status -like "*Up*") {
-            Write-ColoredOutput "✅ $($service.Name): Running" "Green"
-            if ($service.URL) {
-                Write-ColoredOutput "   🌐 Access: $($service.URL)" "Cyan"
-            }
-        } else {
-            Write-ColoredOutput "❌ $($service.Name): Not running" "Red"
-        }
-    }
-    
-    if ($Tools) {
-        Write-ColoredOutput "" "White"
-        Write-ColoredOutput "🛠️ Development tools:" "Yellow"
-        Write-ColoredOutput "   📊 pgAdmin: http://localhost:5050" "Cyan"
-        Write-ColoredOutput "   🔴 Redis Commander: http://localhost:8081" "Cyan"
-        Write-ColoredOutput "   📨 Kafka UI: http://localhost:8082" "Cyan"
-    }
-}
-
-# Setup development environment
-function Initialize-Environment {
-    Write-ColoredOutput "🚀 Setting up development environment..." "Yellow"
-    
-    # Create required directories
-    $directories = @("logs/backend", "logs/frontend", "logs/postgres", "logs/celery", "logs/nginx", "data/init", "data/backup")
     foreach ($dir in $directories) {
         if (!(Test-Path $dir)) {
             New-Item -ItemType Directory -Path $dir -Force | Out-Null
-            Write-ColoredOutput "📁 Created directory: $dir" "Blue"
+            Write-ColoredOutput "📁 디렉토리 생성: $dir" "Green"
         }
     }
     
-    # Copy environment file if needed
-    if (!(Test-Path ".env")) {
-        if (Test-Path ".env.development") {
-            Copy-Item ".env.development" ".env"
-            Write-ColoredOutput "📋 Copied .env.development to .env" "Blue"
-        }
+    # 환경변수 파일 확인
+    if (!(Test-Path ".env.development")) {
+        Write-ColoredOutput "⚠️ .env.development 파일이 없습니다. 샘플 파일을 생성합니다." "Yellow"
+        # 환경변수 파일 생성 로직 추가 필요
     }
     
-    # Build images
-    Write-ColoredOutput "🔨 Building Docker images..." "Yellow"
-    docker-compose build --no-cache
-    
-    Write-ColoredOutput "✅ Environment setup completed!" "Green"
+    Write-ColoredOutput "✅ 환경 설정 완료!" "Green"
 }
 
-# Start services
 function Start-Services {
-    param([string]$Profile = "")
+    Write-ColoredOutput "🚀 서비스 시작..." "Cyan"
     
-    Write-ColoredOutput "🚀 Starting Casino-Club services..." "Yellow"
+    Test-DockerRunning
     
-    $composeCmd = "docker-compose --env-file .env.development up -d"
-    if ($Profile) {
-        $composeCmd += " --profile $Profile"
+    $composeArgs = @("up", "-d", "--build")
+    
+    if ($Tools) {
+        $composeArgs += "--profile"
+        $composeArgs += "tools"
+        Write-ColoredOutput "🛠️ 개발 도구 포함하여 시작..." "Yellow"
     }
     
-    Invoke-Expression $composeCmd
-    
-    Write-ColoredOutput "⏳ Waiting for services to start..." "Blue"
-    Start-Sleep -Seconds 10
-    
-    Test-ServiceHealth
+    try {
+        & docker-compose @composeArgs
+        Write-ColoredOutput "✅ 서비스 시작 완료!" "Green"
+        Show-ServiceStatus
+    } catch {
+        Write-ColoredOutput "❌ 서비스 시작 실패: $($_.Exception.Message)" "Red"
+        exit 1
+    }
 }
 
-# Stop services
 function Stop-Services {
-    Write-ColoredOutput "🛑 Stopping Casino-Club services..." "Yellow"
-    docker-compose down
-    Write-ColoredOutput "✅ Services stopped" "Green"
-}
-
-# Restart services
-function Restart-Services {
-    param([string]$ServiceName = "")
+    Write-ColoredOutput "🛑 서비스 정지..." "Cyan"
     
-    if ($ServiceName) {
-        Write-ColoredOutput "🔄 Restarting service: $ServiceName..." "Yellow"
-        docker-compose restart $ServiceName
-    } else {
-        Write-ColoredOutput "🔄 Restarting all services..." "Yellow"
-        Stop-Services
-        Start-Sleep -Seconds 5
-        Start-Services
+    try {
+        docker-compose down
+        Write-ColoredOutput "✅ 서비스 정지 완료!" "Green"
+    } catch {
+        Write-ColoredOutput "❌ 서비스 정지 실패: $($_.Exception.Message)" "Red"
     }
-    
-    Write-ColoredOutput "✅ Restart completed" "Green"
 }
 
-# View logs
+function Show-ServiceStatus {
+    Write-ColoredOutput "📊 서비스 상태:" "Cyan"
+    docker-compose ps
+    
+    Write-ColoredOutput "`n🌐 서비스 URL:" "Cyan"
+    Write-ColoredOutput "  Frontend:    http://localhost:3000" "Green"
+    Write-ColoredOutput "  Backend API: http://localhost:8000" "Green"
+    Write-ColoredOutput "  API Docs:    http://localhost:8000/docs" "Green"
+    
+    if ($Tools) {
+        Write-ColoredOutput "  pgAdmin:     http://localhost:5050" "Yellow"
+        Write-ColoredOutput "  Redis UI:    http://localhost:8081" "Yellow"
+    }
+}
+
 function Show-Logs {
-    param([string]$ServiceName = "", [int]$Lines = 100)
-    
-    if ($ServiceName) {
-        Write-ColoredOutput "📋 Showing logs for: $ServiceName" "Blue"
-        docker-compose logs --tail=$Lines -f $ServiceName
+    if ($Service) {
+        Write-ColoredOutput "📋 $Service 로그:" "Cyan"
+        docker-compose logs -f $Service
     } else {
-        Write-ColoredOutput "📋 Showing logs for all services" "Blue"
-        docker-compose logs --tail=$Lines -f
+        Write-ColoredOutput "📋 전체 로그:" "Cyan"
+        docker-compose logs -f
     }
 }
 
-# Execute shell in container
-function Enter-Shell {
-    param([string]$ServiceName = "backend")
-    
-    Write-ColoredOutput "🐚 Entering shell for: $ServiceName" "Blue"
-    
-    $containerName = switch ($ServiceName) {
-        "backend" { "cc_backend_dev" }
-        "frontend" { "cc_frontend_dev" }
-        "postgres" { "cc_postgres_dev" }
-        "redis" { "cc_redis_dev" }
-        default { "cc_${ServiceName}_dev" }
-    }
-    
-    docker exec -it $containerName /bin/bash
-}
-
-# Run tests
-function Invoke-Tests {
-    param([string]$TestType = "all")
-    
-    Write-ColoredOutput "🧪 Running tests: $TestType" "Yellow"
-    
-    switch ($TestType) {
-        "backend" {
-            docker-compose exec backend python -m pytest tests/ -v --tb=short
-        }
-        "frontend" {
-            docker-compose exec frontend npm run test
-        }
-        "coverage" {
-            docker-compose exec backend python -m pytest tests/ --cov=app --cov-report=html --cov-report=term
-        }
-        default {
-            Write-ColoredOutput "🔄 Running backend tests..." "Blue"
-            docker-compose exec backend python -m pytest tests/ -v
-            Write-ColoredOutput "🔄 Running frontend tests..." "Blue"
-            docker-compose exec frontend npm run test:ci
+function Reset-Environment {
+    if (!$Force) {
+        $confirm = Read-Host "⚠️ 모든 데이터가 삭제됩니다. 계속하시겠습니까? (y/N)"
+        if ($confirm -ne "y" -and $confirm -ne "Y") {
+            Write-ColoredOutput "❌ 취소되었습니다." "Yellow"
+            return
         }
     }
     
-    Write-ColoredOutput "✅ Tests completed" "Green"
-}
-
-# Database operations
-function Invoke-DatabaseOperation {
-    param([string]$Operation)
+    Write-ColoredOutput "🧹 완전 초기화 시작..." "Red"
     
-    switch ($Operation) {
-        "migrate" {
-            Write-ColoredOutput "🗄️ Running database migrations..." "Yellow"
-            docker-compose exec backend alembic upgrade head
-        }
-        "seed" {
-            Write-ColoredOutput "🌱 Seeding database..." "Yellow"
-            docker-compose exec backend python scripts/seed_data.py
-        }
-        "reset" {
-            Write-ColoredOutput "🔄 Resetting database..." "Yellow"
-            docker-compose exec backend alembic downgrade base
-            docker-compose exec backend alembic upgrade head
-        }
-        "backup" {
-            $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-            $backupFile = "data/backup/backup_$timestamp.sql"
-            Write-ColoredOutput "💾 Creating database backup: $backupFile" "Yellow"
-            docker-compose exec postgres pg_dump -U cc_user cc_webapp > $backupFile
-        }
-    }
-}
-
-# Clean up resources
-function Invoke-Cleanup {
-    param([string]$Type = "containers")
+    # 컨테이너 정지 및 삭제
+    docker-compose down --volumes --remove-orphans
     
-    Write-ColoredOutput "🧹 Cleaning up Docker resources..." "Yellow"
+    # 이미지 정리
+    docker system prune -f
     
-    switch ($Type) {
-        "containers" {
-            docker container prune -f
-        }
-        "images" {
-            docker image prune -f
-        }
-        "volumes" {
-            Write-ColoredOutput "⚠️ This will delete all data volumes. Continue? (y/N)" "Red"
-            $confirm = Read-Host
-            if ($confirm -eq "y" -or $confirm -eq "Y") {
-                docker-compose down -v
-                docker volume prune -f
-            }
-        }
-        "all" {
-            docker system prune -af
-        }
+    # 로그 파일 정리
+    if (Test-Path "logs") {
+        Remove-Item -Path "logs\*" -Recurse -Force -ErrorAction SilentlyContinue
     }
     
-    Write-ColoredOutput "✅ Cleanup completed" "Green"
+    Write-ColoredOutput "✅ 완전 초기화 완료!" "Green"
+    Write-ColoredOutput "다음 명령어로 재시작하세요: .\docker-manage.ps1 setup" "Yellow"
 }
 
-# Performance monitoring
-function Show-Performance {
-    Write-ColoredOutput "📊 Performance monitoring..." "Blue"
-    
-    Write-ColoredOutput "🖥️ System resources:" "Yellow"
-    docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}"
-    
-    Write-ColoredOutput "💾 Disk usage:" "Yellow"
-    docker system df
-}
-
-# Show help
-function Show-Help {
-    Show-Header
-    Write-ColoredOutput "📚 Available Commands:" "Yellow"
-    Write-ColoredOutput "" "White"
-    
-    $commands = @(
-        @{Cmd="help"; Desc="Show this help message"},
-        @{Cmd="check"; Desc="Check development environment"},
-        @{Cmd="setup"; Desc="Initialize development environment"},
-        @{Cmd="start [--tools]"; Desc="Start all services (add --tools for dev tools)"},
-        @{Cmd="stop"; Desc="Stop all services"},
-        @{Cmd="restart [service]"; Desc="Restart services (all or specific)"},
-        @{Cmd="status"; Desc="Show service health status"},
-        @{Cmd="logs [service]"; Desc="Show logs (all or specific service)"},
-        @{Cmd="shell [service]"; Desc="Enter shell for service (default: backend)"},
-        @{Cmd="test [type]"; Desc="Run tests (all/backend/frontend/coverage)"},
-        @{Cmd="migrate"; Desc="Run database migrations"},
-        @{Cmd="seed"; Desc="Seed database with test data"},
-        @{Cmd="backup"; Desc="Create database backup"},
-        @{Cmd="reset-db"; Desc="Reset database"},
-        @{Cmd="clean [type]"; Desc="Clean Docker resources (containers/images/volumes/all)"},
-        @{Cmd="monitor"; Desc="Show performance monitoring"},
-        @{Cmd="build"; Desc="Rebuild Docker images"}
-    )
-    
-    foreach ($cmd in $commands) {
-        Write-Host ("  {0,-20} {1}" -f $cmd.Cmd, $cmd.Desc) -ForegroundColor White
-    }
-    
-    Write-ColoredOutput "" "White"
-    Write-ColoredOutput "💡 Examples:" "Yellow"
-    Write-ColoredOutput "  .\docker-manage.ps1 start --tools     # Start with development tools" "Cyan"
-    Write-ColoredOutput "  .\docker-manage.ps1 logs backend      # Show backend logs" "Cyan"
-    Write-ColoredOutput "  .\docker-manage.ps1 shell frontend    # Enter frontend container" "Cyan"
-    Write-ColoredOutput "  .\docker-manage.ps1 test coverage     # Run tests with coverage" "Cyan"
-}
-
-# Main execution
-Show-Header
-
+# 메인 실행 로직
 switch ($Command.ToLower()) {
     "help" { Show-Help }
-    "check" { Test-Environment }
-    "setup" { Initialize-Environment }
-    "start" { 
-        $profile = if ($Tools) { "tools" } else { "" }
-        Start-Services -Profile $profile 
-    }
+    "setup" { Setup-Environment }
+    "start" { Start-Services }
     "stop" { Stop-Services }
-    "restart" { Restart-Services -ServiceName $Service }
-    "status" { Test-ServiceHealth }
-    "logs" { Show-Logs -ServiceName $Service }
-    "shell" { Enter-Shell -ServiceName $(if ($Service) { $Service } else { "backend" }) }
-    "test" { Invoke-Tests -TestType $(if ($Service) { $Service } else { "all" }) }
-    "migrate" { Invoke-DatabaseOperation -Operation "migrate" }
-    "seed" { Invoke-DatabaseOperation -Operation "seed" }
-    "backup" { Invoke-DatabaseOperation -Operation "backup" }
-    "reset-db" { Invoke-DatabaseOperation -Operation "reset" }
-    "clean" { Invoke-Cleanup -Type $(if ($Service) { $Service } else { "containers" }) }
-    "monitor" { Show-Performance }
-    "build" { 
-        Write-ColoredOutput "🔨 Rebuilding Docker images..." "Yellow"
-        docker-compose build --no-cache
-        Write-ColoredOutput "✅ Build completed" "Green"
-    }
-    default { 
-        Write-ColoredOutput "❌ Unknown command: $Command" "Red"
-        Write-ColoredOutput "Use '.\docker-manage.ps1 help' for available commands" "Yellow"
+    "restart" { Stop-Services; Start-Services }
+    "status" { Show-ServiceStatus }
+    "logs" { Show-Logs }
+    "reset" { Reset-Environment }
+    "clean" { Reset-Environment }
+    default {
+        Write-ColoredOutput "❌ 알 수 없는 명령어: $Command" "Red"
+        Show-Help
+        exit 1
     }
 }

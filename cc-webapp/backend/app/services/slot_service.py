@@ -8,15 +8,13 @@ from .token_service import TokenService
 from ..repositories.game_repository import GameRepository
 from .. import models
 
-
 @dataclass
 class SlotSpinResult:
     result: str
     tokens_change: int
     balance: int
-    streak: int
+    daily_spin_count: int
     animation: Optional[str]
-
 
 class SlotService:
     """슬롯 머신 로직을 담당하는 서비스 계층."""
@@ -25,116 +23,76 @@ class SlotService:
         self.repo = repository or GameRepository()
         self.token_service = token_service or TokenService(db, self.repo)
 
-    def _get_time_based_adjustment(self) -> float:
-        """시간대별 승률 변동 조정값을 반환"""
-        current_hour = datetime.datetime.now().hour
-        
-        # 오전 9시~12시, 오후 6시~10시에 승률 소폭 증가 (피크 타임)
-        if 9 <= current_hour < 12 or 18 <= current_hour < 22:
-            return 0.03
-        # 오전 2시~6시에 승률 감소 (비활성 시간)
-        elif 2 <= current_hour < 6:
-            return -0.05
-        # 그 외 시간에는 중립적
-        else:
-            return 0.0
-
-    def spin(self, user_id: int, db: Session) -> SlotSpinResult:
-        """슬롯 스핀을 실행하고 결과를 반환."""
+    def spin(self, user_id: int, bet_amount: int, db: Session) -> SlotSpinResult:
+        """슬롯 스핀을 실행하고 결과를 반환. (수익성 분석 기반 로직)"""
         # DB 세션을 TokenService에 설정
         if not self.token_service.db:
             self.token_service.db = db
-            
-        # 토큰 차감. 부족하면 ValueError 발생
-        deducted_tokens = self.token_service.deduct_tokens(user_id, 2)
+
+        # 1. 베팅액 검증
+        if not (5000 <= bet_amount <= 10000):
+            raise ValueError("베팅액은 5,000에서 10,000 사이여야 합니다.")
+
+        # 2. 일일 스핀 횟수 제한 검증
+        daily_spin_count = self.repo.count_daily_actions(db, user_id, "SLOT_SPIN")
+        if daily_spin_count >= 30:
+            raise ValueError("일일 슬롯 스핀 횟수(30회)를 초과했습니다.")
+
+        # 3. 토큰 차감
+        deducted_tokens = self.token_service.deduct_tokens(user_id, bet_amount)
         if deducted_tokens is None:
             raise ValueError("토큰이 부족합니다.")
 
-        segment = self.repo.get_user_segment(db, user_id)
-        streak = self.repo.get_streak(user_id)
-        
-        # 기본 확률 설정 (체크리스트 기반)
-        # 소액 승리: 38%, 대박: 2%, 패배: 60%
-        small_win_prob = 0.38
-        jackpot_prob = 0.02
-        
-        # 유저 타입별 승률 차등 적용
-        user = db.query(models.User).filter(models.User.id == user_id).first()
-        
-        # 신규 유저 확인 (가입 후 7일 이내)
-        is_new_user = False
-        if user:
-            days_since_creation = (datetime.datetime.utcnow() - user.created_at).days
-            if days_since_creation <= 7:
-                is_new_user = True
-                small_win_prob += 0.15  # 신규 유저 +15% 승률
-        
-        # VIP 유저 확인
-        is_vip = False
-        if user and user.rank == "VIP":
-            is_vip = True
-            small_win_prob += 0.06  # VIP 유저 +6% 승률
-            
-        # 시간대별 승률 변동 적용
-        time_adjustment = self._get_time_based_adjustment()
-        small_win_prob += time_adjustment
-        
-        # 연패 보상 시스템 (기존 유지)
-        force_win = False
-        if streak >= 7:
-            force_win = True
-            
-        # 결과 계산
+        # 4. 승리/패배 및 보상 계산 (수익률 85% 기반)
+        # RTP 15% -> 15% 확률로 승리하고, 승리 시 베팅액의 100/15 * 0.15 = 1배, 즉 베팅액만큼 돌려받음.
+        # 더 나은 사용자 경험을 위해, 승리 시 베팅액의 2배를 돌려주고 승리 확률을 7.5%로 조정. RTP는 동일.
+        win_chance = 0.075  # 7.5%
         spin = random.random()
-        result = "lose"
-        reward = 0
-        animation = "lose"
         
-        if force_win:
-            # 연패 보상으로 강제 승리 (소액 승리)
+        result: str
+        reward: int
+        animation: str
+
+        if spin < win_chance:
+            # 승리
             result = "win"
-            reward = random.randint(2, 3)  # 110-120% 보상
-            animation = "force_win"
-            streak = 0
-        elif spin < jackpot_prob:
-            # 대박 (베팅액의 200-300%)
-            result = "jackpot"
-            reward = random.randint(4, 6)  # 200-300% 보상
-            animation = "jackpot"
-            streak = 0
-        elif spin < jackpot_prob + small_win_prob:
-            # 소액 승리 (베팅액의 110-120%)
-            result = "win"
-            reward = random.randint(2, 3)  # 110-120% 보상
+            reward = bet_amount * 2  # 2배 지급
             animation = "win"
-            streak = 0
         else:
             # 패배
             result = "lose"
             reward = 0
             animation = "lose"
-            streak += 1
-            
-            # 근접 실패 애니메이션 구현 (80% 확률로 발생)
-            if random.random() < 0.80:
+            # 50% 확률로 근접 실패 애니메이션
+            if random.random() < 0.5:
                 animation = "near_miss"
 
-        if reward:
+        # 5. 보상 지급 (승리 시)
+        if reward > 0:
             self.token_service.add_tokens(user_id, reward)
 
-        self.repo.set_streak(user_id, streak)
-        balance = self.token_service.get_token_balance(user_id)
-        self.repo.record_action(db, user_id, "SLOT_SPIN", -2)
+        # 6. 액션 기록
+        self.repo.record_action(db, user_id, "SLOT_SPIN", -bet_amount)
         
-        # 슬롯 결과 기록
+        # 7. 게임 결과 기록
         game = models.Game(
             user_id=user_id,
             game_type="slot",
-            bet_amount=2,
+            bet_amount=bet_amount,
             result=result,
             payout=reward
         )
         db.add(game)
         db.commit()
+
+        # 8. 최종 결과 반환
+        final_balance = self.token_service.get_token_balance(user_id)
+        tokens_change = reward - bet_amount
         
-        return SlotSpinResult(result, reward - 2, balance, streak, animation)
+        return SlotSpinResult(
+            result=result,
+            tokens_change=tokens_change,
+            balance=final_balance,
+            daily_spin_count=daily_spin_count + 1,
+            animation=animation
+        )

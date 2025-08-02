@@ -13,6 +13,15 @@ from ..services.user_service import UserService
 
 router = APIRouter()
 
+from ..services.reward_service import RewardService
+
+# Pydantic model for distribution request
+class RewardDistributionRequest(BaseModel):
+    user_id: int
+    reward_type: str
+    amount: int
+    source_description: str
+
 # Pydantic model for individual reward item in the response
 class RewardItem(BaseModel):
     id: int = Field(alias="reward_id")
@@ -100,6 +109,35 @@ async def get_user_rewards(
         total_rewards=total_rewards_count,
         total_pages=total_pages
     )
+
+@router.post("/distribute", response_model=RewardItem, tags=["rewards"])
+async def distribute_reward_to_user(
+    request: RewardDistributionRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Distributes a specific reward to a user.
+    This is the central endpoint for granting rewards from games or events.
+    """
+    reward_service = RewardService(db=db)
+    try:
+        user_reward = reward_service.distribute_reward(
+            user_id=request.user_id,
+            reward_type=request.reward_type,
+            amount=request.amount,
+            source_description=request.source_description
+        )
+        # We need to map the UserReward SQLAlchemy model to the RewardItem Pydantic model.
+        # The alias in RewardItem helps, but we need to ensure all fields match.
+        # Let's create a dictionary that matches the RewardItem structure.
+        return {
+            "reward_id": user_reward.id,
+            "reward_type": user_reward.reward_type,
+            "reward_value": user_reward.reward_value,
+            "awarded_at": user_reward.awarded_at,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # Ensure this router is included in app/main.py:
 # from .routers import rewards

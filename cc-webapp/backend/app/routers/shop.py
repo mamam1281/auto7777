@@ -24,43 +24,59 @@ class ShopPurchaseResponse(BaseModel):
     item_name: str
     new_item_count: int
 
-@router.post("/shop/purchase", response_model=ShopPurchaseResponse)
-def purchase_shop_item(request: ShopPurchaseRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == request.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if user.cyber_token_balance < request.price:
-        return ShopPurchaseResponse(
-            success=False,
-            message="골드(토큰)가 부족합니다.",
-            new_gold_balance=user.cyber_token_balance,
+from ..services.shop_service import ShopService
+
+def get_shop_service(db: Session = Depends(get_db)) -> ShopService:
+    """Dependency provider for ShopService."""
+    return ShopService(db)
+
+@router.post("/purchase", response_model=ShopPurchaseResponse, summary="아이템 구매", description="사용자의 토큰을 사용하여 상점의 아이템을 구매합니다.")
+def purchase_shop_item(
+    request: ShopPurchaseRequest,
+    shop_service: ShopService = Depends(get_shop_service)
+):
+    """
+    ### 요청 본문:
+    - **user_id**: 아이템을 구매하는 사용자 ID
+    - **item_id**: 구매할 아이템의 ID
+    - **item_name**: 구매할 아이템의 이름
+    - **price**: 아이템 가격
+    - **description**: 아이템 설명 (선택 사항)
+
+    ### 응답:
+    - **success**: 구매 성공 여부
+    - **message**: 처리 결과 메시지
+    - **new_gold_balance**: 구매 후 사용자의 새 토큰 잔액
+    - **item_id, item_name, new_item_count**: 구매한 아이템 정보 및 보유 개수
+    """
+    try:
+        result = shop_service.purchase_item(
+            user_id=request.user_id,
             item_id=request.item_id,
             item_name=request.item_name,
-            new_item_count=0
+            price=request.price,
+            description=request.description
         )
-    # 차감
-    user.cyber_token_balance -= request.price
-    # 보유 아이템 증가 (UserReward에 기록)
-    reward = models.UserReward(
-        user_id=user.id,
-        reward_type="SHOP_ITEM",
-        reward_value=str(request.item_id),
-        awarded_at=datetime.utcnow(),
-        source_description=f"{request.item_name}: {request.description or ''}"
-    )
-    db.add(reward)
-    db.commit()
-    # 현재 보유 개수 계산
-    item_count = db.query(models.UserReward).filter(
-        models.UserReward.user_id == user.id,
-        models.UserReward.reward_type == "SHOP_ITEM",
-        models.UserReward.reward_value == str(request.item_id)
-    ).count()
-    return ShopPurchaseResponse(
-        success=True,
-        message=f"{request.item_name} 구매 성공!",
-        new_gold_balance=user.cyber_token_balance,
-        item_id=request.item_id,
-        item_name=request.item_name,
-        new_item_count=item_count
-    )
+        if not result["success"]:
+            # Handle the case of insufficient funds gracefully
+            return ShopPurchaseResponse(
+                success=False,
+                message=result["message"],
+                new_gold_balance=result["new_balance"],
+                item_id=request.item_id,
+                item_name=request.item_name,
+                new_item_count=0
+            )
+
+        return ShopPurchaseResponse(
+            success=True,
+            message=result["message"],
+            new_gold_balance=result["new_balance"],
+            item_id=result["item_id"],
+            item_name=result["item_name"],
+            new_item_count=result["new_item_count"]
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An internal server error occurred.")

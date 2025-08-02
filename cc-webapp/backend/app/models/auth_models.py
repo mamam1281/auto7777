@@ -30,6 +30,17 @@ class User(Base):
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
     security_events = relationship("SecurityEvent", back_populates="user", cascade="all, delete-orphan")
 
+    # 게임 및 활동 관련 관계 추가
+    actions = relationship("UserAction", back_populates="user", cascade="all, delete-orphan")
+    rewards = relationship("UserReward", back_populates="user", cascade="all, delete-orphan")
+    game_sessions = relationship("GameSession", back_populates="user", cascade="all, delete-orphan")
+    activities = relationship("UserActivity", back_populates="user", cascade="all, delete-orphan")
+    gacha_results = relationship("GachaResult", back_populates="user", cascade="all, delete-orphan")
+    progress = relationship("UserProgress", back_populates="user", cascade="all, delete-orphan")
+
+    # 세그먼트 관계 추가
+    segment = relationship("UserSegment", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
 class InviteCode(Base):
     """초대코드 모델"""
     __tablename__ = "invite_codes"

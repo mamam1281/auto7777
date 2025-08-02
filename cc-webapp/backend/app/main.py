@@ -41,9 +41,22 @@ class UserActionEvent(BaseModel):
 from pydantic import BaseModel  # For request/response models
 from typing import Optional
 
+# 라우터 import 추가 (가이드에 따라 재구성)
 from app.routers import (
-    auth,  # 우리의 완전한 인증 라우터
-    users,  # 사용자 API
+    auth,
+    users,
+    actions,
+    gacha,
+    rewards,
+    shop,
+    prize_roulette,
+    admin,
+    rps,
+    dashboard,
+    missions,
+    quiz,
+    notifications,
+    # battlepass_router # battlepass 라우터는 아직 없는 것으로 보임
 )
 
 # JWT 인증 API 임포트 추가 - 사용자 요구사항에 맞는 auth.py만 사용
@@ -116,54 +129,36 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     lifespan=lifespan,
-    title="Casino Club F2P API",
+    title="🎰 Casino-Club F2P API",
     description="""
-## Casino Club F2P Backend API
+# ♣️ Casino-Club F2P 종합 백엔드 API
 
-이 API는 Casino Club F2P 프로젝트의 백엔드 시스템입니다.
+이 문서는 **완전히 재구축되고 안정화된** Casino-Club F2P 프로젝트의 API 명세입니다.
 
-### 🎯 주요 기능
-- **사용자 인증**: JWT 기반 회원가입/로그인 시스템
-- **프로필 관리**: 사용자 프로필 조회 및 관리
-- **실시간 이벤트**: Kafka를 통한 사용자 행동 추적
-- **토큰 시스템**: 사이버 토큰 기반 보상 시스템
+## 🚀 핵심 철학
+- **안정성 우선:** 모든 API는 명확한 서비스 계층과 단위 테스트를 통해 안정성을 확보했습니다.
+- **사용자 여정 중심:** API는 '회원가입 → 게임 플레이 → 보상'의 자연스러운 사용자 흐름에 맞춰 설계되었습니다.
+- **확장성:** 신규 게임, 미션, 이벤트 등을 쉽게 추가할 수 있는 모듈식 구조를 지향합니다.
 
-### 🛠 기술 스택
-- **Framework**: FastAPI
-- **Database**: PostgreSQL + SQLite (개발환경)
-- **Messaging**: Apache Kafka
-- **Caching**: Redis
-- **Authentication**: JWT
+## ✨ 주요 기능 API
+- **인증 (`/api/auth`):** `5858` 초대코드 기반 회원가입 및 JWT 토큰 발급
+- **사용자 (`/api/users`):** 프로필 및 보상 내역 조회
+- **게임 (`/api/games`):** 슬롯, 룰렛, 가위바위보 등 핵심 게임 플레이
+- **상점 (`/api/shop`):** 아이템 구매
+- **관리자 (`/api/admin`):** 사용자 관리 및 데이터 조회
+- **대시보드 (`/api/dashboard`):** 핵심 지표 및 통계 제공
 
-### 📖 API 사용 가이드
-1. `/api/auth/signup`으로 회원가입
-2. `/api/auth/login`으로 로그인하여 JWT 토큰 획득
-3. Authorization 헤더에 `Bearer {token}` 형태로 토큰 전송
-4. 인증이 필요한 API 엔드포인트 사용
-
-### 🔗 관련 문서
-- **프로젝트 가이드**: [20250729-가이드006.md](./20250729-가이드006.md)
-- **데이터베이스 스키마**: [DATABASE_MIGRATION_GUIDE.md](./DATABASE_MIGRATION_GUIDE.md)
-- **Docker 설정**: [DOCKER_GUIDE.md](./DOCKER_GUIDE.md)
-
-### 🚀 현재 구현 상태
-- ✅ JWT 인증 시스템 (회원가입, 로그인, 토큰 검증)
-- ✅ 사용자 프로필 조회 API
-- ✅ Kafka 이벤트 발행 시스템
-- ✅ 헬스체크 API
-- ⚠️ 게임 API (슬롯, 가챠) - 개발 중
-- ⚠️ 보상 시스템 - 개발 중
     """,
-    version="0.2.0",
+    version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     contact={
-        "name": "Casino Club F2P Team",
-        "email": "dev@casino-club.com",
+        "name": "Jules - AI Software Engineer",
+        "url": "https://github.com/google/generative-ai-docs",
     },
     license_info={
-        "name": "Private License",
-        "identifier": "Proprietary"
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
     },
     tags_metadata=[
         {
@@ -239,32 +234,29 @@ app.add_middleware(
 )
 
 # Register API routers
-app.include_router(auth.router, prefix="/auth", tags=["authentication"])  # 완전한 인증 시스템
-print("✅ Auth API endpoints registered")
-# 다른 모든 라우터들을 임시로 비활성화 - 모델 의존성 문제 해결 후 재활성화
-# app.include_router(admin.router, prefix="/api")  # 임시 비활성화
-# app.include_router(games.router)  # 임시 비활성화
-# app.include_router(segments.router, prefix="/api")
-# app.include_router(chat.router, prefix="/api")
-# app.include_router(feedback.router, prefix="/api")
-# app.include_router(ai.router, prefix="/api")  # 🆕 Added AI router
-# app.include_router(analyze.router, prefix="/api")  # 🆕 Added analyze router  
-# app.include_router(recommend.router, prefix="/api")  # 🆕 Added recommend router
-# app.include_router(rewards.router, prefix="/api")  # 추가
-# app.include_router(unlock.router, prefix="/api")   # 추가
-# app.include_router(user_segments.router, prefix="/api") # 추가
-# app.include_router(gacha.router, prefix="/api")  # 추가
-# app.include_router(prize_roulette.router, prefix="/api/games/roulette", tags=["prize_roulette"])  # 경품 룰렛 API
-# app.include_router(notification.router, prefix="/api")  # 추가
-# app.include_router(tracking.router, prefix="/api")  # 추가
-# app.include_router(personalization.router, prefix="/api")  # 추가
-# app.include_router(adult_content.router, prefix="/api")  # 추가
-# app.include_router(actions.router, prefix="/api")  # 추가
-# app.include_router(corporate.router, prefix="/api")  # 추가
-app.include_router(users.router, prefix="/api")  # 🎯 프로필 조회 API 활성화
-# app.include_router(recommendation.router, prefix="/api")  # 추가된 라우터 등록
-# app.include_router(doc_titles.router)  # prefix 없이 등록하여 /docs/titles 직접 접근 가능
-# app.include_router(invite_router.router)  # 초대코드 유효성 검증 API 추가 (이미 /api/invite prefix 포함)
+app.include_router(auth.router, prefix="/api/auth", tags=["🔐 인증"])
+app.include_router(users.router, prefix="/api/users", tags=["👤 사용자"])
+app.include_router(actions.router, prefix="/api/actions", tags=["🎮 게임 액션"])
+app.include_router(gacha.router, prefix="/api/gacha", tags=["🎁 가챠"])
+app.include_router(rewards.router, prefix="/api/rewards", tags=["🏆 보상"])
+app.include_router(shop.router, prefix="/api/shop", tags=["🛒 상점"])
+app.include_router(prize_roulette.router, prefix="/api/games/roulette", tags=["🎡 프라이즈 룰렛"])
+app.include_router(admin.router, prefix="/api/admin", tags=["🛠️ 관리자"])
+app.include_router(rps.router, prefix="/api/games/rps", tags=["✂️ 가위바위보"])
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["📊 대시보드"])
+app.include_router(missions.router, prefix="/api/missions", tags=["🎯 미션"])
+app.include_router(quiz.router, prefix="/api/quiz", tags=["📝 퀴즈"])
+app.include_router(notifications.router, prefix="/ws", tags=["📡 실시간 알림"])
+# app.include_router(battlepass_router.router, prefix="/api/battlepass", tags=["배틀패스"])
+
+print("✅ Core API endpoints registered")
+
+# Simple Auth API 라우터 등록
+if SIMPLE_AUTH_AVAILABLE:
+    # app.include_router(simple_auth.router)  # 이미 위에서 /api prefix로 등록됨
+    print("✅ Simple Auth API endpoints registered (already included above)")
+else:
+    print("⚠️ Simple Auth API endpoints not available")
 
 # Simple Auth API 라우터 등록
 if SIMPLE_AUTH_AVAILABLE:

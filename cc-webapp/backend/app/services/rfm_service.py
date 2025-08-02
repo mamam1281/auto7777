@@ -1,176 +1,111 @@
-"""RFM (Recency, Frequency, Monetary) analysis service."""
-
-import json
 import logging
-from typing import Dict, List, Union, NamedTuple
-
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from datetime import datetime, timedelta
 
-from app.repositories.game_repository import GameRepository
+from ..models.auth_models import User
+from ..models.game_models import UserAction, Game
+from ..models.user_models import UserSegment
 
 logger = logging.getLogger(__name__)
 
-class RFMScore(NamedTuple):
-    """
-    Represents the RFM (Recency, Frequency, Monetary) score for a user.
-    
-    Attributes:
-        user_id (int): Unique identifier for the user
-        recency (int): Days since last activity
-        frequency (int): Number of interactions
-        monetary (float): Total value generated
-        rfm_score (float): Computed RFM score
-        segment (str): User segment classification
-    """
-    user_id: int
-    recency: int
-    frequency: int
-    monetary: float
-    rfm_score: float
-    segment: str
-
-__all__ = ["RFMService", "RFMScore"]
+# Define RFM thresholds
+RECENCY_THRESHOLDS = {'high': 7, 'mid': 30}
+FREQUENCY_THRESHOLDS = {'high': 50, 'mid': 10} # Adjusted for more actions
+MONETARY_THRESHOLDS = {'high': 500000, 'mid': 100000} # Adjusted for coin values
 
 class RFMService:
-    """Service for calculating and managing RFM (Recency, Frequency, Monetary) metrics."""
+    """Service for calculating and managing RFM metrics."""
 
-    def __init__(self, db: Session, repository: GameRepository):
-        """
-        Initialize RFM service with database session and game repository.
-
-        Args:
-            db (Session): SQLAlchemy database session
-            repository (GameRepository): Game data repository
-        """
+    def __init__(self, db: Session):
         self.db = db
-        self.repository = repository
 
-    def compute_dynamic_thresholds(self) -> Dict[str, float]:
-        """
-        Compute dynamic thresholds based on distribution.
+    def _get_rfm_score(self, value, thresholds, higher_is_better=True):
+        if higher_is_better:
+            if value >= thresholds['high']: return 5
+            if value >= thresholds['mid']: return 3
+            return 1
+        else: # lower is better (like recency)
+            if value <= thresholds['high']: return 5
+            if value <= thresholds['mid']: return 3
+            return 1
 
-        Returns:
-            Dict[str, float]: Dynamic RFM thresholds
+    def update_all_user_segments(self):
         """
+        Calculates RFM scores for all users and updates their segments in the database.
+        """
+        print(f"[{datetime.utcnow()}] Starting RFM computation for all users...")
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+
+        users = self.db.query(User).all()
+        if not users:
+            print("No users found to process.")
+            return
+
+        updated_count = 0
+        created_count = 0
+
+        for user in users:
+            user_id = user.id
+
+            # Calculate Recency and Frequency from user_actions
+            action_stats = self.db.query(
+                func.max(UserAction.created_at).label("last_action_date"),
+                func.count(UserAction.id).label("frequency")
+            ).filter(
+                UserAction.user_id == user_id,
+                UserAction.created_at >= thirty_days_ago
+            ).first()
+
+            last_action_date = action_stats.last_action_date
+            frequency = action_stats.frequency or 0
+            recency_days = (datetime.utcnow() - last_action_date).days if last_action_date else 999
+
+            # Calculate Monetary value from the games table
+            monetary_stats = self.db.query(
+                func.sum(Game.bet_amount).label("monetary_value")
+            ).filter(
+                Game.user_id == user_id,
+                Game.created_at >= thirty_days_ago
+            ).first()
+            monetary_value = monetary_stats.monetary_value or 0.0
+
+            r_score = self._get_rfm_score(recency_days, RECENCY_THRESHOLDS, higher_is_better=False)
+            f_score = self._get_rfm_score(frequency, FREQUENCY_THRESHOLDS)
+            m_score = self._get_rfm_score(monetary_value, MONETARY_THRESHOLDS)
+
+            # Simplified RFM group assignment
+            if r_score >= 4 and f_score >= 4 and m_score >= 4:
+                rfm_group = "Whale"
+            elif (r_score + f_score + m_score) / 3 >= 3:
+                rfm_group = "High-Value"
+            elif (r_score + f_score + m_score) / 3 >= 2:
+                rfm_group = "Medium-Value"
+            elif r_score < 2:
+                rfm_group = "At-Risk"
+            else:
+                rfm_group = "Low-Value"
+
+            # Update or Create UserSegment
+            user_segment = self.db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
+            current_time = datetime.utcnow()
+            if user_segment:
+                user_segment.rfm_group = rfm_group
+                user_segment.last_updated = current_time
+                updated_count += 1
+            else:
+                user_segment = UserSegment(
+                    user_id=user_id,
+                    rfm_group=rfm_group,
+                    last_updated=current_time,
+                )
+                self.db.add(user_segment)
+                created_count += 1
+
         try:
-            # Placeholder implementation for dynamic thresholds
-            thresholds = {
-                "recency_high": 30.0,
-                "recency_medium": 60.0,
-                "frequency_high": 10.0,
-                "frequency_medium": 5.0,
-                "monetary_high": 500.0,
-                "monetary_medium": 250.0
-            }
-
-            # Store thresholds in game repository
-            self.repository.set_gacha_history(0, [json.dumps(thresholds)])
-            return thresholds
-        except Exception as exc:
-            logger.error(f"Failed to compute dynamic RFM thresholds: {exc}")
-            return {}
-
-    def cache_rfm_scores(self, scores: List[Dict[str, float]]) -> None:
-        """
-        Cache RFM scores in the game repository.
-
-        Args:
-            scores (List[Dict[str, float]]): List of RFM scores for users
-        """
-        try:
-            for score in scores:
-                user_id = int(score.get('user_id', 0))
-                if user_id > 0:
-                    self.repository.set_gacha_history(user_id, [json.dumps(score)])
-        except Exception as exc:
-            logger.error(f"Failed to cache RFM scores: {exc}")
-
-    def calculate_rfm(self, user_id: int) -> RFMScore:
-        """
-        Calculate RFM metrics for a specific user.
-
-        Args:
-            user_id (int): User's unique identifier
-
-        Returns:
-            RFMScore: Calculated RFM metrics
-        """
-        try:
-            # Retrieve user's game history and actions
-            gacha_history = self.repository.get_gacha_history(user_id)
-            user_segment = self.repository.get_user_segment(self.db, user_id)
-
-            # Calculate recency (days since last activity)
-            recency = 45  # Placeholder, should be calculated from actual user activity
-
-            # Calculate frequency (number of interactions)
-            frequency = len(gacha_history) if gacha_history else 0
-
-            # Calculate monetary value (total value generated)
-            monetary = sum(float(json.loads(h).get('value', 0)) for h in gacha_history) if gacha_history else 0.0
-
-            # Compute RFM score (simplified calculation)
-            rfm_score = (recency * 0.3) + (frequency * 0.3) + (monetary * 0.4)
-
-            # Determine segment based on RFM score
-            segment = (
-                "High-Value" if rfm_score > 0.8 else
-                "Medium-Value" if rfm_score > 0.5 else
-                "Low-Value"
-            )
-
-            return RFMScore(
-                user_id=user_id,
-                recency=recency,
-                frequency=frequency,
-                monetary=monetary,
-                rfm_score=rfm_score,
-                segment=segment
-            )
-        except Exception as exc:
-            logger.error(f"RFM calculation failed for user {user_id}: {exc}")
-            return RFMScore(
-                user_id=user_id,
-                recency=0,
-                frequency=0,
-                monetary=0.0,
-                rfm_score=0.0,
-                segment="Low-Value"
-            )
-
-    def calculate_user_rfm(self, user_id: int) -> Dict[str, Union[int, float, str]]:
-        """
-        Wrapper method for calculate_rfm to match potential test expectations.
-
-        Args:
-            user_id (int): User's unique identifier
-
-        Returns:
-            Dict[str, Union[int, float, str]]: Calculated RFM metrics
-        """
-        rfm_score = self.calculate_rfm(user_id)
-        return {
-            "user_id": rfm_score.user_id,
-            "recency": rfm_score.recency,
-            "frequency": rfm_score.frequency,
-            "monetary": rfm_score.monetary,
-            "rfm_score": rfm_score.rfm_score,
-            "segment": rfm_score.segment
-        }
-
-    def get_user_segment(self, user_id: int) -> str:
-        """
-        Determine user segment based on RFM metrics.
-
-        Args:
-            user_id (int): User's unique identifier
-
-        Returns:
-            str: User segment classification
-        """
-        try:
-            rfm_metrics = self.calculate_rfm(user_id)
-            return str(rfm_metrics.segment)
-        except Exception as exc:
-            logger.error(f"Failed to determine user segment for {user_id}: {exc}")
-            return 'Low-Value'
+            self.db.commit()
+            print(f"[{datetime.utcnow()}] User segments updated: {updated_count} updated, {created_count} created.")
+        except Exception as e:
+            self.db.rollback()
+            print(f"[{datetime.utcnow()}] Error updating user segments: {e}")
+            raise e
