@@ -8,7 +8,7 @@ import random
 import string
 import hashlib
 import secrets
-from app.models.invite_code import InviteCode
+from app.models.auth_models import InviteCode
 from app.core.error_handlers import UserServiceException
 
 class InviteService:

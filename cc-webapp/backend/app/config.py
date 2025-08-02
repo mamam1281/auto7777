@@ -3,10 +3,14 @@
 This module defines configuration settings for the Casino Club application.
 It follows the Pydantic BaseSettings pattern for type-safe configuration
 management with support for environment variables.
+
+🔗 Integrated from: /app/core/config.py + /cc-webapp/backend/app/config.py
+📅 Last updated: 2025-08-02
 """
 
 import os
-from typing import List, Optional
+import json
+from typing import List, Optional, Tuple
 from pydantic_settings import BaseSettings
 from pydantic import validator
 
@@ -15,28 +19,76 @@ class Settings(BaseSettings):
     """Application settings with environment variable support."""
     
     # Application Info
-    app_name: str = "Casino Club API"
-    app_description: str = "API for interactive mini-games and token-based reward system"
-    app_version: str = "0.1.0"
+    app_name: str = "🎰 Casino-Club F2P API"
+    app_description: str = "Interactive mini-games and token-based reward system with behavioral addiction triggers"
+    app_version: str = "1.0.0"
     debug: bool = False
     environment: str = "development"
     
-    # Security
+    # Legacy compatibility (from /app/core/config.py)
+    APP_ENV: str = "development"
+    JWT_SECRET_KEY: str = "your-secret-key-here"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    # Enhanced Security Settings
     jwt_secret: str = "dev_secret_key_change_in_production"
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 30
+    jwt_expire_minutes: int = 60  # Extended from 30 to 60 minutes
     jwt_refresh_expire_days: int = 7
     
-    # Database
+    # Legacy Database Support (from /app/core/config.py)
+    DB_HOST: str = "postgres"
+    DB_PORT: int = 5432
+    DB_NAME: str = "cc_webapp_db"
+    DB_USER: str = "cc_user"
+    DB_PASSWORD: str = "cc_password"
+    
+    @property
+    def DATABASE_URL(self) -> str:
+        """Legacy DATABASE_URL property for backward compatibility."""
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    
+    # Enhanced Database Settings
     database_url: str = "postgresql://cc_user:cc_password@postgres:5432/cc_webapp_db"
     database_pool_size: int = 5
     database_max_overflow: int = 10
     database_pool_timeout: int = 30
     database_pool_recycle: int = 3600
     
-    # Redis
+    # Redis Settings
+    REDIS_HOST: str = "redis"  # Legacy compatibility
+    REDIS_PORT: int = 6379      # Legacy compatibility
     redis_url: str = "redis://redis:6379/0"
     redis_expire_time: int = 3600  # 1 hour default
+    
+    # Kafka (optional)
+    kafka_bootstrap_servers: str = "kafka:9093"
+    kafka_enabled: bool = True
+    
+    # 🎰 Gacha System Settings (from /app/core/config.py)
+    GACHA_RARITY_TABLE: Optional[str] = None
+    
+    def get_gacha_rarity_table(self) -> List[Tuple[str, float]]:
+        """
+        Parses the GACHA_RARITY_TABLE from a JSON string in env vars.
+        Enhanced with dopamine-triggering probabilities.
+        """
+        default_table = [
+            ("Legendary", 0.002),     # 0.2% - Ultra rare for maximum dopamine
+            ("Epic", 0.025),          # 2.5% - Rare enough to feel special
+            ("Rare", 0.15),           # 15% - Good rewards to maintain engagement
+            ("Common", 0.65),         # 65% - Base rewards
+            ("Near_Miss_Epic", 0.08), # 8% - Behavioral trigger
+            ("Near_Miss_Legendary", 0.093), # 9.3% - Behavioral trigger
+        ]
+        if self.GACHA_RARITY_TABLE:
+            try:
+                data = json.loads(self.GACHA_RARITY_TABLE)
+                return [(str(name), float(prob)) for name, prob in data]
+            except (json.JSONDecodeError, TypeError):
+                return default_table
+        return default_table
     
     # Kafka (optional)
     kafka_bootstrap_servers: str = "kafka:9093"

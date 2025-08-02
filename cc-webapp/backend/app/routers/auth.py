@@ -11,8 +11,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..schemas.auth import UserCreate, UserLogin, AdminLogin, UserResponse, Token
 from ..services.auth_service import AuthService, security
-from ..models.auth_models import User
-from ..models.invite_code import InviteCode
+from ..models.auth_models import User, InviteCode
 from ..config import settings
 
 # 로거 설정

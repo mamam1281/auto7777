@@ -9,7 +9,8 @@ alembic==1.13.0
 psycopg2-binary==2.9.9
 
 # Redis 및 캐싱
-# Redis dependencies removed
+redis==5.0.1
+hiredis==2.2.3
 
 # 인증 및 보안
 python-jose[cryptography]==3.3.0

@@ -1,230 +1,124 @@
-from fastapi import FastAPI, HTTPException, Depends, Body
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Casino-Club F2P Backend Main Application
+======================================
+Core FastAPI application with essential routers and middleware
+"""
+
+import os
+import logging
+from datetime import datetime
+from typing import Optional
+
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Optional
 
-class _DummyScheduler:
-    running = False
+# Core imports
+from app.database import get_db
+from app.core.logging import setup_logging
+# from app.core.exceptions import add_exception_handlers  # 비활성화 - 파일 비어있음
+# from app.middleware.error_handling import error_handling_middleware  # 비활성화
+# from app.middleware.logging import LoggingContextMiddleware  # 비활성화
 
-    def shutdown(self, wait: bool = False) -> None:  # noqa: D401
-        """No-op shutdown when scheduler is unavailable."""
-
-try:
-    from .apscheduler_jobs import start_scheduler, scheduler
-except Exception:  # noqa: BLE001
-
-    def start_scheduler():
-        print("Scheduler disabled or APScheduler not installed")
-
-    scheduler = _DummyScheduler()
-try:
-    from prometheus_fastapi_instrumentator import Instrumentator
-except ImportError:  # Optional dependency in tests
-    Instrumentator = None
-try:
-    import sentry_sdk
-except Exception:  # noqa: BLE001
-    sentry_sdk = None
-import os  # For Sentry DSN from env var
-
-# Kafka integration
-from app.kafka_client import send_kafka_message
-
-# Define the app first
-# ... (app initialization code) ...
-
-# Then define models and routes
-class UserActionEvent(BaseModel):
-    user_id: str
-    action_type: str
-    payload: Optional[dict] = None
-from pydantic import BaseModel  # For request/response models
-from typing import Optional
-
-# 라우터 import 추가 (가이드에 따라 재구성)
+# Import core routers only
 from app.routers import (
     auth,
     users,
+    admin,
     actions,
     gacha,
     rewards,
     shop,
-    prize_roulette,
-    admin,
-    rps,
-    dashboard,
     missions,
-    quiz,
+    # quiz,  # 임시 비활성화 - Quiz 모델 누락
+    dashboard,
+    prize_roulette,
+    rps,
     notifications,
-    # battlepass_router # battlepass 라우터는 아직 없는 것으로 보임
+    doc_titles,  # Phase 1 추가
+    feedback,    # Phase 2 추가
+    games,       # Phase 3 추가
+    game_api,    # Phase 4 추가
+    invite_router,  # Phase 5 추가
+    analyze,     # Phase 6 추가
+    roulette,    # Phase 7 추가
+    segments,    # Phase 8 추가
+    tracking,    # Phase 9 추가
+    unlock,      # Phase 10 추가
 )
 
-# JWT 인증 API 임포트 추가 - 사용자 요구사항에 맞는 auth.py만 사용
-# try:
-#     from app.routers import simple_auth  # PostgreSQL 기반 간단한 인증 라우터
-#     SIMPLE_AUTH_AVAILABLE = True
-#     print("✅ Simple Auth API 모듈 로드 성공")
-# except ImportError as e:
-#     SIMPLE_AUTH_AVAILABLE = False
-#     print(f"⚠️ Warning: Simple Auth API not available: {e}")
-# except Exception as e:
-#     SIMPLE_AUTH_AVAILABLE = False
-#     print(f"❌ Error loading Simple Auth API: {e}")
-SIMPLE_AUTH_AVAILABLE = False  # 중복 제거를 위해 비활성화
+# Scheduler setup
+class _DummyScheduler:
+    running = False
+    def shutdown(self, wait: bool = False) -> None:
+        """No-op shutdown when scheduler is unavailable."""
 
-# Kafka API 임포트 추가
 try:
-    from app.api.v1.kafka import router as kafka_router
-    KAFKA_AVAILABLE = True
-    print("✅ Kafka API 모듈 로드 성공")
-except ImportError as e:
-    KAFKA_AVAILABLE = False
-    print(f"⚠️ Warning: Kafka integration not available: {e}")
-except Exception as e:
-    KAFKA_AVAILABLE = False
-    print(f"❌ Error loading Kafka integration: {e}")
+    from app.apscheduler_jobs import start_scheduler, scheduler
+except Exception:
+    def start_scheduler():
+        print("Scheduler disabled or APScheduler not installed")
+    scheduler = _DummyScheduler()
 
-# --- Sentry Initialization (Placeholder - should be configured properly with DSN) ---
-# It's good practice to initialize Sentry as early as possible.
-# The DSN should be configured via an environment variable for security and flexibility.
-SENTRY_DSN = os.getenv("SENTRY_DSN")
-if SENTRY_DSN and sentry_sdk:
-    try:
-        sentry_sdk.init(
-            dsn=SENTRY_DSN,
-            traces_sample_rate=1.0,
-            profiles_sample_rate=1.0,
-            environment=os.getenv("ENVIRONMENT", "development"),
-        )
-        print("Sentry SDK initialized successfully.")
-    except Exception as e:  # noqa: BLE001
-        print(f"Error: Failed to initialize Sentry SDK. {e}")
-else:
-    print(
-        "Warning: SENTRY_DSN not found or sentry_sdk missing. Sentry not initialized."
-    )
-# --- End Sentry Initialization Placeholder ---
+# Optional monitoring
+try:
+    from prometheus_fastapi_instrumentator import Instrumentator
+except ImportError:
+    Instrumentator = None
 
-# 로깅 시스템 및 에러 핸들러 임포트
-from app.core.logging import setup_logging, LoggingContextMiddleware
-from app.core.error_handlers import add_exception_handlers, error_handling_middleware
+try:
+    import sentry_sdk
+except Exception:
+    sentry_sdk = None
 
-# 로깅 시스템 초기화
-log_level = "DEBUG" if os.getenv("ENVIRONMENT", "development") != "production" else "INFO"
-setup_logging(level=log_level)
-
-from contextlib import asynccontextmanager
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup logic
-    if os.getenv("DISABLE_SCHEDULER") != "1":
-        print("FastAPI startup event: Initializing job scheduler...")
-        start_scheduler()
-    yield
-    # Shutdown logic
-    print("FastAPI shutdown event: Shutting down scheduler...")
-    if scheduler.running:
-        scheduler.shutdown(wait=False)
+# ===== FastAPI App Initialization =====
 
 app = FastAPI(
-    lifespan=lifespan,
-    title="🎰 Casino-Club F2P API",
-    description="""
-# ♣️ Casino-Club F2P 종합 백엔드 API
-
-이 문서는 **완전히 재구축되고 안정화된** Casino-Club F2P 프로젝트의 API 명세입니다.
-
-## 🚀 핵심 철학
-- **안정성 우선:** 모든 API는 명확한 서비스 계층과 단위 테스트를 통해 안정성을 확보했습니다.
-- **사용자 여정 중심:** API는 '회원가입 → 게임 플레이 → 보상'의 자연스러운 사용자 흐름에 맞춰 설계되었습니다.
-- **확장성:** 신규 게임, 미션, 이벤트 등을 쉽게 추가할 수 있는 모듈식 구조를 지향합니다.
-
-## ✨ 주요 기능 API
-- **인증 (`/api/auth`):** `5858` 초대코드 기반 회원가입 및 JWT 토큰 발급
-- **사용자 (`/api/users`):** 프로필 및 보상 내역 조회
-- **게임 (`/api/games`):** 슬롯, 룰렛, 가위바위보 등 핵심 게임 플레이
-- **상점 (`/api/shop`):** 아이템 구매
-- **관리자 (`/api/admin`):** 사용자 관리 및 데이터 조회
-- **대시보드 (`/api/dashboard`):** 핵심 지표 및 통계 제공
-
-    """,
+    title="Casino-Club F2P API",
+    description="Backend API for Casino-Club F2P gaming platform",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    contact={
-        "name": "Jules - AI Software Engineer",
-        "url": "https://github.com/google/generative-ai-docs",
-    },
-    license_info={
-        "name": "Apache 2.0",
-        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
-    },
-    tags_metadata=[
-        {
-            "name": "Simple Auth",
-            "description": "사용자 인증 및 계정 관리 API",
-            "externalDocs": {
-                "description": "인증 시스템 가이드",
-                "url": "/docs/auth-guide",
-            },
-        },
-        {
-            "name": "Users",
-            "description": "사용자 프로필 및 정보 관리 API",
-        },
-        {
-            "name": "Kafka",
-            "description": "실시간 이벤트 발행 및 메시징 시스템",
-        },
-        {
-            "name": "Event",
-            "description": "사용자 행동 이벤트 추적",
-        },
-        {
-            "name": "Authentication",
-            "description": "로그인 및 토큰 기반 인증",
-        },
-        {
-            "name": "System",
-            "description": "시스템 상태 확인 및 모니터링",
-        },
-    ]
 )
 
-# Prometheus Instrumentation
-if Instrumentator:
-    instrumentator = Instrumentator(
-        should_group_status_codes=True,
-        should_instrument_requests_inprogress=True,
-        excluded_handlers=["/metrics"],
-        inprogress_labels=True,
-    )
-    instrumentator.instrument(app)
-    instrumentator.expose(
-        app, include_in_schema=False, endpoint="/metrics", tags=["monitoring"]
-    )
+# ===== Request/Response Models =====
 
+class HealthResponse(BaseModel):
+    status: str
+    timestamp: datetime
+    version: str
 
-# Configure CORS
+class LoginRequest(BaseModel):
+    user_id: str
+    password: str
+
+class LoginResponse(BaseModel):
+    token: str
+    user_id: str
+    message: Optional[str] = None
+
+# ===== Middleware Setup =====
+
+# CORS settings
 origins = [
-    "http://localhost:3000",  # Assuming Next.js runs on port 3000
-    "http://localhost:3001",  # Next.js dev server on port 3001
-    "http://localhost:3002",  # Next.js dev server on port 3002 (현재 사용 중)
-    "http://139.180.155.143:3000",  # 프로덕션 프론트엔드
-    "https://139.180.155.143:3000",  # HTTPS 지원
-    # Add other origins if needed
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://localhost:3000",
+    "https://127.0.0.1:3000",
+    "http://139.180.155.143:3000",
+    "https://139.180.155.143:3000",
 ]
 
-# 에러 핸들러 등록
-add_exception_handlers(app)
+# Error handlers (disabled - files empty)
+# add_exception_handlers(app)
 
-# 에러 핸들링 미들웨어 등록
-app.add_middleware(error_handling_middleware)
-
-# 로깅 컨텍스트 미들웨어 등록
-app.add_middleware(LoggingContextMiddleware)
-
+# Middleware registration (disabled - files missing)
+# app.add_middleware(error_handling_middleware)
+# app.add_middleware(LoggingContextMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -233,99 +127,163 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register API routers
-app.include_router(auth.router, prefix="/api/auth", tags=["🔐 인증"])
-app.include_router(users.router, prefix="/api/users", tags=["👤 사용자"])
-app.include_router(actions.router, prefix="/api/actions", tags=["🎮 게임 액션"])
-app.include_router(gacha.router, prefix="/api/gacha", tags=["🎁 가챠"])
-app.include_router(rewards.router, prefix="/api/rewards", tags=["🏆 보상"])
-app.include_router(shop.router, prefix="/api/shop", tags=["🛒 상점"])
-app.include_router(prize_roulette.router, prefix="/api/games/roulette", tags=["🎡 프라이즈 룰렛"])
-app.include_router(admin.router, prefix="/api/admin", tags=["🛠️ 관리자"])
-app.include_router(rps.router, prefix="/api/games/rps", tags=["✂️ 가위바위보"])
-app.include_router(dashboard.router, prefix="/api/dashboard", tags=["📊 대시보드"])
-app.include_router(missions.router, prefix="/api/missions", tags=["🎯 미션"])
-app.include_router(quiz.router, prefix="/api/quiz", tags=["📝 퀴즈"])
-app.include_router(notifications.router, prefix="/ws", tags=["📡 실시간 알림"])
-# app.include_router(battlepass_router.router, prefix="/api/battlepass", tags=["배틀패스"])
+# ===== Core API Router Registration =====
 
-print("✅ Core API endpoints registered")
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+app.include_router(actions.router, prefix="/api/actions", tags=["Game Actions"])
+app.include_router(gacha.router, prefix="/api/gacha", tags=["Gacha"])
+app.include_router(rewards.router, prefix="/api/rewards", tags=["Rewards"])
+app.include_router(shop.router, prefix="/api/shop", tags=["Shop"])
+app.include_router(missions.router, prefix="/api/missions", tags=["Missions"])
+# app.include_router(quiz.router, prefix="/api/quiz", tags=["Quiz"])  # 임시 비활성화
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+app.include_router(prize_roulette.router, prefix="/api/games/roulette", tags=["Prize Roulette"])
+app.include_router(rps.router, prefix="/api/games/rps", tags=["Rock Paper Scissors"])
+app.include_router(notifications.router, prefix="/ws", tags=["Real-time Notifications"])
 
-# Simple Auth API 라우터 등록
-if SIMPLE_AUTH_AVAILABLE:
-    # app.include_router(simple_auth.router)  # 이미 위에서 /api prefix로 등록됨
-    print("✅ Simple Auth API endpoints registered (already included above)")
-else:
-    print("⚠️ Simple Auth API endpoints not available")
+# ===== Progressive Expansion - Phase 1 =====
+app.include_router(doc_titles.router, prefix="/api/doc-titles", tags=["Document Titles"])
 
-# Simple Auth API 라우터 등록
-if SIMPLE_AUTH_AVAILABLE:
-    # app.include_router(simple_auth.router)  # 이미 위에서 /api prefix로 등록됨
-    print("✅ Simple Auth API endpoints registered (already included above)")
-else:
-    print("⚠️ Simple Auth API endpoints not available")
+# ===== Progressive Expansion - Phase 2 =====
+app.include_router(feedback.router, prefix="/api/feedback", tags=["Feedback"])
 
-# Kafka API 라우터 등록 (가능한 경우에만)
-if KAFKA_AVAILABLE:
-    app.include_router(kafka_router)
-    print("✅ Kafka API endpoints registered")
-else:
-    print("⚠️ Kafka API endpoints not available")
+# ===== Progressive Expansion - Phase 3 =====
+app.include_router(games.router, prefix="/api/games", tags=["Games"])
 
-# Kafka integration route
-@app.post("/api/kafka/publish", tags=["Kafka", "Event"])
-async def publish_user_action_event(event: UserActionEvent = Body(...)):
-    """
-    사용자 행동 이벤트를 Kafka로 발행 (샘플)
-    - topic: user_actions
-    - value: {user_id, action_type, payload}
-    """
-    send_kafka_message("user_actions", event.model_dump())
-    return {"status": "ok", "message": "Event published to Kafka", "event": event.model_dump()}
+# ===== Progressive Expansion - Phase 4 =====
+app.include_router(game_api.router, prefix="/api/game-api", tags=["Game API"])
 
-# Request/Response Models
-class UserLogin(BaseModel):
-    """사용자 로그인 스키마"""
+# ===== Progressive Expansion - Phase 5 =====
+app.include_router(invite_router.router, prefix="/api/invites", tags=["Invite Codes"])
 
-    user_id: str
-    password: str
+# ===== Progressive Expansion - Phase 6 =====
+app.include_router(analyze.router, prefix="/api/analyze", tags=["Analytics"])
 
+# ===== Progressive Expansion - Phase 7 =====
+app.include_router(roulette.router, prefix="/api/roulette", tags=["Roulette"])
 
-class LoginResponse(BaseModel):
-    """로그인 응답 스키마"""
+# ===== Progressive Expansion - Phase 8 =====
+app.include_router(segments.router, prefix="/api/segments", tags=["Segments"])
 
-    token: str
-    user_id: str
-    message: Optional[str] = None
+# ===== Progressive Expansion - Phase 9 =====
+app.include_router(tracking.router, prefix="/api/tracking", tags=["Tracking"])
 
+# ===== Progressive Expansion - Phase 10 =====
+app.include_router(unlock.router, prefix="/api/unlock", tags=["Unlock"])
 
-@app.post("/login", response_model=LoginResponse, tags=["Authentication"])
-async def login(user: UserLogin):
-    """
-    사용자 로그인 엔드포인트
+print("✅ Core API endpoints registered + Progressive Expansion Phase 1-10 Complete")
 
-    - **user_id**: 사용자 ID
-    - **password**: 비밀번호
-    - 성공 시 JWT 토큰 반환
-    """
-    # 실제 로직은 추후 구현
-    if user.user_id == "test" and user.password == "password":
-        return {
-            "token": "sample_jwt_token",
-            "user_id": user.user_id,
-            "message": "로그인 성공",
-        }
-    raise HTTPException(status_code=401, detail="인증 실패")
+# ===== Core API Endpoints =====
 
+@app.get("/", tags=["Root"])
+async def root():
+    """Root endpoint"""
+    return {
+        "message": "Casino-Club F2P Backend API",
+        "version": "1.0.0",
+        "status": "running",
+        "docs": "/docs"
+    }
 
-@app.get("/health", tags=["System"])
-@app.head("/health", tags=["System"])
+@app.get("/health", response_model=HealthResponse, tags=["Health"])
 async def health_check():
-    """
-    시스템 상태 확인 엔드포인트
+    """Health check endpoint"""
+    return HealthResponse(
+        status="healthy",
+        timestamp=datetime.now(),
+        version="1.0.0"
+    )
 
-    - 서버 정상 동작 여부 확인
-    - 헬스체크 용도
-    - GET 및 HEAD 메서드 모두 지원
-    """
-    return {"status": "healthy"}
+@app.get("/api", tags=["API Info"])
+async def api_info():
+    """API information endpoint"""
+    return {
+        "title": "Casino-Club F2P API",
+        "version": "1.0.0",
+        "description": "Backend API for Casino-Club F2P gaming platform",
+        "endpoints": {
+            "auth": "/api/auth",
+            "users": "/api/users",
+            "admin": "/api/admin",
+            "games": "/api/actions, /api/gacha, /api/games/*",
+            "shop": "/api/shop, /api/rewards",
+            "missions": "/api/missions",
+            "quiz": "/api/quiz",
+            "dashboard": "/api/dashboard",
+            "websocket": "/ws"
+        }
+    }
+
+# ===== Application Lifecycle Events =====
+
+@app.on_event("startup")
+async def startup_event():
+    """Application startup event"""
+    print("🚀 Casino-Club F2P Backend starting up...")
+    
+    # Initialize logging
+    try:
+        setup_logging()
+        print("📋 Logging initialized")
+    except Exception as e:
+        print(f"⚠️ Logging setup failed: {e}")
+    
+    # Start scheduler
+    start_scheduler()
+    
+    # Note: Prometheus monitoring disabled to avoid middleware timing issue
+    # if Instrumentator:
+    #     Instrumentator().instrument(app).expose(app)
+    #     print("📊 Prometheus monitoring enabled")
+    
+    print("✅ Backend startup complete")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Application shutdown event"""
+    print("🛑 Casino-Club F2P Backend shutting down...")
+    
+    # Shutdown scheduler
+    if scheduler and scheduler.running:
+        scheduler.shutdown(wait=True)
+        print("⏱️ Scheduler stopped")
+    
+    print("✅ Backend shutdown complete")
+
+# ===== Error Handlers =====
+
+@app.exception_handler(404)
+async def not_found_handler(request, exc):
+    """Custom 404 handler"""
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "Not Found",
+            "message": f"The requested endpoint {request.url.path} was not found",
+            "available_endpoints": "/docs"
+        }
+    )
+
+@app.exception_handler(500)
+async def internal_error_handler(request, exc):
+    """Custom 500 handler"""
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal Server Error",
+            "message": "An unexpected error occurred",
+            "timestamp": datetime.now().isoformat()
+        }
+    )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )
