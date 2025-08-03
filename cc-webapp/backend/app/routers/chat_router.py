@@ -1,480 +1,545 @@
 """
-KOREAN_TEXT_REMOVED Casino-Club F2P - Chat API Router
-===================================
-Ï±KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVEDAI KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVEDAPI
+Chat System API Router
+Provides endpoints for chat rooms, messaging, AI assistants, and real-time communication.
+Implements community features and AI-driven conversations.
 """
-
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
-
-from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import Optional, List, Dict, Any
+from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field
+from app.database import get_db
+from app.dependencies import get_current_user, get_current_admin
+from app import models
+from datetime import datetime
 import json
-from datetime import datetime, timedelta
 
-from ..database import get_db
-from ..models.auth_models import User
-from ..models.chat_models import (
-    ChatRoom, ChatParticipant, ChatMessage, MessageReaction,
-    AIAssistant, AIConversation, AIMessage, EmotionProfile, ChatModeration
-)
-from ..schemas.chat_schemas import (
-    ChatRoomCreate, ChatRoomResponse, ChatParticipantResponse,
-    ChatMessageCreate, ChatMessageResponse, MessageReactionCreate,
-    AIAssistantCreate, AIAssistantResponse, AIConversationCreate,
-    AIConversationResponse, AIMessageCreate, AIMessageResponse,
-    EmotionProfileUpdate, EmotionProfileResponse, ChatModerationAction
-)
-from ..dependencies import get_current_user
-from ..services.chat_service import ChatService
-from ..utils.redis import get_redis_manager
-from ..utils.emotion_engine import EmotionEngine
+router = APIRouter(prefix="/api/chat", tags=["chat"])
 
-router = APIRouter(prefix="/api/chat", tags=["Chat"])
+# Request/Response Models
+class ChatRoomResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    is_private: bool
+    participant_count: int
+    created_at: datetime
 
-# WebSocket KOREAN_TEXT_REMOVED Í¥ÄÎ¶¨ÏKOREAN_TEXT_REMOVED
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
-        self.user_connections: dict = {}
-    
-    async def connect(self, websocket: WebSocket, user_id: int):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-        self.user_connections[user_id] = websocket
-    
-    def disconnect(self, websocket: WebSocket, user_id: int):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-        if user_id in self.user_connections:
-            del self.user_connections[user_id]
-    
-    async def send_personal_message(self, message: str, user_id: int):
-        if user_id in self.user_connections:
-            websocket = self.user_connections[user_id]
-            await websocket.send_text(message)
-    
-    async def broadcast_to_room(self, message: str, room_id: int):
-        # KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVEDÎ°KOREAN_TEXT_REMOVED room_idÎ≥KOREAN_TEXT_REMOVED Í¥ÄÎ¶¨ÍKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÎßKOREAN_TEXT_REMOVED¨ÍKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED®ÏKOREAN_TEXT_REMOVED
-        for connection in self.active_connections:
-            await connection.send_text(message)
+class ChatMessageResponse(BaseModel):
+    id: int
+    content: str
+    user_id: int
+    username: str
+    room_id: int
+    message_type: str
+    created_at: datetime
+    reactions: List[str] = []
 
-manager = ConnectionManager()
+class CreateRoomRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    is_private: bool = False
 
-# ========== Ï±KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVEDÍ¥ÄÎ¶KOREAN_TEXT_REMOVED==========
+class SendMessageRequest(BaseModel):
+    content: str = Field(..., min_length=1, max_length=1000)
+    message_type: str = Field("TEXT", description="Message type: TEXT, IMAGE, SYSTEM")
 
-@router.post("/rooms", response_model=ChatRoomResponse)
-async def create_chat_room(
-    room_data: ChatRoomCreate,
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Ï±KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVED"""
-    try:
-        chat_service = ChatService(db)
-        room = await chat_service.create_room(current_user.id, room_data)
-        return room
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create room: {str(e)}")
+class AIAssistantResponse(BaseModel):
+    id: int
+    name: str
+    personality: str
+    avatar_url: Optional[str]
+    specialties: List[str]
+    is_active: bool
 
-
+# 1. List Chat Rooms
 @router.get("/rooms", response_model=List[ChatRoomResponse])
-async def get_chat_rooms(
-    room_type: Optional[str] = Query(None),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+def list_chat_rooms(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """Ï±KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVEDÎ™©ÎKOREAN_TEXT_REMOVED Ï°KOREAN_TEXT_REMOVED"""
-    try:
-        query = db.query(ChatRoom).filter(ChatRoom.is_active == True)
+    """
+    Get list of available chat rooms
+    Returns both public and private rooms the user has access to
+    """
+    # Query chat rooms with participant counts
+    rooms = db.query(models.ChatRoom).all()
+    
+    room_responses = []
+    for room in rooms:
+        # Count participants
+        participant_count = db.query(models.ChatParticipant).filter(
+            models.ChatParticipant.room_id == room.id
+        ).count()
         
-        if room_type:
-            query = query.filter(ChatRoom.room_type == room_type)
+        # Check if user can access private rooms
+        if room.is_private:
+            is_participant = db.query(models.ChatParticipant).filter(
+                models.ChatParticipant.room_id == room.id,
+                models.ChatParticipant.user_id == current_user.id
+            ).first()
+            if not is_participant and not getattr(current_user, 'is_admin', False):
+                continue
         
-        rooms = query.offset(offset).limit(limit).all()
-        
-        # Ï∞KOREAN_TEXT_REMOVEDÏ∂KOREAN_TEXT_REMOVED
-        for room in rooms:
-            participant_count = db.query(ChatParticipant).filter(
-                ChatParticipant.room_id == room.id,
-                ChatParticipant.is_active == True
-            ).count()
-            room.participant_count = participant_count
-        
-        return rooms
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get rooms: {str(e)}")
+        room_responses.append(ChatRoomResponse(
+            id=room.id,
+            name=room.name,
+            description=room.description,
+            is_private=room.is_private,
+            participant_count=participant_count,
+            created_at=room.created_at
+        ))
+    
+    return room_responses
 
+# 2. Create Chat Room
+@router.post("/rooms", response_model=ChatRoomResponse)
+def create_chat_room(
+    request: CreateRoomRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new chat room
+    User becomes the room creator and first participant
+    """
+    # Create new room
+    room = models.ChatRoom(
+        name=request.name,
+        description=request.description,
+        is_private=request.is_private,
+        created_by=current_user.id,
+        created_at=datetime.now()
+    )
+    db.add(room)
+    db.commit()
+    db.refresh(room)
+    
+    # Add creator as participant
+    participant = models.ChatParticipant(
+        room_id=room.id,
+        user_id=current_user.id,
+        role="ADMIN",
+        joined_at=datetime.now()
+    )
+    db.add(participant)
+    db.commit()
+    
+    return ChatRoomResponse(
+        id=room.id,
+        name=room.name,
+        description=room.description,
+        is_private=room.is_private,
+        participant_count=1,
+        created_at=room.created_at
+    )
 
-@router.post("/rooms/{room_id}/join", response_model=ChatParticipantResponse)
-async def join_chat_room(
+# 3. Join Chat Room
+@router.post("/rooms/{room_id}/join")
+def join_chat_room(
     room_id: int,
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """Ï±KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVEDÏ∞KOREAN_TEXT_REMOVED"""
-    try:
-        chat_service = ChatService(db)
-        participant = await chat_service.join_room(current_user.id, room_id)
-        return participant
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to join room: {str(e)}")
-
-
-@router.post("/rooms/{room_id}/leave")
-async def leave_chat_room(
-    room_id: int,
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Ï±KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVEDÍ∏KOREAN_TEXT_REMOVED""
-    try:
-        chat_service = ChatService(db)
-        await chat_service.leave_room(current_user.id, room_id)
-        return {"message": "Successfully left the room"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to leave room: {str(e)}")
-
-
-# ========== Î©KOREAN_TEXT_REMOVEDÏßÄ Í¥ÄÎ¶KOREAN_TEXT_REMOVED==========
-
-@router.get("/rooms/{room_id}/messages", response_model=List[ChatMessageResponse])
-async def get_room_messages(
-    room_id: int,
-    limit: int = Query(50, ge=1, le=100),
-    before_id: Optional[int] = Query(None),
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Ï±KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVEDÏßÄ Ï°KOREAN_TEXT_REMOVED"""
-    try:
-        # Ï∞KOREAN_TEXT_REMOVED
-        participant = db.query(ChatParticipant).filter(
-            ChatParticipant.room_id == room_id,
-            ChatParticipant.user_id == current_user.id,
-            ChatParticipant.is_active == True
-        ).first()
-        
-        if not participant:
-            raise HTTPException(status_code=403, detail="Not a participant of this room")
-        
-        query = db.query(ChatMessage).filter(
-            ChatMessage.room_id == room_id,
-            ChatMessage.is_deleted == False
+    """
+    Join a chat room as a participant
+    Creates participant record and sends join notification
+    """
+    # Check if room exists
+    room = db.query(models.ChatRoom).filter(models.ChatRoom.id == room_id).first()
+    if not room:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat room not found"
         )
-        
-        if before_id:
-            query = query.filter(ChatMessage.id < before_id)
-        
-        messages = query.order_by(ChatMessage.created_at.desc()).limit(limit).all()
-        messages.reverse()  # KOREAN_TEXT_REMOVED
-        
-        # Î∞KOREAN_TEXT_REMOVEDÏ∂KOREAN_TEXT_REMOVED
-        for message in messages:
-            if message.sender_id:
-                sender = db.query(User).filter(User.id == message.sender_id).first()
-                message.sender_nickname = sender.nickname if sender else "Unknown"
-        
-        return messages
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get messages: {str(e)}")
+    
+    # Check if already a participant
+    existing_participant = db.query(models.ChatParticipant).filter(
+        models.ChatParticipant.room_id == room_id,
+        models.ChatParticipant.user_id == current_user.id
+    ).first()
+    
+    if existing_participant:
+        return {"message": "Already a participant in this room"}
+    
+    # Add as participant
+    participant = models.ChatParticipant(
+        room_id=room_id,
+        user_id=current_user.id,
+        role="MEMBER",
+        joined_at=datetime.now()
+    )
+    db.add(participant)
+    
+    # Send join notification message
+    join_message = models.ChatMessage(
+        content=f"{current_user.nickname} has joined the room",
+        user_id=current_user.id,
+        room_id=room_id,
+        message_type="SYSTEM",
+        created_at=datetime.now()
+    )
+    db.add(join_message)
+    
+    db.commit()
+    
+    return {"message": "Successfully joined the chat room"}
 
-
+# 4. Send Message
 @router.post("/rooms/{room_id}/messages", response_model=ChatMessageResponse)
-async def send_message(
+def send_message(
     room_id: int,
-    message_data: ChatMessageCreate,
-    db = Depends(get_db),
-    redis = Depends(get_redis_manager),
-    current_user: User = Depends(get_current_user)
+    request: SendMessageRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """Î©KOREAN_TEXT_REMOVEDÏßÄ KOREAN_TEXT_REMOVED"""
-    try:
-        chat_service = ChatService(db, redis)
-        emotion_engine = EmotionEngine(redis)
-        
-        # Î©KOREAN_TEXT_REMOVEDÏßÄ KOREAN_TEXT_REMOVED
-        message = await chat_service.send_message(
-            current_user.id, room_id, message_data
+    """
+    Send a message to a chat room
+    Only participants can send messages
+    """
+    # Verify user is a participant
+    participant = db.query(models.ChatParticipant).filter(
+        models.ChatParticipant.room_id == room_id,
+        models.ChatParticipant.user_id == current_user.id
+    ).first()
+    
+    if not participant:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Must be a participant to send messages"
         )
-        
-        # Í∞KOREAN_TEXT_REMOVED Î∂KOREAN_TEXT_REMOVED
-        emotion_result = await emotion_engine.detect_emotion_from_text(message_data.content)
-        message.emotion_detected = emotion_result["emotion"]
-        message.sentiment_score = emotion_result["sentiment_score"]
-        
-        # KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
-        await emotion_engine.update_user_mood(
-            current_user.id,
-            emotion_result["emotion"],
-            confidence=emotion_result["confidence"]
-        )
-        
-        db.commit()
-        
-        # WebSocketKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVED
-        message_dict = {
-            "type": "new_message",
-            "message": {
-                "id": message.id,
-                "content": message.content,
-                "sender_id": message.sender_id,
-                "sender_nickname": current_user.nickname,
-                "emotion_detected": message.emotion_detected,
-                "created_at": message.created_at.isoformat(),
-                "room_id": room_id
-            }
-        }
-        await manager.broadcast_to_room(json.dumps(message_dict), room_id)
-        
-        return message
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send message: {str(e)}")
+    
+    # Create message
+    message = models.ChatMessage(
+        content=request.content,
+        user_id=current_user.id,
+        room_id=room_id,
+        message_type=request.message_type,
+        created_at=datetime.now()
+    )
+    db.add(message)
+    db.commit()
+    db.refresh(message)
+    
+    # Get reactions for this message (if any)
+    reactions = db.query(models.MessageReaction).filter(
+        models.MessageReaction.message_id == message.id
+    ).all()
+    
+    reaction_list = [reaction.reaction_type for reaction in reactions]
+    
+    return ChatMessageResponse(
+        id=message.id,
+        content=message.content,
+        user_id=message.user_id,
+        username=current_user.nickname,
+        room_id=message.room_id,
+        message_type=message.message_type,
+        created_at=message.created_at,
+        reactions=reaction_list
+    )
 
-
-@router.post("/messages/{message_id}/reactions", response_model=dict)
-async def add_message_reaction(
-    message_id: int,
-    reaction_data: MessageReactionCreate,
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Î©KOREAN_TEXT_REMOVEDÏßÄ Î∞KOREAN_TEXT_REMOVED Ï∂KOREAN_TEXT_REMOVED"""
-    try:
-        # Í∏KOREAN_TEXT_REMOVED°¥ Î∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
-        existing_reaction = db.query(MessageReaction).filter(
-            MessageReaction.message_id == message_id,
-            MessageReaction.user_id == current_user.id,
-            MessageReaction.reaction_value == reaction_data.reaction_value
-        ).first()
-        
-        if existing_reaction:
-            # KOREAN_TEXT_REMOVED Í∞KOREAN_TEXT_REMOVED Î∞KOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVED
-            db.delete(existing_reaction)
-            action = "removed"
-        else:
-            # KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVED Ï∂KOREAN_TEXT_REMOVED
-            reaction = MessageReaction(
-                message_id=message_id,
-                user_id=current_user.id,
-                reaction_type=reaction_data.reaction_type,
-                reaction_value=reaction_data.reaction_value
-            )
-            db.add(reaction)
-            action = "added"
-        
-        db.commit()
-        
-        # Î∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
-        message = db.query(ChatMessage).filter(ChatMessage.id == message_id).first()
-        if message:
-            reactions = db.query(MessageReaction).filter(
-                MessageReaction.message_id == message_id
-            ).all()
-            
-            reaction_counts = {}
-            for r in reactions:
-                reaction_counts[r.reaction_value] = reaction_counts.get(r.reaction_value, 0) + 1
-            
-            message.reaction_counts = reaction_counts
-            db.commit()
-        
-        return {"action": action, "reaction": reaction_data.reaction_value}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to add reaction: {str(e)}")
-
-
-# ========== AI KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED==========
-
-@router.get("/assistants", response_model=List[AIAssistantResponse])
-async def get_ai_assistants(
-    assistant_type: Optional[str] = Query(None),
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """AI KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVEDÎ™©ÎKOREAN_TEXT_REMOVED Ï°KOREAN_TEXT_REMOVED"""
-    try:
-        query = db.query(AIAssistant).filter(AIAssistant.is_active == True)
-        
-        if assistant_type:
-            query = query.filter(AIAssistant.assistant_type == assistant_type)
-        
-        assistants = query.all()
-        return assistants
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get assistants: {str(e)}")
-
-
-@router.post("/conversations", response_model=AIConversationResponse)
-async def start_ai_conversation(
-    conversation_data: AIConversationCreate,
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """AI KOREAN_TEXT_REMOVEDÄKOREAN_TEXT_REMOVED"""
-    try:
-        chat_service = ChatService(db)
-        conversation = await chat_service.start_ai_conversation(
-            current_user.id, conversation_data
-        )
-        return conversation
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to start conversation: {str(e)}")
-
-
-@router.post("/conversations/{conversation_id}/messages", response_model=AIMessageResponse)
-async def send_ai_message(
-    conversation_id: int,
-    message_data: AIMessageCreate,
-    db = Depends(get_db),
-    redis = Depends(get_redis_manager),
-    current_user: User = Depends(get_current_user)
-):
-    """AIKOREAN_TEXT_REMOVEDÄ Î©KOREAN_TEXT_REMOVEDÏßÄ Ï£KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVED"""
-    try:
-        chat_service = ChatService(db, redis)
-        
-        # KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVEDÏßÄ KOREAN_TEXT_REMOVEDÄKOREAN_TEXT_REMOVED
-        user_message = await chat_service.add_ai_message(
-            conversation_id, current_user.id, message_data
-        )
-        
-        # AI KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
-        ai_response = await chat_service.generate_ai_response(
-            conversation_id, current_user.id, message_data.content
-        )
-        
-        return ai_response
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send AI message: {str(e)}")
-
-
-@router.get("/conversations/{conversation_id}/messages", response_model=List[AIMessageResponse])
-async def get_ai_conversation_messages(
-    conversation_id: int,
+# 5. Get Room Messages
+@router.get("/rooms/{room_id}/messages", response_model=List[ChatMessageResponse])
+def get_room_messages(
+    room_id: int,
+    page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100),
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """AI KOREAN_TEXT_REMOVEDÄKOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVEDÏßÄ Ï°KOREAN_TEXT_REMOVED"""
-    try:
-        # Í∂KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
-        conversation = db.query(AIConversation).filter(
-            AIConversation.id == conversation_id,
-            AIConversation.user_id == current_user.id
-        ).first()
+    """
+    Get messages from a chat room with pagination
+    Only participants can view messages
+    """
+    # Verify user is a participant or admin
+    participant = db.query(models.ChatParticipant).filter(
+        models.ChatParticipant.room_id == room_id,
+        models.ChatParticipant.user_id == current_user.id
+    ).first()
+    
+    if not participant and not getattr(current_user, 'is_admin', False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to room messages"
+        )
+    
+    # Get messages with pagination
+    offset = (page - 1) * limit
+    messages = db.query(models.ChatMessage).join(
+        models.User, models.ChatMessage.user_id == models.User.id
+    ).filter(
+        models.ChatMessage.room_id == room_id
+    ).order_by(
+        models.ChatMessage.created_at.desc()
+    ).offset(offset).limit(limit).all()
+    
+    message_responses = []
+    for message in messages:
+        # Get user nickname
+        user = db.query(models.User).filter(models.User.id == message.user_id).first()
         
-        if not conversation:
-            raise HTTPException(status_code=404, detail="Conversation not found")
+        # Get reactions for this message
+        reactions = db.query(models.MessageReaction).filter(
+            models.MessageReaction.message_id == message.id
+        ).all()
         
-        messages = db.query(AIMessage).filter(
-            AIMessage.conversation_id == conversation_id
-        ).order_by(AIMessage.created_at.desc()).limit(limit).all()
+        reaction_list = [reaction.reaction_type for reaction in reactions]
         
-        messages.reverse()  # KOREAN_TEXT_REMOVED
-        return messages
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get AI messages: {str(e)}")
+        message_responses.append(ChatMessageResponse(
+            id=message.id,
+            content=message.content,
+            user_id=message.user_id,
+            username=user.nickname if user else "Unknown",
+            room_id=message.room_id,
+            message_type=message.message_type,
+            created_at=message.created_at,
+            reactions=reaction_list
+        ))
+    
+    # Return in chronological order (oldest first)
+    return list(reversed(message_responses))
 
-
-# ========== Í∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED==========
-
-@router.get("/emotion-profile", response_model=EmotionProfileResponse)
-async def get_emotion_profile(
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+# 6. Add Message Reaction
+@router.post("/messages/{message_id}/reactions")
+def add_message_reaction(
+    message_id: int,
+    reaction_type: str = Query(..., description="Reaction type: LIKE, LOVE, LAUGH, WOW, SAD, ANGRY"),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÏ°KOREAN_TEXT_REMOVED"""
-    try:
-        profile = db.query(EmotionProfile).filter(
-            EmotionProfile.user_id == current_user.id
-        ).first()
-        
-        if not profile:
-            # KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVEDÍ∏KOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVEDÎ°KOREAN_TEXT_REMOVED
-            profile = EmotionProfile(user_id=current_user.id)
-            db.add(profile)
-            db.commit()
-        
-        return profile
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get emotion profile: {str(e)}")
+    """
+    Add a reaction to a message
+    Users can only have one reaction per message
+    """
+    # Verify message exists
+    message = db.query(models.ChatMessage).filter(
+        models.ChatMessage.id == message_id
+    ).first()
+    
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Message not found"
+        )
+    
+    # Check if user already reacted
+    existing_reaction = db.query(models.MessageReaction).filter(
+        models.MessageReaction.message_id == message_id,
+        models.MessageReaction.user_id == current_user.id
+    ).first()
+    
+    if existing_reaction:
+        # Update existing reaction
+        existing_reaction.reaction_type = reaction_type
+        existing_reaction.created_at = datetime.now()
+    else:
+        # Create new reaction
+        reaction = models.MessageReaction(
+            message_id=message_id,
+            user_id=current_user.id,
+            reaction_type=reaction_type,
+            created_at=datetime.now()
+        )
+        db.add(reaction)
+    
+    db.commit()
+    
+    return {"message": "Reaction added successfully"}
 
-
-@router.put("/emotion-profile", response_model=EmotionProfileResponse)
-async def update_emotion_profile(
-    profile_data: EmotionProfileUpdate,
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+# 7. List AI Assistants
+@router.get("/ai-assistants", response_model=List[AIAssistantResponse])
+def list_ai_assistants(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED"""
-    try:
-        profile = db.query(EmotionProfile).filter(
-            EmotionProfile.user_id == current_user.id
-        ).first()
+    """
+    Get list of available AI assistants
+    Returns active AI assistants that users can chat with
+    """
+    assistants = db.query(models.AIAssistant).filter(
+        models.AIAssistant.is_active == True
+    ).all()
+    
+    assistant_responses = []
+    for assistant in assistants:
+        # Parse specialties from JSON if stored as string
+        specialties = []
+        if assistant.specialties:
+            try:
+                if isinstance(assistant.specialties, str):
+                    specialties = json.loads(assistant.specialties)
+                else:
+                    specialties = assistant.specialties
+            except (json.JSONDecodeError, TypeError):
+                specialties = []
         
-        if not profile:
-            profile = EmotionProfile(user_id=current_user.id)
-            db.add(profile)
-        
-        # KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
-        update_data = profile_data.dict(exclude_unset=True)
-        for field, value in update_data.items():
-            if hasattr(profile, field) and value is not None:
-                setattr(profile, field, value)
-        
-        profile.last_updated = datetime.utcnow()
+        assistant_responses.append(AIAssistantResponse(
+            id=assistant.id,
+            name=assistant.name,
+            personality=assistant.personality or "Friendly and helpful",
+            avatar_url=assistant.avatar_url,
+            specialties=specialties,
+            is_active=assistant.is_active
+        ))
+    
+    return assistant_responses
+
+# 8. Chat with AI Assistant
+@router.post("/ai-assistants/{assistant_id}/chat")
+def chat_with_ai_assistant(
+    assistant_id: int,
+    message: str = Query(..., min_length=1, max_length=500),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Send a message to an AI assistant and get a response
+    Creates conversation history and generates personalized responses
+    """
+    # Verify assistant exists and is active
+    assistant = db.query(models.AIAssistant).filter(
+        models.AIAssistant.id == assistant_id,
+        models.AIAssistant.is_active == True
+    ).first()
+    
+    if not assistant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="AI assistant not found or inactive"
+        )
+    
+    # Get or create conversation
+    conversation = db.query(models.AIConversation).filter(
+        models.AIConversation.user_id == current_user.id,
+        models.AIConversation.assistant_id == assistant_id
+    ).first()
+    
+    if not conversation:
+        conversation = models.AIConversation(
+            user_id=current_user.id,
+            assistant_id=assistant_id,
+            started_at=datetime.now(),
+            last_message_at=datetime.now()
+        )
+        db.add(conversation)
         db.commit()
-        
-        return profile
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update emotion profile: {str(e)}")
+        db.refresh(conversation)
+    
+    # Save user message
+    user_message = models.AIMessage(
+        conversation_id=conversation.id,
+        sender_type="USER",
+        content=message,
+        created_at=datetime.now()
+    )
+    db.add(user_message)
+    
+    # Generate AI response (simplified logic)
+    ai_response_content = generate_ai_response(message, assistant, current_user)
+    
+    # Save AI response
+    ai_message = models.AIMessage(
+        conversation_id=conversation.id,
+        sender_type="AI",
+        content=ai_response_content,
+        created_at=datetime.now()
+    )
+    db.add(ai_message)
+    
+    # Update conversation timestamp
+    conversation.last_message_at = datetime.now()
+    
+    db.commit()
+    
+    return {
+        "assistant_name": assistant.name,
+        "user_message": message,
+        "ai_response": ai_response_content,
+        "conversation_id": conversation.id
+    }
 
-
-# ========== WebSocket KOREAN_TEXT_REMOVED ==========
-
-@router.websocket("/ws/{room_id}")
-async def websocket_endpoint(
-    websocket: WebSocket,
-    room_id: int,
-    user_id: int = Query(...),
-    db = Depends(get_db)
+# 9. Get AI Conversation History
+@router.get("/ai-assistants/{assistant_id}/conversation")
+def get_ai_conversation_history(
+    assistant_id: int,
+    limit: int = Query(20, ge=1, le=50),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """WebSocket Ï±KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED"""
-    try:
-        # Ï∞KOREAN_TEXT_REMOVED
-        participant = db.query(ChatParticipant).filter(
-            ChatParticipant.room_id == room_id,
-            ChatParticipant.user_id == user_id,
-            ChatParticipant.is_active == True
-        ).first()
-        
-        if not participant:
-            await websocket.close(code=4003, reason="Not authorized")
-            return
-        
-        await manager.connect(websocket, user_id)
-        
-        try:
-            while True:
-                data = await websocket.receive_text()
-                message_data = json.loads(data)
-                
-                # Î©KOREAN_TEXT_REMOVEDÏßÄ KOREAN_TEXT_REMOVEDÄKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED•∏ Ï≤KOREAN_TEXT_REMOVED¶¨
-                if message_data.get("type") == "message":
-                    # KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVEDÏßÄ Î∏KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVEDsend_messageKOREAN_TEXT_REMOVED Ï≤KOREAN_TEXT_REMOVED¶¨
-                    pass
-                elif message_data.get("type") == "typing":
-                    # KOREAN_TEXT_REMOVEDÄKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED Î∏KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED
-                    typing_data = {
-                        "type": "typing",
-                        "user_id": user_id,
-                        "is_typing": message_data.get("is_typing", False)
-                    }
-                    await manager.broadcast_to_room(json.dumps(typing_data), room_id)
-                
-        except WebSocketDisconnect:
-            manager.disconnect(websocket, user_id)
-            
-    except Exception as e:
-        await websocket.close(code=4000, reason=f"Error: {str(e)}")
+    """
+    Get conversation history with an AI assistant
+    Returns recent messages in chronological order
+    """
+    # Get conversation
+    conversation = db.query(models.AIConversation).filter(
+        models.AIConversation.user_id == current_user.id,
+        models.AIConversation.assistant_id == assistant_id
+    ).first()
+    
+    if not conversation:
+        return {"messages": [], "assistant_name": "Unknown"}
+    
+    # Get messages
+    messages = db.query(models.AIMessage).filter(
+        models.AIMessage.conversation_id == conversation.id
+    ).order_by(
+        models.AIMessage.created_at.desc()
+    ).limit(limit).all()
+    
+    # Get assistant name
+    assistant = db.query(models.AIAssistant).filter(
+        models.AIAssistant.id == assistant_id
+    ).first()
+    
+    message_list = []
+    for msg in reversed(messages):  # Show oldest first
+        message_list.append({
+            "sender": msg.sender_type,
+            "content": msg.content,
+            "timestamp": msg.created_at
+        })
+    
+    return {
+        "assistant_name": assistant.name if assistant else "Unknown",
+        "messages": message_list,
+        "conversation_id": conversation.id
+    }
+
+# Helper function for AI response generation
+def generate_ai_response(user_message: str, assistant: models.AIAssistant, user: models.User) -> str:
+    """
+    Generate AI response based on assistant personality and user message
+    This is a simplified implementation - in production, integrate with actual AI service
+    """
+    message_lower = user_message.lower()
+    
+    # Casino-themed responses
+    if any(word in message_lower for word in ["slot", "spin", "jackpot", "lucky"]):
+        responses = [
+            f"üé∞ Feeling lucky today, {user.nickname}? The slots are calling your name!",
+            f"‚ú® Big wins await! Your next spin could be the one, {user.nickname}!",
+            f"üçÄ I sense great fortune in your future. Ready to test your luck?"
+        ]
+    elif any(word in message_lower for word in ["hello", "hi", "hey"]):
+        responses = [
+            f"Welcome to the casino, {user.nickname}! Ready for some excitement?",
+            f"Hey there, high roller! What brings you to our neon paradise today?",
+            f"Greetings, {user.nickname}! The night is young and full of possibilities!"
+        ]
+    elif any(word in message_lower for word in ["help", "guide", "how"]):
+        responses = [
+            f"I'm here to guide you through our casino experience! What would you like to know?",
+            f"Need assistance, {user.nickname}? I can help with games, rewards, and more!",
+            f"Let me be your personal casino concierge. How can I enhance your experience?"
+        ]
+    else:
+        # Default responses
+        responses = [
+            f"That's interesting, {user.nickname}! Tell me more about what excites you here.",
+            f"I love chatting with our valued players! What's your favorite game so far?",
+            f"Every conversation makes this place more vibrant. Thanks for sharing, {user.nickname}!"
+        ]
+    
+    # Select response based on assistant personality
+    import random
+    return random.choice(responses)

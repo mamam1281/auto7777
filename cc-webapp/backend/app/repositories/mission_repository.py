@@ -41,11 +41,16 @@ class MissionRepository(BaseRepository[models.UserAction]):
                 .all()
             
             # 일일 미션 통계 계산
+            slot_actions = [a for a in actions if str(a.action_type) == 'SLOT_SPIN']
+            game_actions = [a for a in actions if str(a.action_type) in ['SLOT_SPIN', 'ROULETTE_SPIN', 'RPS_PLAY']]
+            win_actions = [a for a in actions if a.result and 'win' in str(a.result).lower()]
+            login_actions = [a for a in actions if str(a.action_type) == 'USER_LOGIN']
+            
             missions = {
-                'daily_spins': len([a for a in actions if a.action_type == 'SLOT_SPIN']),
-                'daily_games': len([a for a in actions if a.action_type in ['SLOT_SPIN', 'ROULETTE_SPIN', 'RPS_PLAY']]),
-                'daily_wins': len([a for a in actions if a.result and 'win' in a.result.lower()]),
-                'daily_login': len([a for a in actions if a.action_type == 'USER_LOGIN']) > 0
+                'daily_spins': len(slot_actions),
+                'daily_games': len(game_actions),
+                'daily_wins': len(win_actions),
+                'daily_login': len(login_actions) > 0
             }
             
             return [
@@ -68,9 +73,9 @@ class MissionRepository(BaseRepository[models.UserAction]):
                 .all()
             
             missions = {
-                'weekly_spins': len([a for a in actions if a.action_type == 'SLOT_SPIN']),
-                'weekly_games': len([a for a in actions if a.action_type in ['SLOT_SPIN', 'ROULETTE_SPIN', 'RPS_PLAY']]),
-                'weekly_wins': len([a for a in actions if a.result and 'win' in a.result.lower()]),
+                'weekly_spins': len([a for a in actions if str(a.action_type) == 'SLOT_SPIN']),
+                'weekly_games': len([a for a in actions if str(a.action_type) in ['SLOT_SPIN', 'ROULETTE_SPIN', 'RPS_PLAY']]),
+                'weekly_wins': len([a for a in actions if a.result and 'win' in str(a.result).lower()]),
                 'weekly_streaks': self._calculate_win_streaks(actions)
             }
             
@@ -86,7 +91,7 @@ class MissionRepository(BaseRepository[models.UserAction]):
     
     def _calculate_win_streaks(self, actions: List[models.UserAction]) -> int:
         """연승 계산"""
-        win_actions = [a for a in actions if a.result and 'win' in a.result.lower()]
+        win_actions = [a for a in actions if a.result and 'win' in str(a.result).lower()]
         if not win_actions:
             return 0
         
@@ -94,7 +99,14 @@ class MissionRepository(BaseRepository[models.UserAction]):
         max_streak = 0
         current_streak = 0
         
-        for action in sorted(win_actions, key=lambda x: x.created_at):
+        # Sort by created_at timestamp - handle None values safely
+        try:
+            sorted_actions = sorted(win_actions, key=lambda x: getattr(x, 'created_at', datetime.utcnow()))
+        except Exception:
+            # Fallback to unsorted if sorting fails
+            sorted_actions = win_actions
+        
+        for action in sorted_actions:
             current_streak += 1
             max_streak = max(max_streak, current_streak)
         
