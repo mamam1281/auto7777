@@ -79,8 +79,8 @@ export function GameDashboard({
       icon: Dice1,
       color: 'from-primary to-primary-light',
       description: '운을 시험해보세요! 잭팟의 짜릿함!',
-      playCount: user.gameStats.slot.totalSpins,
-      bestScore: user.gameStats.slot.biggestWin,
+      playCount: user.gameStats?.slot?.totalSpins || 0,
+      bestScore: user.gameStats?.slot?.biggestWin || 0,
       lastPlayed: new Date(),
       difficulty: 'Easy',
       rewards: ['골드', '경험치', '특별 스킨'],
@@ -95,8 +95,8 @@ export function GameDashboard({
       icon: Swords,
       color: 'from-success to-info',
       description: 'AI와 두뇌 대결! 승부의 짜릿함!',
-      playCount: user.gameStats.rps.totalGames,
-      bestScore: user.gameStats.rps.bestStreak,
+      playCount: user.gameStats?.rps?.totalGames || 0,
+      bestScore: user.gameStats?.rps?.bestStreak || 0,
       lastPlayed: new Date(),
       difficulty: 'Medium',
       rewards: ['골드', '전략 포인트', '승부사 배지'],
@@ -111,8 +111,8 @@ export function GameDashboard({
       icon: Gift,
       color: 'from-error to-warning',
       description: '전설의 아이템을 뽑아보세요!',
-      playCount: user.gameStats.gacha.totalPulls,
-      bestScore: user.gameStats.gacha.legendaryPulls,
+      playCount: user.gameStats?.gacha?.totalPulls || 0,
+      bestScore: user.gameStats?.gacha?.legendaryPulls || 0,
       lastPlayed: new Date(),
       difficulty: 'Extreme',
       rewards: ['전설 아이템', '희귀 스킨', '특별 캐릭터'],
@@ -128,8 +128,8 @@ export function GameDashboard({
       icon: Zap,
       color: 'from-error to-primary',
       description: '배율 상승의 스릴! 언제 터질까?',
-      playCount: user.gameStats.crash.totalGames,
-      bestScore: user.gameStats.crash.highestMultiplier,
+      playCount: user.gameStats?.crash?.totalGames || 0,
+      bestScore: user.gameStats?.crash?.highestMultiplier || 0,
       lastPlayed: new Date(),
       difficulty: 'Hard',
       rewards: ['고배율 골드', '크래시 배지', '스릴 포인트'],
@@ -294,7 +294,7 @@ export function GameDashboard({
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-xl lg:text-2xl font-bold text-gold">
-                {user.goldBalance.toLocaleString()}G
+                {(user.goldBalance || 0).toLocaleString()}G
               </div>
               <div className="text-sm text-muted-foreground">보유 골드</div>
             </div>
@@ -383,7 +383,7 @@ export function GameDashboard({
                     <span className="text-xs text-muted-foreground">•</span>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Users className="w-3 h-3" />
-                      {game.players.toLocaleString()}
+                      {(game.players || 0).toLocaleString()}
                     </div>
                     <span className="text-xs text-muted-foreground">•</span>
                     <div className="flex items-center gap-1 text-xs text-gold">
@@ -400,7 +400,7 @@ export function GameDashboard({
                   <div className="text-xs text-muted-foreground">플레이 수</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-gold">{game.bestScore.toLocaleString()}</div>
+                  <div className="text-lg font-bold text-gold">{(game.bestScore || 0).toLocaleString()}</div>
                   <div className="text-xs text-muted-foreground">최고 기록</div>
                 </div>
                 <div className="text-center">
@@ -553,7 +553,7 @@ export function GameDashboard({
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-gold">
-                      {player.score.toLocaleString()}G
+                      {(player.score || 0).toLocaleString()}G
                     </span>
                     {player.trend === 'up' && <TrendingUp className="w-4 h-4 text-success" />}
                     {player.trend === 'down' && <TrendingUp className="w-4 h-4 text-error rotate-180" />}
