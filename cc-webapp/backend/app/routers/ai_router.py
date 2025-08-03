@@ -1,7 +1,7 @@
 """
-?ï¿½ï¿½ Casino-Club F2P - AI Recommendation API Router
+KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED Casino-Club F2P - AI Recommendation API Router
 ===============================================
-AI ê¸°ë°˜ ê°œì¸??ì¶”ì²œ ?ï¿½ìŠ¤??API
+AI ê¸KOREAN_TEXT_REMOVED ê°KOREAN_TEXT_REMOVEDì¶KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDAPI
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -37,7 +37,7 @@ async def get_user_recommendations(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """?ï¿½ìš©??ì¶”ì²œ ëª©ë¡ ì¡°íšŒ"""
+    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDì¶KOREAN_TEXT_REMOVED ëª©ëKOREAN_TEXT_REMOVED ì¡KOREAN_TEXT_REMOVED"""
     try:
         query = db.query(UserRecommendation).filter(
             UserRecommendation.user_id == current_user.id
@@ -67,7 +67,7 @@ async def generate_recommendations(
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """AI ì¶”ì²œ ?ï¿½ì„±"""
+    """AI ì¶KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED"""
     try:
         ai_service = AIRecommendationService(db, redis)
         recommendations = await ai_service.generate_recommendations(
@@ -89,7 +89,7 @@ async def record_recommendation_interaction(
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """ì¶”ì²œ ?ï¿½í˜¸?ï¿½ìš© ê¸°ë¡"""
+    """ì¶KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ê¸KOREAN_TEXT_REMOVED"""
     try:
         ai_service = AIRecommendationService(db, redis)
         interaction = await ai_service.record_interaction(
@@ -109,7 +109,7 @@ async def get_user_preferences(
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """?ï¿½ìš©???ï¿½í˜¸??ì¡°íšŒ"""
+    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDì¡KOREAN_TEXT_REMOVED"""
     try:
         ai_service = AIRecommendationService(db, redis)
         preferences = await ai_service.get_user_preferences(current_user.id)
@@ -129,7 +129,7 @@ async def update_user_preferences(
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """?ï¿½ìš©???ï¿½í˜¸???ï¿½ë°?ï¿½íŠ¸"""
+    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED"""
     try:
         ai_service = AIRecommendationService(db, redis)
         preferences = await ai_service.update_user_preferences(
@@ -149,29 +149,29 @@ async def get_personalized_content(
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """ê°œì¸??ì½˜í…ï¿??ï¿½ì²­"""
+    """ê°KOREAN_TEXT_REMOVEDì½KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED"""
     try:
         ai_service = AIRecommendationService(db, redis)
         
-        # ?ï¿½ìš©??ID ?ï¿½ì •
+        # KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDID KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED
         request.user_id = current_user.id
         
-        # ì¶”ì²œ ?ï¿½ì„±
+        # ì¶KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED
         recommendations = await ai_service.generate_recommendations(
             user_id=current_user.id,
             recommendation_type=request.content_type,
             max_recommendations=request.max_recommendations
         )
         
-        # ê°œì¸???ï¿½ë‹µ ?ï¿½ì„±
+        # ê°KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED
         response = PersonalizationResponse(
             recommendations=recommendations,
             personalization_factors={
-                "user_segment": "Medium",  # ?ï¿½ì œ ?ï¿½ê·¸ë¨¼íŠ¸ ì¡°íšŒ ?ï¿½ìš”
+                "user_segment": "Medium",  # KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDë¨KOREAN_TEXT_REMOVED ì¡KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED
                 "content_type": request.content_type,
                 "context_data": request.context_data or {}
             },
-            confidence_score=0.8,  # ?ï¿½ì œ ?ï¿½ë¢°??ê³„ì‚° ?ï¿½ìš”
+            confidence_score=0.8,  # KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED¢°KOREAN_TEXT_REMOVEDê³KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED
             algorithm_version="v1.0",
             generated_at=datetime.utcnow()
         )
@@ -188,7 +188,7 @@ async def get_user_predictions(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """?ï¿½ìš©??AI ?ï¿½ì¸¡ ê²°ê³¼ ì¡°íšŒ"""
+    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDAI KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ê²KOREAN_TEXT_REMOVED ì¡KOREAN_TEXT_REMOVED"""
     try:
         query = db.query(ModelPrediction).filter(
             ModelPrediction.user_id == current_user.id
@@ -212,25 +212,25 @@ async def get_recommendation_stats(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """ì¶”ì²œ ?ï¿½ìŠ¤???ï¿½ê³„"""
+    """ì¶KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED"""
     try:
         from datetime import timedelta
         start_date = datetime.utcnow() - timedelta(days=days)
         
-        # ?ï¿½ì²´ ì¶”ì²œ ??
+        # KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ì¶KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         total_recommendations = db.query(UserRecommendation).filter(
             UserRecommendation.user_id == current_user.id,
             UserRecommendation.created_at >= start_date
         ).count()
         
-        # ?ï¿½ë¦­??ì¶”ì²œ ??
+        # KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED¦­KOREAN_TEXT_REMOVEDì¶KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         clicked_recommendations = db.query(UserRecommendation).filter(
             UserRecommendation.user_id == current_user.id,
             UserRecommendation.status == "clicked",
             UserRecommendation.created_at >= start_date
         ).count()
         
-        # ?ï¿?ï¿½ë³„ ì¶”ì²œ ??
+        # KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ì¶KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         type_stats = db.query(
             UserRecommendation.recommendation_type,
             db.func.count(UserRecommendation.id).label('count')
@@ -239,7 +239,7 @@ async def get_recommendation_stats(
             UserRecommendation.created_at >= start_date
         ).group_by(UserRecommendation.recommendation_type).all()
         
-        # ?ï¿½í˜¸?ï¿½ìš© ??
+        # KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         total_interactions = db.query(RecommendationInteraction).filter(
             RecommendationInteraction.user_id == current_user.id,
             RecommendationInteraction.created_at >= start_date
@@ -267,9 +267,9 @@ async def submit_ai_feedback(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """AI ì¶”ì²œ???ï¿???ï¿½ë“œï¿??ï¿½ì¶œ"""
+    """AI ì¶KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED"""
     try:
-        # ì¶”ì²œ ?ï¿½ì¸
+        # ì¶KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED
         recommendation = db.query(UserRecommendation).filter(
             UserRecommendation.id == recommendation_id,
             UserRecommendation.user_id == current_user.id
@@ -278,7 +278,7 @@ async def submit_ai_feedback(
         if not recommendation:
             raise HTTPException(status_code=404, detail="Recommendation not found")
         
-        # ?ï¿½í˜¸?ï¿½ìš© ê¸°ë¡
+        # KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ê¸KOREAN_TEXT_REMOVED
         interaction = RecommendationInteraction(
             recommendation_id=recommendation_id,
             user_id=current_user.id,
@@ -300,9 +300,9 @@ async def get_learning_progress(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """AI ?ï¿½ìŠµ ì§„í–‰ ?ï¿½í™©"""
+    """AI KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ì§KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED"""
     try:
-        # ?ï¿½ìš©???ï¿½í˜¸??ì¡°íšŒ
+        # KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDì¡KOREAN_TEXT_REMOVED
         preferences = db.query(UserPreference).filter(
             UserPreference.user_id == current_user.id
         ).first()
@@ -316,13 +316,13 @@ async def get_learning_progress(
                 "status": "no_data"
             }
         
-        # ?ï¿½í˜¸?ï¿½ìš© ?ï¿½ì´???ï¿½ì§‘
+        # KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED
         total_interactions = db.query(RecommendationInteraction).filter(
             RecommendationInteraction.user_id == current_user.id
         ).count()
         
-        # ?ï¿½ìŠµ ì§„í–‰??ê³„ì‚°
-        learning_progress = min(total_interactions / 50.0, 1.0)  # 50ï¿??ï¿½í˜¸?ï¿½ìš©?ï¿½ë¡œ ?ï¿½ì „ ?ï¿½ìŠµ
+        # KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ì§KOREAN_TEXT_REMOVEDê³KOREAN_TEXT_REMOVED
+        learning_progress = min(total_interactions / 50.0, 1.0)  # 50ï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED
         
         return {
             "learning_progress": round(learning_progress * 100, 1),

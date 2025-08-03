@@ -1,7 +1,7 @@
 """
-?�� Casino-Club F2P - Quiz API Router
+KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED Casino-Club F2P - Quiz API Router
 ===================================
-?�즈 게임 �??�리 ?�로??측정 API
+KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED�� KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED측�KOREAN_TEXT_REMOVED API
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -33,7 +33,7 @@ async def get_quiz_categories(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """?�즈 카테고리 목록 조회"""
+    """KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED�� 목�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED"""
     try:
         categories = db.query(QuizCategory).filter(
             QuizCategory.is_active == True
@@ -49,7 +49,7 @@ async def get_quizzes_by_category(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """카테고리�??�즈 목록 조회"""
+    """�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED���KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED 목�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED"""
     try:
         quizzes = db.query(Quiz).filter(
             Quiz.category_id == category_id,
@@ -66,7 +66,7 @@ async def get_quiz_details(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """?�즈 ?�세 ?�보 조회"""
+    """KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED"""
     try:
         quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
         if not quiz:
@@ -82,7 +82,7 @@ async def get_quiz_questions(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """?�즈 문제 목록 조회"""
+    """KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED 목�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED"""
     try:
         questions = db.query(QuizQuestion).filter(
             QuizQuestion.quiz_id == quiz_id
@@ -100,7 +100,7 @@ async def start_quiz_attempt(
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """?�즈 ?�도 ?�작"""
+    """KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED"""
     try:
         quiz_service = QuizService(db, redis)
         attempt = await quiz_service.start_quiz_attempt(
@@ -121,7 +121,7 @@ async def submit_quiz_answer(
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """?�즈 ?��? ?�출"""
+    """KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED"""
     try:
         quiz_service = QuizService(db, redis)
         result = await quiz_service.submit_answer(
@@ -141,7 +141,7 @@ async def complete_quiz_attempt(
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """?�즈 ?�도 ?�료"""
+    """KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED"""
     try:
         quiz_service = QuizService(db, redis)
         result = await quiz_service.complete_quiz_attempt(
@@ -149,7 +149,7 @@ async def complete_quiz_attempt(
             user_id=current_user.id
         )
         
-        # 감정 기반 ?�드�??�성
+        # �KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED
         emotion_engine = EmotionEngine(redis)
         feedback = await emotion_engine.generate_quiz_feedback(
             user_id=current_user.id,
@@ -168,7 +168,7 @@ async def get_quiz_attempt(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """?�즈 ?�도 조회"""
+    """KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED"""
     try:
         attempt = db.query(UserQuizAttempt).filter(
             UserQuizAttempt.id == attempt_id,
@@ -190,7 +190,7 @@ async def get_user_quiz_history(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """?�용???�즈 기록 조회"""
+    """KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED"""
     try:
         attempts = db.query(UserQuizAttempt).filter(
             UserQuizAttempt.user_id == current_user.id
@@ -209,7 +209,7 @@ async def get_quiz_leaderboard(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """?�즈 리더보드 조회"""
+    """KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED 리�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED"""
     try:
         leaderboard = db.query(QuizLeaderboard).filter(
             QuizLeaderboard.quiz_id == quiz_id,
@@ -227,7 +227,7 @@ async def get_user_quiz_stats(
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """?�용???�즈 ?�계 조회"""
+    """KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED"""
     try:
         quiz_service = QuizService(db, redis)
         stats = await quiz_service.get_user_stats(current_user.id)
@@ -241,9 +241,9 @@ async def get_user_risk_profile(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """?�용??리스???�로??조회"""
+    """KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED리�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED"""
     try:
-        # 최근 리스???��? ?�즈 결과 조회
+        # �KOREAN_TEXT_REMOVED 리�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED
         recent_attempts = db.query(UserQuizAttempt).join(Quiz).filter(
             UserQuizAttempt.user_id == current_user.id,
             Quiz.quiz_type == "risk_profile",
@@ -258,11 +258,11 @@ async def get_user_risk_profile(
                 "recommendations": []
             }
         
-        # 리스???�로??계산 (최근 결과?�의 ?�균)
+        # 리�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED (�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED)
         risk_scores = [attempt.final_score for attempt in recent_attempts if attempt.final_score]
         avg_score = sum(risk_scores) / len(risk_scores) if risk_scores else 0
         
-        # 리스???�벨 결정
+        # 리�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED
         if avg_score >= 80:
             risk_level = "high-risk"
         elif avg_score >= 60:
@@ -284,27 +284,27 @@ async def get_user_risk_profile(
 
 
 def _get_risk_recommendations(risk_level: str) -> List[str]:
-    """리스???�벨�?추천?�항"""
+    """리�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED��KOREAN_TEXT_REMOVED"""
     recommendations = {
         "high-risk": [
-            "?�중??게임 ?�레?��? 권장?�니??,
-            "?�액 베팅?�로 ?�작?�보?�요",
-            "?�일 ?�도�??�정?�는 것이 좋습?�다"
+            "KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED��KOREAN_TEXT_REMOVED,
+            "KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED",
+            "KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED��KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED"
         ],
         "moderate-risk": [
-            "균형?�힌 게임 ?�레?��? 권해?�려??,
-            "?�기?�인 ?�식??취하?�요",
-            "?�산 관리에 주의?�세??
+            "�KOREAN_TEXT_REMOVED��KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED,
+            "KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED취�KOREAN_TEXT_REMOVED",
+            "KOREAN_TEXT_REMOVED 관리�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED
         ],
         "calculated-risk": [
-            "?�략?�인 게임 ?�레?��? 계속?�세??,
-            "?�양??게임???�도?�보?�요",
-            "리워??최적?�에 집중?�세??
+            "KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED,
+            "KOREAN_TEXT_REMOVED��KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED",
+            "리�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED
         ],
         "conservative": [
-            "?�전???�레???��??�을 권해?�립?�다",
-            "보상 중심??게임??즐기?�요",
-            "?�진?�으�??�전?�보?�요"
+            "KOREAN_TEXT_REMOVED��KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED��KOREAN_TEXT_REMOVED",
+            "�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED",
+            "KOREAN_TEXT_REMOVED�KOREAN_TEXT_REMOVED"
         ]
     }
     return recommendations.get(risk_level, [])

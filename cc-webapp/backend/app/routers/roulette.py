@@ -1,10 +1,10 @@
 """
-PrizeRoulette Í≤åÏûÑ API ?ºÏö∞??
+PrizeRoulette Í≤KOREAN_TEXT_REMOVED API KOREAN_TEXT_REMOVED
 
-?ÑÎ°†?∏Ïóî?úÏùò PrizeRoulette.tsx Ïª¥Ìè¨?åÌä∏?êÏÑú ?¨Ïö©?òÎäî 
-??Í∞úÏùò Ï£ºÏöî ?îÎìú?¨Ïù∏?∏Î? ?úÍ≥µ?©Îãà??
-1. GET /api/roulette/info - ?¨Ïö©?êÎ≥Ñ Î£∞Î†õ ?ïÎ≥¥ Ï°∞Ìöå
-2. POST /api/roulette/spin - Î£∞Î†õ ?§Ì? ?§Ìñâ Î∞?Í≤∞Í≥º Î∞òÌôò
+KOREAN_TEXT_REMOVED PrizeRoulette.tsx ÏªKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVED 
+KOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVED Ï£KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED©ÎKOREAN_TEXT_REMOVED
+1. GET /api/roulette/info - KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVED Î£KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED Ï°KOREAN_TEXT_REMOVED
+2. POST /api/roulette/spin - Î£KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED Î∞KOREAN_TEXT_REMOVEDÍ≤KOREAN_TEXT_REMOVED Î∞KOREAN_TEXT_REMOVED
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -21,7 +21,7 @@ from app.dependencies import get_current_user
 from app.schemas.game_schemas import RouletteInfoResponse, RouletteSpinRequest, RouletteSpinResponse
 from app.services.roulette_service import RouletteService
 
-# Î°úÍπÖ ?§Ï†ï
+# Î°KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVED
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
@@ -30,8 +30,8 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# ?ÑÎùº?¥Ï¶à Î£∞Î†õ ?úÎπÑ???∏Ïä§?¥Ïä§ ?ùÏÑ±
-# ?úÎπÑ???òÏ°¥??Ï£ºÏûÖ???ÑÌïú ?®Ïàò
+# KOREAN_TEXT_REMOVED Î£KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
+# KOREAN_TEXT_REMOVED°¥KOREAN_TEXT_REMOVEDÏ£KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED®ÏKOREAN_TEXT_REMOVED
 def get_roulette_service(db = Depends(get_db)):
     from app.repositories.game_repository import GameRepository
     repo = GameRepository(db)
@@ -44,24 +44,24 @@ async def get_roulette_info(
     roulette_service: RouletteService = Depends(get_roulette_service)
 ):
     """
-    ?¨Ïö©?êÏùò ?ÑÎùº?¥Ï¶à Î£∞Î†õ ?ïÎ≥¥Î•?Ï°∞Ìöå?©Îãà??
-    - ?®Ï? ?§Ì? ?üÏàò
-    - ?§Ïùå ?§Ì?ÍπåÏ? ?®Ï? ?úÍ∞Ñ (?àÎäî Í≤ΩÏö∞)
-    - Í≥ºÍ±∞ ?§Ì? ?¥Ïó≠ ?îÏïΩ
+    KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED Î£KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÎ•KOREAN_TEXT_REMOVEDÏ°KOREAN_TEXT_REMOVED©ÎKOREAN_TEXT_REMOVED
+    - KOREAN_TEXT_REMOVED®ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
+    - KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVEDÍπKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED®ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED (KOREAN_TEXT_REMOVED Í≤KOREAN_TEXT_REMOVED)
+    - Í≥KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
     """
     try:
-        # ?§Ï†ú ?¨Ïö©???∞Ïù¥??Í∏∞Î∞ò Î£∞Î†õ ?ïÎ≥¥ Í≥ÑÏÇ∞
+        # KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVEDÍ∏KOREAN_TEXT_REMOVED Î£KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED Í≥KOREAN_TEXT_REMOVED
         user_id = current_user.id
         
-        # ?§Îäò???§Ì? ?üÏàò Í≥ÑÏÇ∞ (Í∏∞Î≥∏Í∞? 3??
+        # KOREAN_TEXT_REMOVED§ÎKOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED Í≥KOREAN_TEXT_REMOVED (Í∏KOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVED 3KOREAN_TEXT_REMOVED
         daily_limit = 3
-        spins_used_today = 0  # ?§Ï†úÎ°úÎäî DB?êÏÑú Ï°∞Ìöå
+        spins_used_today = 0  # KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVEDÎ°KOREAN_TEXT_REMOVED DBKOREAN_TEXT_REMOVED Ï°KOREAN_TEXT_REMOVED
         spins_left = max(0, daily_limit - spins_used_today)
         
-        # ?§Ïùå ?§Ì? Í∞Ä???úÍ∞Ñ (Ïø®Îã§?¥Ïù¥ ?àÎã§Î©?
+        # KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED Í∞ÄKOREAN_TEXT_REMOVED (Ïø®ÎKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVED
         next_spin_time = None
         if spins_left == 0:
-            # ?êÏ†ï??Î¶¨ÏÖã
+            # KOREAN_TEXT_REMOVEDÎ¶¨ÏKOREAN_TEXT_REMOVED
             from datetime import datetime, time
             tomorrow = datetime.now().date() + timedelta(days=1)
             next_spin_time = datetime.combine(tomorrow, time.min)
@@ -73,10 +73,10 @@ async def get_roulette_info(
             total_spins_today=daily_limit
         )
     except Exception as e:
-        logger.error(f"Î£∞Î†õ ?ïÎ≥¥ Ï°∞Ìöå ?§Ìå®: {e}")
+        logger.error(f"Î£KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED Ï°KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Î£∞Î†õ ?ïÎ≥¥Î•?Î∂àÎü¨?§Îäî Ï§??§Î•òÍ∞Ä Î∞úÏÉù?àÏäµ?àÎã§."
+            detail="Î£KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÎ•KOREAN_TEXT_REMOVEDÎ∂KOREAN_TEXT_REMOVED§ÎKOREAN_TEXT_REMOVED Ï§KOREAN_TEXT_REMOVED§ÎKOREAN_TEXT_REMOVEDÍ∞Ä Î∞KOREAN_TEXT_REMOVED."
         )
 
 
@@ -88,42 +88,42 @@ async def spin_roulette(
     roulette_service: RouletteService = Depends(get_roulette_service)
 ):
     """
-    ?ÑÎùº?¥Ï¶à Î£∞Î†õ???åÎ¶¨Í≥?Í≤∞Í≥ºÎ•?Î∞òÌôò?©Îãà??
-    - ?§Ì? Í≤∞Í≥º (?πÏ≤® ?ÅÌíà)
-    - ?†ÎãàÎ©îÏù¥???Ä??(?ºÎ∞ò, ??åü, ?àÏñ¥ÎØ∏Ïä§)
-    - Í≤∞Í≥º Î©îÏãúÏßÄ
-    - ?®Ï? ?§Ì? ?üÏàò
+    KOREAN_TEXT_REMOVED Î£KOREAN_TEXT_REMOVED¶¨Í≥KOREAN_TEXT_REMOVEDÍ≤KOREAN_TEXT_REMOVEDÎ•KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVED©ÎKOREAN_TEXT_REMOVED
+    - KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED Í≤KOREAN_TEXT_REMOVED (KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED)
+    - KOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVEDÄKOREAN_TEXT_REMOVED(KOREAN_TEXT_REMOVED, KOREAN_TEXT_REMOVED, KOREAN_TEXT_REMOVEDÎØKOREAN_TEXT_REMOVED)
+    - Í≤KOREAN_TEXT_REMOVED Î©KOREAN_TEXT_REMOVEDÏßÄ
+    - KOREAN_TEXT_REMOVED®ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
     """
     try:
         user_id = current_user.id
         
-        # ?§Ì? Í∞Ä???¨Î? Ï≤¥ÌÅ¨
+        # KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED Í∞ÄKOREAN_TEXT_REMOVED¨ÎKOREAN_TEXT_REMOVED Ï≤KOREAN_TEXT_REMOVED
         daily_limit = 3
-        spins_used_today = 0  # ?§Ï†úÎ°úÎäî DB?êÏÑú Ï°∞Ìöå
+        spins_used_today = 0  # KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVEDÎ°KOREAN_TEXT_REMOVED DBKOREAN_TEXT_REMOVED Ï°KOREAN_TEXT_REMOVED
         spins_left = max(0, daily_limit - spins_used_today)
         
         if spins_left <= 0:
             return RouletteSpinResponse(
                 success=False,
-                message="?§Îäò???§Ì? ?üÏàòÎ•?Î™®Îëê ?¨Ïö©?àÏäµ?àÎã§. ?¥Ïùº ?§Ïãú ?úÎèÑ?¥Ï£º?∏Ïöî!",
+                message="KOREAN_TEXT_REMOVED§ÎKOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÎ•KOREAN_TEXT_REMOVEDÎ™®ÎKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVED. KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED£ºKOREAN_TEXT_REMOVED!",
                 spins_left=0,
                 cooldown_expires=datetime.now() + timedelta(hours=24)
             )
         
-        # Î£∞Î†õ ?§Ì? ?úÎ??àÏù¥??
+        # Î£KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         prizes = [
-            {"id": "coin_50", "name": "50 ÏΩîÏù∏", "probability": 30, "type": "normal"},
-            {"id": "coin_100", "name": "100 ÏΩîÏù∏", "probability": 25, "type": "normal"},
-            {"id": "coin_200", "name": "200 ÏΩîÏù∏", "probability": 20, "type": "normal"},
-            {"id": "gem_5", "name": "5 ??, "probability": 15, "type": "rare"},
-            {"id": "gem_10", "name": "10 ??, "probability": 8, "type": "rare"},
-            {"id": "jackpot", "name": "??åü! 1000 ÏΩîÏù∏", "probability": 2, "type": "jackpot"}
+            {"id": "coin_50", "name": "50 ÏΩKOREAN_TEXT_REMOVED", "probability": 30, "type": "normal"},
+            {"id": "coin_100", "name": "100 ÏΩKOREAN_TEXT_REMOVED", "probability": 25, "type": "normal"},
+            {"id": "coin_200", "name": "200 ÏΩKOREAN_TEXT_REMOVED", "probability": 20, "type": "normal"},
+            {"id": "gem_5", "name": "5 KOREAN_TEXT_REMOVED, "probability": 15, "type": "rare"},
+            {"id": "gem_10", "name": "10 KOREAN_TEXT_REMOVED, "probability": 8, "type": "rare"},
+            {"id": "jackpot", "name": "KOREAN_TEXT_REMOVED! 1000 ÏΩKOREAN_TEXT_REMOVED", "probability": 2, "type": "jackpot"}
         ]
         
-        # ?ïÎ•† Í∏∞Î∞ò ?πÏ≤® Í≤∞Ï†ï
+        # KOREAN_TEXT_REMOVED Í∏KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED Í≤KOREAN_TEXT_REMOVED
         rand = random.randint(1, 100)
         cumulative = 0
-        selected_prize = prizes[0]  # Í∏∞Î≥∏Í∞?
+        selected_prize = prizes[0]  # Í∏KOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVED
         
         for prize in prizes:
             cumulative += prize["probability"]
@@ -131,14 +131,14 @@ async def spin_roulette(
                 selected_prize = prize
                 break
         
-        # Í≤∞Í≥º Î©îÏãúÏßÄ ?ùÏÑ±
-        message = f"?éâ {selected_prize['name']}??Î•? ?çÎìù?àÏäµ?àÎã§!"
+        # Í≤KOREAN_TEXT_REMOVED Î©KOREAN_TEXT_REMOVEDÏßÄ KOREAN_TEXT_REMOVED
+        message = f"KOREAN_TEXT_REMOVED {selected_prize['name']}KOREAN_TEXT_REMOVEDÎ•KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED!"
         animation_type = selected_prize["type"]
         
         if selected_prize["type"] == "jackpot":
-            message = f"?é∞ JACKPOT! {selected_prize['name']}??Î•? ?çÎìù?àÏäµ?àÎã§!"
+            message = f"KOREAN_TEXT_REMOVED JACKPOT! {selected_prize['name']}KOREAN_TEXT_REMOVEDÎ•KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED!"
         
-        # ?§Ì? ???®Ï? ?üÏàò
+        # KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED®ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         remaining_spins = spins_left - 1
         
         return RouletteSpinResponse(
@@ -150,14 +150,14 @@ async def spin_roulette(
             prize_name=selected_prize["name"]
         )
     except Exception as e:
-        logger.error(f"Î£∞Î†õ ?§Ì? Ï≤òÎ¶¨ ?§Ìå®: {e}")
+        logger.error(f"Î£KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED Ï≤KOREAN_TEXT_REMOVED¶¨ KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Î£∞Î†õ ?§Ì? Ï≤òÎ¶¨ Ï§??§Î•òÍ∞Ä Î∞úÏÉù?àÏäµ?àÎã§."
+            detail="Î£KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED Ï≤KOREAN_TEXT_REMOVED¶¨ Ï§KOREAN_TEXT_REMOVED§ÎKOREAN_TEXT_REMOVEDÍ∞Ä Î∞KOREAN_TEXT_REMOVED."
         )
 
 
-# Í¥ÄÎ¶¨Ïûê??API
+# Í¥ÄÎ¶¨ÏKOREAN_TEXT_REMOVEDAPI
 @router.get("/admin/stats", response_model=Dict[str, Any])
 async def get_roulette_admin_stats(
     db = Depends(get_db),
@@ -165,22 +165,22 @@ async def get_roulette_admin_stats(
     roulette_service: RouletteService = Depends(get_roulette_service)
 ):
     """
-    ?ÑÎùº?¥Ï¶à Î£∞Î†õ Í¥ÄÎ¶¨Ïûê ?µÍ≥ÑÎ•?Ï°∞Ìöå?©Îãà??
-    - ?ºÏùº ?§Ì? ?üÏàò
-    - ?ÅÌíàÎ≥??πÏ≤® ?µÍ≥Ñ
-    - ??åü Î∞úÏÉù ?¥Ïó≠
+    KOREAN_TEXT_REMOVED Î£KOREAN_TEXT_REMOVED Í¥ÄÎ¶¨ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÎ•KOREAN_TEXT_REMOVEDÏ°KOREAN_TEXT_REMOVED©ÎKOREAN_TEXT_REMOVED
+    - KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
+    - KOREAN_TEXT_REMOVEDÎ≥KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
+    - KOREAN_TEXT_REMOVED Î∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
     """
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Í¥ÄÎ¶¨ÏûêÎß??ëÍ∑º?????àÏäµ?àÎã§."
+            detail="Í¥ÄÎ¶¨ÏKOREAN_TEXT_REMOVEDÎßKOREAN_TEXT_REMOVED."
         )
     
     try:
-        # ?§Ï†ú ?µÍ≥Ñ ?∞Ïù¥??Í≥ÑÏÇ∞ (?ÑÏû¨??Î™®Ïùò ?∞Ïù¥??
+        # KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÍ≥KOREAN_TEXT_REMOVED (KOREAN_TEXT_REMOVEDÎ™®ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         today = datetime.now().date()
         
-        # Î™®Ïùò ?µÍ≥Ñ ?∞Ïù¥???ùÏÑ±
+        # Î™®ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         stats = {
             "today_stats": {
                 "daily_spins": random.randint(50, 200),
@@ -210,8 +210,8 @@ async def get_roulette_admin_stats(
         
         return stats
     except Exception as e:
-        logger.error(f"Í¥ÄÎ¶¨Ïûê ?µÍ≥Ñ Ï°∞Ìöå ?§Ìå®: {e}")
+        logger.error(f"Í¥ÄÎ¶¨ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED Ï°KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Í¥ÄÎ¶¨Ïûê ?µÍ≥ÑÎ•?Î∂àÎü¨?§Îäî Ï§??§Î•òÍ∞Ä Î∞úÏÉù?àÏäµ?àÎã§."
+            detail="Í¥ÄÎ¶¨ÏKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÎ•KOREAN_TEXT_REMOVEDÎ∂KOREAN_TEXT_REMOVED§ÎKOREAN_TEXT_REMOVED Ï§KOREAN_TEXT_REMOVED§ÎKOREAN_TEXT_REMOVEDÍ∞Ä Î∞KOREAN_TEXT_REMOVED."
         )

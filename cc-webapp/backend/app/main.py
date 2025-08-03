@@ -27,7 +27,7 @@ from app.core.logging import setup_logging
 # Import core routers only
 from app.routers import (
     auth,
-    # users,  # 임시로 비활성화
+    users,  # 다시 활성화
     admin,
     actions,
     gacha,
@@ -134,7 +134,7 @@ app.add_middleware(
 # ===== Core API Router Registration =====
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-# app.include_router(users.router, prefix="/api/users", tags=["Users"])  # 임시로 비활성화
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(actions.router, prefix="/api/actions", tags=["Game Actions"])
 app.include_router(gacha.router, prefix="/api/gacha", tags=["Gacha"])

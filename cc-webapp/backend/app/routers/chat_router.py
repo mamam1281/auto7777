@@ -1,7 +1,7 @@
 """
-?í¨ Casino-Club F2P - Chat API Router
+KOREAN_TEXT_REMOVED Casino-Club F2P - Chat API Router
 ===================================
-Ï±ÑÌåÖ ?úÏä§??Î∞?AI ?¥Ïãú?§ÌÑ¥??API
+Ï±KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVEDAI KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVEDAPI
 """
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
@@ -30,7 +30,7 @@ from ..utils.emotion_engine import EmotionEngine
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
-# WebSocket ?∞Í≤∞ Í¥ÄÎ¶¨Ïûê
+# WebSocket KOREAN_TEXT_REMOVED Í¥ÄÎ¶¨ÏKOREAN_TEXT_REMOVED
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
@@ -53,13 +53,13 @@ class ConnectionManager:
             await websocket.send_text(message)
     
     async def broadcast_to_room(self, message: str, room_id: int):
-        # ?§Ï†úÎ°úÎäî room_idÎ≥??∞Í≤∞ Í¥ÄÎ¶¨Í? ?ÑÏöî?òÏ?Îß??¨Í∏∞?úÎäî ?®Ïàú??
+        # KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVEDÎ°KOREAN_TEXT_REMOVED room_idÎ≥KOREAN_TEXT_REMOVED Í¥ÄÎ¶¨ÍKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÎßKOREAN_TEXT_REMOVED¨ÍKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED®ÏKOREAN_TEXT_REMOVED
         for connection in self.active_connections:
             await connection.send_text(message)
 
 manager = ConnectionManager()
 
-# ========== Ï±ÑÌåÖÎ∞?Í¥ÄÎ¶?==========
+# ========== Ï±KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVEDÍ¥ÄÎ¶KOREAN_TEXT_REMOVED==========
 
 @router.post("/rooms", response_model=ChatRoomResponse)
 async def create_chat_room(
@@ -67,7 +67,7 @@ async def create_chat_room(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Ï±ÑÌåÖÎ∞??ùÏÑ±"""
+    """Ï±KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVED"""
     try:
         chat_service = ChatService(db)
         room = await chat_service.create_room(current_user.id, room_data)
@@ -84,7 +84,7 @@ async def get_chat_rooms(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Ï±ÑÌåÖÎ∞?Î™©Î°ù Ï°∞Ìöå"""
+    """Ï±KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVEDÎ™©ÎKOREAN_TEXT_REMOVED Ï°KOREAN_TEXT_REMOVED"""
     try:
         query = db.query(ChatRoom).filter(ChatRoom.is_active == True)
         
@@ -93,7 +93,7 @@ async def get_chat_rooms(
         
         rooms = query.offset(offset).limit(limit).all()
         
-        # Ï∞∏Í?????Ï∂îÍ?
+        # Ï∞KOREAN_TEXT_REMOVEDÏ∂KOREAN_TEXT_REMOVED
         for room in rooms:
             participant_count = db.query(ChatParticipant).filter(
                 ChatParticipant.room_id == room.id,
@@ -112,7 +112,7 @@ async def join_chat_room(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Ï±ÑÌåÖÎ∞?Ï∞∏Í?"""
+    """Ï±KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVEDÏ∞KOREAN_TEXT_REMOVED"""
     try:
         chat_service = ChatService(db)
         participant = await chat_service.join_room(current_user.id, room_id)
@@ -127,7 +127,7 @@ async def leave_chat_room(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Ï±ÑÌåÖÎ∞??òÍ?Í∏?""
+    """Ï±KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVEDÍ∏KOREAN_TEXT_REMOVED""
     try:
         chat_service = ChatService(db)
         await chat_service.leave_room(current_user.id, room_id)
@@ -136,7 +136,7 @@ async def leave_chat_room(
         raise HTTPException(status_code=500, detail=f"Failed to leave room: {str(e)}")
 
 
-# ========== Î©îÏãúÏßÄ Í¥ÄÎ¶?==========
+# ========== Î©KOREAN_TEXT_REMOVEDÏßÄ Í¥ÄÎ¶KOREAN_TEXT_REMOVED==========
 
 @router.get("/rooms/{room_id}/messages", response_model=List[ChatMessageResponse])
 async def get_room_messages(
@@ -146,9 +146,9 @@ async def get_room_messages(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Ï±ÑÌåÖÎ∞?Î©îÏãúÏßÄ Ï°∞Ìöå"""
+    """Ï±KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVEDÏßÄ Ï°KOREAN_TEXT_REMOVED"""
     try:
-        # Ï∞∏Í????ïÏù∏
+        # Ï∞KOREAN_TEXT_REMOVED
         participant = db.query(ChatParticipant).filter(
             ChatParticipant.room_id == room_id,
             ChatParticipant.user_id == current_user.id,
@@ -167,9 +167,9 @@ async def get_room_messages(
             query = query.filter(ChatMessage.id < before_id)
         
         messages = query.order_by(ChatMessage.created_at.desc()).limit(limit).all()
-        messages.reverse()  # ?úÍ∞Ñ???ïÎ†¨
+        messages.reverse()  # KOREAN_TEXT_REMOVED
         
-        # Î∞úÏã†???âÎÑ§??Ï∂îÍ?
+        # Î∞KOREAN_TEXT_REMOVEDÏ∂KOREAN_TEXT_REMOVED
         for message in messages:
             if message.sender_id:
                 sender = db.query(User).filter(User.id == message.sender_id).first()
@@ -188,22 +188,22 @@ async def send_message(
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """Î©îÏãúÏßÄ ?ÑÏÜ°"""
+    """Î©KOREAN_TEXT_REMOVEDÏßÄ KOREAN_TEXT_REMOVED"""
     try:
         chat_service = ChatService(db, redis)
         emotion_engine = EmotionEngine(redis)
         
-        # Î©îÏãúÏßÄ ?ùÏÑ±
+        # Î©KOREAN_TEXT_REMOVEDÏßÄ KOREAN_TEXT_REMOVED
         message = await chat_service.send_message(
             current_user.id, room_id, message_data
         )
         
-        # Í∞êÏ†ï Î∂ÑÏÑù
+        # Í∞KOREAN_TEXT_REMOVED Î∂KOREAN_TEXT_REMOVED
         emotion_result = await emotion_engine.detect_emotion_from_text(message_data.content)
         message.emotion_detected = emotion_result["emotion"]
         message.sentiment_score = emotion_result["sentiment_score"]
         
-        # ?¨Ïö©??Í∞êÏ†ï ?ÑÎ°ú???ÖÎç∞?¥Ìä∏
+        # KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         await emotion_engine.update_user_mood(
             current_user.id,
             emotion_result["emotion"],
@@ -212,7 +212,7 @@ async def send_message(
         
         db.commit()
         
-        # WebSocket?ºÎ°ú ?§ÏãúÍ∞??ÑÏÜ°
+        # WebSocketKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVED
         message_dict = {
             "type": "new_message",
             "message": {
@@ -239,9 +239,9 @@ async def add_message_reaction(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Î©îÏãúÏßÄ Î∞òÏùë Ï∂îÍ?"""
+    """Î©KOREAN_TEXT_REMOVEDÏßÄ Î∞KOREAN_TEXT_REMOVED Ï∂KOREAN_TEXT_REMOVED"""
     try:
-        # Í∏∞Ï°¥ Î∞òÏùë ?ïÏù∏
+        # Í∏KOREAN_TEXT_REMOVED°¥ Î∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         existing_reaction = db.query(MessageReaction).filter(
             MessageReaction.message_id == message_id,
             MessageReaction.user_id == current_user.id,
@@ -249,11 +249,11 @@ async def add_message_reaction(
         ).first()
         
         if existing_reaction:
-            # ?¥Î? Í∞ôÏ? Î∞òÏùë???àÏúºÎ©??úÍ±∞
+            # KOREAN_TEXT_REMOVED Í∞KOREAN_TEXT_REMOVED Î∞KOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVED
             db.delete(existing_reaction)
             action = "removed"
         else:
-            # ??Î∞òÏùë Ï∂îÍ?
+            # KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVED Ï∂KOREAN_TEXT_REMOVED
             reaction = MessageReaction(
                 message_id=message_id,
                 user_id=current_user.id,
@@ -265,7 +265,7 @@ async def add_message_reaction(
         
         db.commit()
         
-        # Î∞òÏùë ???ÖÎç∞?¥Ìä∏
+        # Î∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         message = db.query(ChatMessage).filter(ChatMessage.id == message_id).first()
         if message:
             reactions = db.query(MessageReaction).filter(
@@ -284,7 +284,7 @@ async def add_message_reaction(
         raise HTTPException(status_code=500, detail=f"Failed to add reaction: {str(e)}")
 
 
-# ========== AI ?¥Ïãú?§ÌÑ¥??==========
+# ========== AI KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED==========
 
 @router.get("/assistants", response_model=List[AIAssistantResponse])
 async def get_ai_assistants(
@@ -292,7 +292,7 @@ async def get_ai_assistants(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """AI ?¥Ïãú?§ÌÑ¥??Î™©Î°ù Ï°∞Ìöå"""
+    """AI KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVEDÎ™©ÎKOREAN_TEXT_REMOVED Ï°KOREAN_TEXT_REMOVED"""
     try:
         query = db.query(AIAssistant).filter(AIAssistant.is_active == True)
         
@@ -311,7 +311,7 @@ async def start_ai_conversation(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """AI ?Ä???úÏûë"""
+    """AI KOREAN_TEXT_REMOVEDÄKOREAN_TEXT_REMOVED"""
     try:
         chat_service = ChatService(db)
         conversation = await chat_service.start_ai_conversation(
@@ -330,16 +330,16 @@ async def send_ai_message(
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """AI?Ä Î©îÏãúÏßÄ Ï£ºÍ≥†Î∞õÍ∏∞"""
+    """AIKOREAN_TEXT_REMOVEDÄ Î©KOREAN_TEXT_REMOVEDÏßÄ Ï£KOREAN_TEXT_REMOVEDÎ∞KOREAN_TEXT_REMOVED"""
     try:
         chat_service = ChatService(db, redis)
         
-        # ?¨Ïö©??Î©îÏãúÏßÄ ?Ä??
+        # KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVEDÏßÄ KOREAN_TEXT_REMOVEDÄKOREAN_TEXT_REMOVED
         user_message = await chat_service.add_ai_message(
             conversation_id, current_user.id, message_data
         )
         
-        # AI ?ëÎãµ ?ùÏÑ±
+        # AI KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         ai_response = await chat_service.generate_ai_response(
             conversation_id, current_user.id, message_data.content
         )
@@ -356,9 +356,9 @@ async def get_ai_conversation_messages(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """AI ?Ä??Î©îÏãúÏßÄ Ï°∞Ìöå"""
+    """AI KOREAN_TEXT_REMOVEDÄKOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVEDÏßÄ Ï°KOREAN_TEXT_REMOVED"""
     try:
-        # Í∂åÌïú ?ïÏù∏
+        # Í∂KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         conversation = db.query(AIConversation).filter(
             AIConversation.id == conversation_id,
             AIConversation.user_id == current_user.id
@@ -371,27 +371,27 @@ async def get_ai_conversation_messages(
             AIMessage.conversation_id == conversation_id
         ).order_by(AIMessage.created_at.desc()).limit(limit).all()
         
-        messages.reverse()  # ?úÍ∞Ñ???ïÎ†¨
+        messages.reverse()  # KOREAN_TEXT_REMOVED
         return messages
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get AI messages: {str(e)}")
 
 
-# ========== Í∞êÏ†ï ?ÑÎ°ú??==========
+# ========== Í∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED==========
 
 @router.get("/emotion-profile", response_model=EmotionProfileResponse)
 async def get_emotion_profile(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """?¨Ïö©??Í∞êÏ†ï ?ÑÎ°ú??Ï°∞Ìöå"""
+    """KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÏ°KOREAN_TEXT_REMOVED"""
     try:
         profile = db.query(EmotionProfile).filter(
             EmotionProfile.user_id == current_user.id
         ).first()
         
         if not profile:
-            # ?ÑÎ°ú?ÑÏù¥ ?ÜÏúºÎ©?Í∏∞Î≥∏Í∞íÏúºÎ°??ùÏÑ±
+            # KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVEDÍ∏KOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVEDÎ°KOREAN_TEXT_REMOVED
             profile = EmotionProfile(user_id=current_user.id)
             db.add(profile)
             db.commit()
@@ -407,7 +407,7 @@ async def update_emotion_profile(
     db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """?¨Ïö©??Í∞êÏ†ï ?ÑÎ°ú???ÖÎç∞?¥Ìä∏"""
+    """KOREAN_TEXT_REMOVED¨ÏKOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED"""
     try:
         profile = db.query(EmotionProfile).filter(
             EmotionProfile.user_id == current_user.id
@@ -417,7 +417,7 @@ async def update_emotion_profile(
             profile = EmotionProfile(user_id=current_user.id)
             db.add(profile)
         
-        # ?ÑÎìú ?ÖÎç∞?¥Ìä∏
+        # KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED
         update_data = profile_data.dict(exclude_unset=True)
         for field, value in update_data.items():
             if hasattr(profile, field) and value is not None:
@@ -431,7 +431,7 @@ async def update_emotion_profile(
         raise HTTPException(status_code=500, detail=f"Failed to update emotion profile: {str(e)}")
 
 
-# ========== WebSocket ?∞Í≤∞ ==========
+# ========== WebSocket KOREAN_TEXT_REMOVED ==========
 
 @router.websocket("/ws/{room_id}")
 async def websocket_endpoint(
@@ -440,9 +440,9 @@ async def websocket_endpoint(
     user_id: int = Query(...),
     db = Depends(get_db)
 ):
-    """WebSocket Ï±ÑÌåÖ ?∞Í≤∞"""
+    """WebSocket Ï±KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED"""
     try:
-        # Ï∞∏Í????ïÏù∏
+        # Ï∞KOREAN_TEXT_REMOVED
         participant = db.query(ChatParticipant).filter(
             ChatParticipant.room_id == room_id,
             ChatParticipant.user_id == user_id,
@@ -460,12 +460,12 @@ async def websocket_endpoint(
                 data = await websocket.receive_text()
                 message_data = json.loads(data)
                 
-                # Î©îÏãúÏßÄ ?Ä?ÖÏóê ?∞Î•∏ Ï≤òÎ¶¨
+                # Î©KOREAN_TEXT_REMOVEDÏßÄ KOREAN_TEXT_REMOVEDÄKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED•∏ Ï≤KOREAN_TEXT_REMOVED¶¨
                 if message_data.get("type") == "message":
-                    # ?§ÏãúÍ∞?Î©îÏãúÏßÄ Î∏åÎ°ú?úÏ∫ê?§Ìä∏??send_message?êÏÑú Ï≤òÎ¶¨
+                    # KOREAN_TEXT_REMOVED§ÏKOREAN_TEXT_REMOVEDÍ∞KOREAN_TEXT_REMOVEDÎ©KOREAN_TEXT_REMOVEDÏßÄ Î∏KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVEDsend_messageKOREAN_TEXT_REMOVED Ï≤KOREAN_TEXT_REMOVED¶¨
                     pass
                 elif message_data.get("type") == "typing":
-                    # ?Ä?¥Ìïë ?ÅÌÉú Î∏åÎ°ú?úÏ∫ê?§Ìä∏
+                    # KOREAN_TEXT_REMOVEDÄKOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED Î∏KOREAN_TEXT_REMOVED§ÌKOREAN_TEXT_REMOVED
                     typing_data = {
                         "type": "typing",
                         "user_id": user_id,

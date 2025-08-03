@@ -2,11 +2,11 @@
 # Clean English comments only - no Unicode issues
 
 # Core authentication and user management
-from . import auth  # Authentication system (5 required fields)
-# from . import users  # User API (temporarily disabled due to encoding issues)
+from . import auth  # Authentication system
+from . import users  # User API
 
 # Administrative and basic game functions
-from . import admin  # Admin API (simplified version)
+from . import admin  # Admin API
 from . import actions  # Game action API
 from . import gacha  # Gacha system API
 from . import rewards  # Reward system API
@@ -18,7 +18,7 @@ from . import prize_roulette  # Prize roulette API
 from . import rps  # Rock Paper Scissors API
 from . import notifications  # Notification API
 
-# Progressive expansion phases (Phase 1-10)
+# Progressive expansion phases
 from . import doc_titles  # Phase 1: Document titles
 from . import feedback  # Phase 2: Feedback system
 from . import games  # Phase 3: Game collection
@@ -37,19 +37,20 @@ from . import chat_router as chat  # Chat system
 # Export list for controlled imports
 __all__ = [
     "auth",
-    "admin", 
-    "actions",
+    "users",
+    "admin",
+    "actions", 
     "gacha",
-    "rewards", 
+    "rewards",
     "shop",
     "missions",
     "quiz",
     "dashboard",
     "prize_roulette",
-    "rps",
+    "rps", 
     "notifications",
     "doc_titles",
-    "feedback", 
+    "feedback",
     "games",
     "game_api",
     "invite_router",
