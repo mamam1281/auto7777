@@ -25,13 +25,23 @@ class InviteCode(InviteCodeBase):
 # Add InviteCodeResponse for API responses
 class InviteCodeResponse(BaseModel):
     code: str
-    is_used: bool
-    created_at: datetime
-    used_at: Optional[datetime] = None
     expires_at: Optional[datetime] = None
-    max_uses: Optional[int] = 1
-    use_count: int = 0
+    max_uses: int = 1
+    used_count: int = 0
+    is_active: bool = True
+    created_at: datetime
 
 # Add InviteCodeList for listing multiple invite codes
 class InviteCodeList(BaseModel):
     invite_codes: List[InviteCodeResponse]
+
+# Add validation request/response schemas
+class ValidateInviteCodeRequest(BaseModel):
+    code: str
+
+class ValidateInviteCodeResponse(BaseModel):
+    is_valid: bool
+    error_message: Optional[str] = None
+    code: Optional[str] = None
+    expires_at: Optional[datetime] = None
+    remaining_uses: Optional[int] = None

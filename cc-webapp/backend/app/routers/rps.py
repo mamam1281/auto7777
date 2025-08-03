@@ -20,7 +20,7 @@ class RPSPlayResponse(BaseModel):
     balance: int
     daily_play_count: int
 
-@router.post("/play", response_model=RPSPlayResponse, summary="ê°€?„ë°”?„ë³´ ê²Œì„ ?Œë ˆ??, description="?¬ìš©?ê? ? íƒ????ê°€?? ë°”ìœ„, ë³??€ ë² íŒ…?¡ìœ¼ë¡?ê²Œì„??ì§„í–‰?©ë‹ˆ??")
+@router.post("/play", response_model=RPSPlayResponse, summary="Rock Paper Scissors Game", description="Play rock paper scissors game with betting")
 async def play_rps(
     request: RPSPlayRequest,
     db = Depends(get_db),
@@ -29,12 +29,12 @@ async def play_rps(
     user_id: int = 1 # Placeholder: Replace with Depends(get_current_user_id)
 ):
     """
-    ### ?”ì²­ ë³¸ë¬¸:
-    - **user_choice**: "rock", "paper", "scissors" ì¤??˜ë‚˜
-    - **bet_amount**: 5,000?ì„œ 10,000 ?¬ì´??ë² íŒ…??
+    ### Request Body:
+    - **user_choice**: "rock", "paper", or "scissors"
+    - **bet_amount**: Betting amount between 5,000 and 10,000
 
-    ### ?‘ë‹µ:
-    - ?¬ìš©?ì˜ ? íƒ, ì»´í“¨?°ì˜ ? íƒ, ê²Œì„ ê²°ê³¼, ? í° ë³€?”ëŸ‰, ìµœì¢… ?”ì•¡ ???ì„¸ ?•ë³´ë¥?ë°˜í™˜?©ë‹ˆ??
+    ### Response:
+    - Returns user choice, computer choice, game result, token change amount, final balance and detailed information
     """
     rps_service = RPSService(db=db)
     try:

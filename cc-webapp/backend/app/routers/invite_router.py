@@ -1,145 +1,229 @@
 """
-ì´ˆë?ì½”ë“œ ê´€??API ?¼ìš°??
-- ì´ˆë?ì½”ë“œ ? íš¨??ê²€ì¦?API (/api/invite/validate)
-- ê³ ì • ì´ˆë?ì½”ë“œ: 6969, 6974, 2560
+Invite Code System Router
+Handles invite code generation, validation, and user registration with invite codes.
+Implements simple registration flow for MVP.
 """
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
-
-from typing import List, Optional
-from pydantic import BaseModel
-
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
 from app.database import get_db
-from app.services.invite_service import InviteService
-from app.schemas.invite_code import InviteCodeResponse, InviteCodeList
-from app.core.error_handlers import UserServiceException
-
-# ì´ˆë?ì½”ë“œ ?ì„± ?”ì²­ ?¤í‚¤ë§?
-class InviteCodeGenerateRequest(BaseModel):
-    count: Optional[int] = 1
-    length: Optional[int] = 6
-    max_uses: Optional[int] = 1
-    days_valid: Optional[int] = 30
-
-# ?¼ìš°???¤ì •
-router = APIRouter(
-    prefix="/api/invite",
-    tags=["invite"],
-    responses={404: {"description": "Not found"}},
+from app.dependencies import get_current_user
+from app import models
+from app.schemas.invite_code import (
+    InviteCodeResponse, ValidateInviteCodeRequest, ValidateInviteCodeResponse
 )
+from datetime import datetime, timedelta
+import secrets
+import string
 
-@router.get("/validate/{code}", response_model=dict)
-async def validate_invite_code(
-    code: str = Path(..., description="ê²€ì¦í•  ì´ˆë?ì½”ë“œ"),
-    db = Depends(get_db)
+router = APIRouter(prefix="/api/invite", tags=["invite"])
+
+def generate_invite_code(length: int = 8) -> str:
+    """Generate a random invite code"""
+    characters = string.ascii_uppercase + string.digits
+    # Exclude confusing characters
+    characters = characters.replace('O', '').replace('0', '').replace('I', '').replace('1', '')
+    return ''.join(secrets.choice(characters) for _ in range(length))
+
+@router.post("/generate", response_model=InviteCodeResponse)
+def create_invite_code(
+    expires_in_days: int = 30,
+    max_uses: int = 1,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """
-    ì´ˆë?ì½”ë“œ ? íš¨??ê²€ì¦?API
-    
-    Args:
-        code: ê²€ì¦í•  ì´ˆë?ì½”ë“œ
-        db: ?°ì´?°ë² ?´ìŠ¤ ?¸ì…˜
-        
-    Returns:
-        ? íš¨??ê²€ì¦?ê²°ê³¼
-        
-    Raises:
-        HTTPException: ì´ˆë?ì½”ë“œê°€ ? íš¨?˜ì? ?Šì? ê²½ìš°
+    Generate a new invite code
+    Only admin users can generate invite codes
     """
-    invite_service = InviteService(db)
-    try:
-        result = invite_service.validate_invite_code(code)
-        return {
-            "valid": True,
-            "detail": "? íš¨??ì´ˆë?ì½”ë“œ?…ë‹ˆ??",
-            "code": result["code"],
-            "created_at": result["created_at"],
-            "is_special": result["is_special"]
-        }
-    except UserServiceException as e:
-        return {
-            "valid": False,
-            "detail": e.message,
-            "error_code": e.error_code
-        }
-
-@router.get("/list", response_model=InviteCodeList)
-async def list_invite_codes(
-    limit: int = Query(10, description="ì¡°íšŒ??ìµœë? ??ª© ??),
-    offset: int = Query(0, description="ì¡°íšŒ ?œì‘??),
-    db = Depends(get_db)
-):
-    """
-    ì´ˆë?ì½”ë“œ ëª©ë¡ ì¡°íšŒ
+    if not getattr(current_user, 'is_admin', False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admin users can generate invite codes"
+        )
     
-    Args:
-        limit: ì¡°íšŒ??ìµœë? ??ª© ??
-        offset: ì¡°íšŒ ?œì‘??
-        db: ?°ì´?°ë² ?´ìŠ¤ ?¸ì…˜
-        
-    Returns:
-        ì´ˆë?ì½”ë“œ ëª©ë¡
-    """
-    invite_service = InviteService(db)
-    invite_codes = invite_service.list_invite_codes(limit, offset)
+    # Generate unique code
+    while True:
+        code = generate_invite_code()
+        existing = db.query(models.InviteCode).filter(
+            models.InviteCode.code == code
+        ).first()
+        if not existing:
+            break
     
-    return {
-        "invite_codes": invite_codes
-    }
-
-@router.post("/generate", response_model=InviteCodeList)
-async def generate_invite_codes(
-    request: InviteCodeGenerateRequest = Body(...),
-    db = Depends(get_db)
-):
-    """
-    ë³´ì•ˆ???’ì? ì´ˆë?ì½”ë“œ ?ì„± API
-    
-    Args:
-        request: ì´ˆë?ì½”ë“œ ?ì„± ?”ì²­ ?•ë³´
-        db: ?°ì´?°ë² ?´ìŠ¤ ?¸ì…˜
-        
-    Returns:
-        ?ì„±??ì´ˆë?ì½”ë“œ ëª©ë¡
-    """
-    invite_service = InviteService(db)
-    
-    # ?Œë¼ë¯¸í„° ê²€ì¦?
-    if request.count <= 0:
-        return HTTPException(status_code=400, detail="?ì„±??ì½”ë“œ ?˜ëŠ” 1 ?´ìƒ?´ì–´???©ë‹ˆ??")
-    if request.length < 4:
-        return HTTPException(status_code=400, detail="ì½”ë“œ ê¸¸ì´??ìµœì†Œ 4???´ìƒ?´ì–´???©ë‹ˆ??")
-    
-    # ?€??ì´ˆë?ì½”ë“œ ?ì„±
-    invite_codes = invite_service.generate_bulk_invite_codes(
-        count=request.count,
-        length=request.length,
-        max_uses=request.max_uses,
-        days_valid=request.days_valid
+    # Create invite code record
+    invite_code = models.InviteCode(
+        code=code,
+        created_by=current_user.id,
+        expires_at=datetime.now() + timedelta(days=expires_in_days),
+        max_uses=max_uses,
+        used_count=0,
+        is_active=True
     )
     
-    return {
-        "invite_codes": invite_codes
-    }
+    db.add(invite_code)
+    db.commit()
+    db.refresh(invite_code)
+    
+    return InviteCodeResponse(
+        code=invite_code.code,
+        expires_at=invite_code.expires_at,
+        max_uses=invite_code.max_uses,
+        used_count=invite_code.used_count,
+        is_active=invite_code.is_active,
+        created_at=invite_code.created_at
+    )
 
-@router.get("/{code}", response_model=InviteCodeResponse)
-async def get_invite_code(
-    code: str = Path(..., description="ì¡°íšŒ??ì´ˆë?ì½”ë“œ"),
-    db = Depends(get_db)
+@router.post("/validate", response_model=ValidateInviteCodeResponse)
+def validate_invite_code(
+    request: ValidateInviteCodeRequest,
+    db: Session = Depends(get_db)
 ):
     """
-    ?¹ì • ì´ˆë?ì½”ë“œ ì¡°íšŒ API
-    
-    Args:
-        code: ì¡°íšŒ??ì´ˆë?ì½”ë“œ
-        db: ?°ì´?°ë² ?´ìŠ¤ ?¸ì…˜
-        
-    Returns:
-        ì´ˆë?ì½”ë“œ ?•ë³´
+    Validate an invite code
+    Returns validation status and code details
     """
-    invite_service = InviteService(db)
-    invite_code = invite_service.get_invite_code(code)
+    invite_code = db.query(models.InviteCode).filter(
+        models.InviteCode.code == request.code.upper()
+    ).first()
     
     if not invite_code:
-        raise HTTPException(status_code=404, detail=f"ì´ˆë?ì½”ë“œ {code}ë¥?ì°¾ì„ ???†ìŠµ?ˆë‹¤.")
+        return ValidateInviteCodeResponse(
+            is_valid=False,
+            error_message="Invalid invite code"
+        )
     
-    return invite_code
+    # Check if code is still active
+    if not invite_code.is_active:
+        return ValidateInviteCodeResponse(
+            is_valid=False,
+            error_message="Invite code has been deactivated"
+        )
+    
+    # Check if code has expired
+    if invite_code.expires_at and invite_code.expires_at < datetime.now():
+        return ValidateInviteCodeResponse(
+            is_valid=False,
+            error_message="Invite code has expired"
+        )
+    
+    # Check if code has reached max uses
+    if invite_code.used_count >= invite_code.max_uses:
+        return ValidateInviteCodeResponse(
+            is_valid=False,
+            error_message="Invite code has reached maximum usage limit"
+        )
+    
+    return ValidateInviteCodeResponse(
+        is_valid=True,
+        code=invite_code.code,
+        expires_at=invite_code.expires_at,
+        remaining_uses=invite_code.max_uses - invite_code.used_count
+    )
+
+@router.get("/codes", response_model=list[InviteCodeResponse])
+def list_invite_codes(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    List all invite codes created by the current user
+    Admin users can see all codes
+    """
+    if getattr(current_user, 'is_admin', False):
+        # Admin can see all codes
+        codes = db.query(models.InviteCode).order_by(
+            models.InviteCode.created_at.desc()
+        ).all()
+    else:
+        # Regular users can only see codes they created
+        codes = db.query(models.InviteCode).filter(
+            models.InviteCode.created_by == current_user.id
+        ).order_by(
+            models.InviteCode.created_at.desc()
+        ).all()
+    
+    return [
+        InviteCodeResponse(
+            code=code.code,
+            expires_at=code.expires_at,
+            max_uses=code.max_uses,
+            used_count=code.used_count,
+            is_active=code.is_active,
+            created_at=code.created_at
+        )
+        for code in codes
+    ]
+
+@router.patch("/codes/{code}/deactivate")
+def deactivate_invite_code(
+    code: str,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Deactivate an invite code
+    Only the creator or admin can deactivate
+    """
+    invite_code = db.query(models.InviteCode).filter(
+        models.InviteCode.code == code.upper()
+    ).first()
+    
+    if not invite_code:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invite code not found"
+        )
+    
+    # Check permissions
+    if (not getattr(current_user, 'is_admin', False) and 
+        invite_code.created_by != current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only deactivate your own invite codes"
+        )
+    
+    invite_code.is_active = False
+    db.commit()
+    
+    return {"message": "Invite code deactivated successfully"}
+
+@router.get("/stats")
+def get_invite_stats(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get invite code statistics
+    Shows usage metrics for the current user's codes
+    """
+    if getattr(current_user, 'is_admin', False):
+        # Admin gets global stats
+        total_codes = db.query(models.InviteCode).count()
+        active_codes = db.query(models.InviteCode).filter(
+            models.InviteCode.is_active == True
+        ).count()
+        total_uses = db.query(models.InviteCode).with_entities(
+            db.func.sum(models.InviteCode.used_count)
+        ).scalar() or 0
+    else:
+        # Regular user gets their own stats
+        total_codes = db.query(models.InviteCode).filter(
+            models.InviteCode.created_by == current_user.id
+        ).count()
+        active_codes = db.query(models.InviteCode).filter(
+            models.InviteCode.created_by == current_user.id,
+            models.InviteCode.is_active == True
+        ).count()
+        total_uses = db.query(models.InviteCode).filter(
+            models.InviteCode.created_by == current_user.id
+        ).with_entities(
+            db.func.sum(models.InviteCode.used_count)
+        ).scalar() or 0
+    
+    return {
+        "total_codes": total_codes,
+        "active_codes": active_codes,
+        "expired_codes": total_codes - active_codes,
+        "total_uses": total_uses
+    }

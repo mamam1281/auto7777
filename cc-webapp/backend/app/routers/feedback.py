@@ -62,17 +62,17 @@ async def generate_feedback(
     service: EmotionFeedbackService = Depends(get_emotion_feedback_service)
 ):
     """
-    ?¬ìš©??ê°ì •??ê¸°ë°˜???¼ë“œë°??ì„±
+    Generate emotion-based feedback for user
     
     Args:
-        request: ?¼ë“œë°??”ì²­ ?°ì´??
-            - user_id: ?¬ìš©??ID
-            - emotion: ê°ì • ?íƒœ
-            - segment: ?¬ìš©???¸ê·¸ë¨¼íŠ¸
-            - context: ì¶”ê? ì»¨í…?¤íŠ¸ ?•ë³´
+        request: Feedback request data
+            - user_id: User ID
+            - emotion: Emotion state
+            - segment: User segment
+            - context: Additional context information
     
     Returns:
-        ?¼ë“œë°??‘ë‹µ ê°ì²´
+        Feedback response object
     """
     try:
         user_id = request.get("user_id")
@@ -80,15 +80,15 @@ async def generate_feedback(
         segment = request.get("segment", "Medium")
         context = request.get("context", {})
         
-        # ?„ìˆ˜ ?„ë“œ ê²€ì¦?
+        # Validate required fields
         if not user_id or not emotion:
             raise HTTPException(status_code=400, detail="Missing required fields")
         
-        # ?„ì¬ ?¬ìš©??ê¶Œí•œ ?•ì¸
+        # Check current user authorization
         if user_id != current_user["user_id"]:
             raise HTTPException(status_code=403, detail="Not authorized to access this resource")
         
-        # ?¼ë“œë°??ì„±
+        # Generate feedback
         feedback = service.generate_feedback(emotion, segment, context)
         
         return {

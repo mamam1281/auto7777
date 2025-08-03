@@ -1,10 +1,10 @@
 """
 Prize Roulette API Router
-�KOREAN_TEXT_REMOVED �KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED FastAPI KOREAN_TEXT_REMOVED
+Casino Club Prize Roulette FastAPI Router
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-
+from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 import logging
@@ -20,7 +20,7 @@ router = APIRouter()
 # === Pydantic Models ===
 
 class Prize(BaseModel):
-    """KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED"""
+    """Prize model"""
     id: str
     name: str
     value: int
@@ -29,17 +29,17 @@ class Prize(BaseModel):
     icon: Optional[str] = None
 
 class PrizeRouletteInfoResponse(BaseModel):
-    """�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED"""
+    """Prize roulette info response"""
     spins_left: int
     cooldown_expires: Optional[datetime] = None
     next_reset_time: datetime
 
 class PrizeRouletteSpinRequest(BaseModel):
-    """�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED��KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED"""
-    user_id: Optional[str] = "temp_user"  # KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED��KOREAN_TEXT_REMOVEDID
+    """Prize roulette spin request"""
+    user_id: Optional[str] = "temp_user"  # Temporary user ID
 
 class PrizeRouletteSpinResponse(BaseModel):
-    """�KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED��KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED"""
+    """Prize roulette spin response"""
     success: bool
     prize: Optional[Prize] = None
     message: str
