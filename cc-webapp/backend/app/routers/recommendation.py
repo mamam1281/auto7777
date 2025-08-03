@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
+
 from pydantic import BaseModel, Field, field_validator # Ensure all are imported
 
 from ..emotion_models import EmotionResult, SupportedEmotion, SupportedLanguage
@@ -68,7 +68,7 @@ async def get_personalized_recommendations_endpoint(
     try:
         recommendation_service = RecommendationService(db=db)
         recommendations = recommendation_service.get_personalized_recommendations(
-            user_id=request_data.user_id, emotion=None  # 감정 데이터는 요청의 current_emotion_data로 이미 처리됨
+            user_id=request_data.user_id, emotion=None  # 감정 ?�이?�는 ?�청??current_emotion_data�??��? 처리??
         )
     except Exception as e:
         logger.exception(f"Error generating recommendations for user {request_data.user_id}")
@@ -82,24 +82,24 @@ async def get_personalized_recommendations_endpoint(
 
 @router.get("/personalized")
 async def get_personalized_recommendations_v2(
-    user_id: int = Query(..., description="사용자 ID"),
-    emotion: Optional[str] = Query(None, description="현재 감정 상태"),
+    user_id: int = Query(..., description="?�용??ID"),
+    emotion: Optional[str] = Query(None, description="?�재 감정 ?�태"),
     current_user_id = Depends(get_current_user_id),
     service: RecommendationService = Depends(get_recommendation_service)
 ):
     """
-    개인화된 게임 추천을 제공합니다
+    개인?�된 게임 추천???�공?�니??
     
     Args:
-        user_id: 사용자 ID
-        emotion: 현재 감정 상태 (옵션)
+        user_id: ?�용??ID
+        emotion: ?�재 감정 ?�태 (?�션)
     
     Returns:
         추천 게임 목록
     """
-    try:        # 현재 사용자 권한 확인
+    try:        # ?�재 ?�용??권한 ?�인
         if user_id != current_user_id:
-            raise HTTPException(status_code=403, detail="Not authorized to access this resource")# 추천 서비스 호출 - 올바른 매개변수 사용
+            raise HTTPException(status_code=403, detail="Not authorized to access this resource")# 추천 ?�비???�출 - ?�바�?매개변???�용
         recommendations = service.get_personalized_recommendations(user_id=user_id, emotion=emotion)
         
         return {

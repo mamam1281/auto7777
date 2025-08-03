@@ -62,17 +62,17 @@ async def generate_feedback(
     service: EmotionFeedbackService = Depends(get_emotion_feedback_service)
 ):
     """
-    사용자 감정에 기반한 피드백 생성
+    ?�용??감정??기반???�드�??�성
     
     Args:
-        request: 피드백 요청 데이터
-            - user_id: 사용자 ID
-            - emotion: 감정 상태
-            - segment: 사용자 세그먼트
-            - context: 추가 컨텍스트 정보
+        request: ?�드�??�청 ?�이??
+            - user_id: ?�용??ID
+            - emotion: 감정 ?�태
+            - segment: ?�용???�그먼트
+            - context: 추�? 컨텍?�트 ?�보
     
     Returns:
-        피드백 응답 객체
+        ?�드�??�답 객체
     """
     try:
         user_id = request.get("user_id")
@@ -80,15 +80,15 @@ async def generate_feedback(
         segment = request.get("segment", "Medium")
         context = request.get("context", {})
         
-        # 필수 필드 검증
+        # ?�수 ?�드 검�?
         if not user_id or not emotion:
             raise HTTPException(status_code=400, detail="Missing required fields")
         
-        # 현재 사용자 권한 확인
+        # ?�재 ?�용??권한 ?�인
         if user_id != current_user["user_id"]:
             raise HTTPException(status_code=403, detail="Not authorized to access this resource")
         
-        # 피드백 생성
+        # ?�드�??�성
         feedback = service.generate_feedback(emotion, segment, context)
         
         return {

@@ -29,24 +29,24 @@ def get_shop_service(db = Depends(get_db)) -> ShopService:
     """Dependency provider for ShopService."""
     return ShopService(db)
 
-@router.post("/purchase", response_model=ShopPurchaseResponse, summary="아이템 구매", description="사용자의 토큰을 사용하여 상점의 아이템을 구매합니다.")
+@router.post("/purchase", response_model=ShopPurchaseResponse, summary="?�이??구매", description="?�용?�의 ?�큰???�용?�여 ?�점???�이?�을 구매?�니??")
 def purchase_shop_item(
     request: ShopPurchaseRequest,
     shop_service: ShopService = Depends(get_shop_service)
 ):
     """
-    ### 요청 본문:
-    - **user_id**: 아이템을 구매하는 사용자 ID
-    - **item_id**: 구매할 아이템의 ID
-    - **item_name**: 구매할 아이템의 이름
-    - **price**: 아이템 가격
-    - **description**: 아이템 설명 (선택 사항)
+    ### ?�청 본문:
+    - **user_id**: ?�이?�을 구매?�는 ?�용??ID
+    - **item_id**: 구매???�이?�의 ID
+    - **item_name**: 구매???�이?�의 ?�름
+    - **price**: ?�이??가�?
+    - **description**: ?�이???�명 (?�택 ?�항)
 
-    ### 응답:
-    - **success**: 구매 성공 여부
+    ### ?�답:
+    - **success**: 구매 ?�공 ?��?
     - **message**: 처리 결과 메시지
-    - **new_gold_balance**: 구매 후 사용자의 새 토큰 잔액
-    - **item_id, item_name, new_item_count**: 구매한 아이템 정보 및 보유 개수
+    - **new_gold_balance**: 구매 ???�용?�의 ???�큰 ?�액
+    - **item_id, item_name, new_item_count**: 구매???�이???�보 �?보유 개수
     """
     try:
         result = shop_service.purchase_item(

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+
 from typing import List
 
 from ..services.mission_service import MissionService
@@ -11,7 +11,7 @@ router = APIRouter(
     tags=["missions"],
 )
 
-def get_mission_service(db: Session = Depends(get_db)) -> MissionService:
+def get_mission_service(db = Depends(get_db)) -> MissionService:
     return MissionService(db)
 
 @router.get("/")

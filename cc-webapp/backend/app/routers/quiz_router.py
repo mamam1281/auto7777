@@ -1,11 +1,11 @@
 """
 ?�� Casino-Club F2P - Quiz API Router
 ===================================
-?�즈 게임 �??�리 ?�로??측정 API
+?�즈 게임 �??�리 ?�로??측정 API
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+
 from typing import List, Optional
 import json
 from datetime import datetime, timedelta
@@ -30,7 +30,7 @@ router = APIRouter(prefix="/api/quiz", tags=["Quiz"])
 
 @router.get("/categories", response_model=List[QuizCategoryResponse])
 async def get_quiz_categories(
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """?�즈 카테고리 목록 조회"""
@@ -46,10 +46,10 @@ async def get_quiz_categories(
 @router.get("/categories/{category_id}/quizzes", response_model=List[QuizResponse])
 async def get_quizzes_by_category(
     category_id: int,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """카테고리�??�즈 목록 조회"""
+    """카테고리�??�즈 목록 조회"""
     try:
         quizzes = db.query(Quiz).filter(
             Quiz.category_id == category_id,
@@ -63,7 +63,7 @@ async def get_quizzes_by_category(
 @router.get("/{quiz_id}", response_model=QuizResponse)
 async def get_quiz_details(
     quiz_id: int,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """?�즈 ?�세 ?�보 조회"""
@@ -79,7 +79,7 @@ async def get_quiz_details(
 @router.get("/{quiz_id}/questions", response_model=List[QuizQuestionResponse])
 async def get_quiz_questions(
     quiz_id: int,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """?�즈 문제 목록 조회"""
@@ -96,7 +96,7 @@ async def get_quiz_questions(
 async def start_quiz_attempt(
     quiz_id: int,
     attempt_data: QuizAttemptCreate,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
@@ -117,7 +117,7 @@ async def start_quiz_attempt(
 async def submit_quiz_answer(
     attempt_id: int,
     answer_data: QuizAnswerSubmit,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
@@ -137,7 +137,7 @@ async def submit_quiz_answer(
 @router.post("/attempts/{attempt_id}/complete", response_model=QuizAttemptResponse)
 async def complete_quiz_attempt(
     attempt_id: int,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
@@ -149,7 +149,7 @@ async def complete_quiz_attempt(
             user_id=current_user.id
         )
         
-        # 감정 기반 ?�드�??�성
+        # 감정 기반 ?�드�??�성
         emotion_engine = EmotionEngine(redis)
         feedback = await emotion_engine.generate_quiz_feedback(
             user_id=current_user.id,
@@ -165,7 +165,7 @@ async def complete_quiz_attempt(
 @router.get("/attempts/{attempt_id}", response_model=QuizAttemptResponse)
 async def get_quiz_attempt(
     attempt_id: int,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """?�즈 ?�도 조회"""
@@ -187,7 +187,7 @@ async def get_quiz_attempt(
 async def get_user_quiz_history(
     limit: int = Query(10, ge=1, le=50),
     offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """?�용???�즈 기록 조회"""
@@ -206,7 +206,7 @@ async def get_quiz_leaderboard(
     quiz_id: int,
     period: str = Query("all_time", regex="^(daily|weekly|monthly|all_time)$"),
     limit: int = Query(10, ge=1, le=100),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """?�즈 리더보드 조회"""
@@ -223,7 +223,7 @@ async def get_quiz_leaderboard(
 
 @router.get("/user/stats", response_model=QuizStatsResponse)
 async def get_user_quiz_stats(
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
@@ -238,7 +238,7 @@ async def get_user_quiz_stats(
 
 @router.get("/user/risk-profile", response_model=dict)
 async def get_user_risk_profile(
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """?�용??리스???�로??조회"""
@@ -284,27 +284,27 @@ async def get_user_risk_profile(
 
 
 def _get_risk_recommendations(risk_level: str) -> List[str]:
-    """리스크 레벨별 추천사항"""
+    """리스???�벨�?추천?�항"""
     recommendations = {
         "high-risk": [
-            "신중한 게임 플레이를 권장합니다",
-            "소액 베팅으로 시작해보세요",
-            "일일 한도를 설정하는 것이 좋습니다"
+            "?�중??게임 ?�레?��? 권장?�니??,
+            "?�액 베팅?�로 ?�작?�보?�요",
+            "?�일 ?�도�??�정?�는 것이 좋습?�다"
         ],
         "moderate-risk": [
-            "균형잡힌 게임 플레이를 권해드려요",
-            "정기적인 휴식을 취하세요",
-            "예산 관리에 주의하세요"
+            "균형?�힌 게임 ?�레?��? 권해?�려??,
+            "?�기?�인 ?�식??취하?�요",
+            "?�산 관리에 주의?�세??
         ],
         "calculated-risk": [
-            "전략적인 게임 플레이를 계속하세요",
-            "다양한 게임을 시도해보세요",
-            "리워드 최적화에 집중하세요"
+            "?�략?�인 게임 ?�레?��? 계속?�세??,
+            "?�양??게임???�도?�보?�요",
+            "리워??최적?�에 집중?�세??
         ],
         "conservative": [
-            "안전한 플레이 스타일을 권해드립니다",
-            "보상 중심의 게임을 즐기세요",
-            "점진적으로 도전해보세요"
+            "?�전???�레???��??�을 권해?�립?�다",
+            "보상 중심??게임??즐기?�요",
+            "?�진?�으�??�전?�보?�요"
         ]
     }
     return recommendations.get(risk_level, [])

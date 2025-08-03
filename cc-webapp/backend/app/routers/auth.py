@@ -1,4 +1,4 @@
-"""인증 관련 API 라우터"""
+"""?�증 관??API ?�우??""
 import logging
 from datetime import datetime
 from typing import Optional
@@ -13,16 +13,16 @@ from ..services.auth_service import AuthService, security
 from ..models.auth_models import User, InviteCode
 from ..config_simple import settings
 
-# 로거 설정
+# 로거 ?�정
 logger = logging.getLogger(__name__)
 
-# Auth service 인스턴스
+# Auth service ?�스?�스
 auth_service = AuthService()
 
-# OAuth2 스키마
+# OAuth2 ?�키�?
 oauth2_scheme = HTTPBearer()
 
-# 설정값들
+# ?�정값들
 JWT_EXPIRE_MINUTES = settings.jwt_expire_minutes
 INITIAL_CYBER_TOKENS = getattr(settings, 'initial_cyber_tokens', 200)
 
@@ -34,19 +34,19 @@ async def signup(
     data: UserCreate,
     db = Depends(get_db)
 ):
-    """사용자 회원가입 (필수 5개 입력: 사이트아이디, 닉네임, 전화번호, 초대코드, 비밀번호)"""
+    """?�용???�원가??(?�수 5�??�력: ?�이?�아?�디, ?�네?? ?�화번호, 초�?코드, 비�?번호)"""
     try:
-        logger.info(f"회원가입 시도: site_id={data.site_id}, nickname={data.nickname}")
+        logger.info(f"?�원가???�도: site_id={data.site_id}, nickname={data.nickname}")
         
-        # AuthService를 통한 사용자 생성
+        # AuthService�??�한 ?�용???�성
         user = auth_service.create_user(db, data)
         
-        # 토큰 생성
+        # ?�큰 ?�성
         access_token = auth_service.create_access_token(
             data={"sub": user.site_id, "user_id": user.id}
         )
         
-        # 사용자 응답 데이터 생성
+        # ?�용???�답 ?�이???�성
         user_response = UserResponse(
             id=user.id,
             site_id=user.site_id,
@@ -59,7 +59,7 @@ async def signup(
             is_active=user.is_active
         )
         
-        logger.info(f"회원가입 성공: user_id={user.id}")
+        logger.info(f"?�원가???�공: user_id={user.id}")
         
         return Token(
             access_token=access_token,
@@ -71,7 +71,7 @@ async def signup(
         raise
     except Exception as e:
         logger.error(f"Signup error: {e}")
-        raise HTTPException(status_code=500, detail="회원가입 처리 중 오류가 발생했습니다")
+        raise HTTPException(status_code=500, detail="?�원가??처리 �??�류가 발생?�습?�다")
 
 
 @router.post("/login", response_model=Token)
@@ -79,30 +79,30 @@ async def login(
     form_data: UserLogin,
     db = Depends(get_db)
 ):
-    """사용자 로그인"""
+    """?�용??로그??""
     try:
-        logger.info(f"로그인 시도: site_id={form_data.site_id}")
+        logger.info(f"로그???�도: site_id={form_data.site_id}")
         
-        # 사용자 인증
+        # ?�용???�증
         user = auth_service.authenticate_user(form_data.site_id, form_data.password, db)
         if not user:
-            logger.warning(f"로그인 실패: 잘못된 자격 증명 - site_id={form_data.site_id}")
+            logger.warning(f"로그???�패: ?�못???�격 증명 - site_id={form_data.site_id}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="잘못된 사이트 ID 또는 비밀번호입니다",
+                detail="?�못???�이??ID ?�는 비�?번호?�니??,
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
-        # 토큰 생성
+        # ?�큰 ?�성
         access_token = auth_service.create_access_token(
             data={"sub": user.site_id, "user_id": user.id}
         )
         
-        # 마지막 로그인 시간 업데이트
+        # 마�?�?로그???�간 ?�데?�트
         user.last_login = datetime.utcnow()
         db.commit()
         
-        # 사용자 응답 데이터 생성
+        # ?�용???�답 ?�이???�성
         user_response = UserResponse(
             id=user.id,
             site_id=user.site_id,
@@ -115,7 +115,7 @@ async def login(
             is_active=user.is_active
         )
         
-        logger.info(f"로그인 성공: user_id={user.id}")
+        logger.info(f"로그???�공: user_id={user.id}")
         
         return Token(
             access_token=access_token,
@@ -127,4 +127,4 @@ async def login(
         raise
     except Exception as e:
         logger.error(f"Login error: {e}")
-        raise HTTPException(status_code=500, detail="로그인 처리 중 오류가 발생했습니다")
+        raise HTTPException(status_code=500, detail="로그??처리 �??�류가 발생?�습?�다")

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+
 
 from ..services.dashboard_service import DashboardService
 from ..database import get_db
@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 @router.get("/main")
-def get_main_dashboard(db: Session = Depends(get_db)):
+def get_main_dashboard(db = Depends(get_db)):
     """
     Get main dashboard statistics.
     """
@@ -21,7 +21,7 @@ def get_main_dashboard(db: Session = Depends(get_db)):
     return dashboard_service.get_main_dashboard_stats()
 
 @router.get("/games")
-def get_games_dashboard(db: Session = Depends(get_db)):
+def get_games_dashboard(db = Depends(get_db)):
     """
     Get game-specific dashboard statistics.
     """
@@ -29,7 +29,7 @@ def get_games_dashboard(db: Session = Depends(get_db)):
     return dashboard_service.get_game_dashboard_stats()
 
 @router.get("/social-proof")
-def get_social_proof(db: Session = Depends(get_db)):
+def get_social_proof(db = Depends(get_db)):
     """
     Get statistics for social proof widgets.
     This endpoint is not protected by admin auth to be publicly available.

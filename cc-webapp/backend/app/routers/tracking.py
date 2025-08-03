@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
@@ -30,7 +30,7 @@ class SiteVisitResponse(BaseModel):
         from_attributes = True
 
 # Dependency provider for TrackingService
-def get_tracking_service(db: Session = Depends(get_db)):
+def get_tracking_service(db = Depends(get_db)):
     return TrackingService(db=db)
 
 @router.post("/site-visit", status_code=201, response_model=SiteVisitResponse)

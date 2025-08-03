@@ -23,11 +23,11 @@ async def chat_websocket(
     user_id: int
 ):
     """WebSocket endpoint for real-time chat."""
-    # WebSocket에서는 의존성 주입을 직접 생성해야 함
+    # WebSocket?�서???�존??주입??직접 ?�성?�야 ??
     cj_service = CJAIService()
     
-    # WebSocket 연결에서는 토큰 인증을 다르게 처리
-    # 실제 구현에서는 websocket.query_params에서 토큰을 가져와 검증
+    # WebSocket ?�결?�서???�큰 ?�증???�르�?처리
+    # ?�제 구현?�서??websocket.query_params?�서 ?�큰??가?��? 검�?
         
     try:
         await websocket.accept()

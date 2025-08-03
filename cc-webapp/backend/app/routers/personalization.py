@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import List, Dict
 from datetime import datetime
 
-from sqlalchemy.orm import Session
+
 
 from app.database import get_db
 from app.services.rfm_service import RFMService, RFMScore
@@ -40,7 +40,7 @@ class UserProfile(BaseModel):
 @router.get("/recommendations", response_model=List[GameRecommendation])
 async def get_recommendations(
     user_id: int = Depends(get_user_from_token),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
 ):
     game_repository = GameRepository()
     rfm_service = RFMService(db, game_repository)
@@ -65,7 +65,7 @@ async def get_recommendations(
 @router.get("/profile", response_model=UserProfile)
 async def get_user_profile(
     user_id: int = Depends(get_user_from_token),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
 ):
     game_repository = GameRepository()
     rfm_service = RFMService(db, game_repository)

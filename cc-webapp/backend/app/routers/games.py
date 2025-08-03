@@ -1,184 +1,158 @@
-"""게임 관련 API 엔드포인트"""
+"""Game Collection API Endpoints"""
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..services.game_service import GameService
-# from ..repositories.game_repository import GameRepository  # 임시 비활성화
 
 router = APIRouter(prefix="/api/games", tags=["games"])
 
-# Pydantic 모델들
-from pydantic import BaseModel
-
+# Pydantic models
 class PrizeRouletteSpinRequest(BaseModel):
-    """경품추첨 룰렛 요청"""
-    pass  # 단순히 돌리기만 하므로 추가 파라미터 없음
+    """Prize roulette spin request"""
+    pass  # Simple spin only, no additional parameters
 
 class GachaPullRequest(BaseModel):
-    count: int  # 뽑기 횟수
+    count: int  # Number of pulls
 
 class RPSPlayRequest(BaseModel):
     choice: str  # "rock", "paper", "scissors"
     bet_amount: int
 
-class SlotSpinResponse(BaseModel):
-    result: str
-    tokens_change: int
-    balance: int
-    daily_spin_count: int
-    animation: Optional[str]
+class SlotSpinRequest(BaseModel):
+    """Slot machine spin request"""
+    bet_amount: int
 
 class PrizeRouletteSpinResponse(BaseModel):
-    """경품 룰렛 스핀 응답"""
-    success: bool
-    prize: Optional[dict]
-    message: str
-    spins_left: int
-    cooldown_expires: Optional[str]
+    """Prize roulette spin response"""
+    winner_prize: str
+    tokens_change: int
+    balance: int
 
 class PrizeRouletteInfoResponse(BaseModel):
-    """경품 룰렛 정보 응답"""
-    spins_left: int
-    prizes: List[dict]
+    """Prize roulette info response"""
+    prizes: List[Dict[str, Any]]
     max_daily_spins: int
 
 class GachaPullResponse(BaseModel):
-    """가챠 뽑기 응답"""
-    results: List[dict]
+    """Gacha pull response"""
+    results: List[str]  # Actual GachaPullResult format
     tokens_change: int
     balance: int
 
 class RPSPlayResponse(BaseModel):
-    """가위바위보 응답"""
+    """Rock Paper Scissors response"""
     user_choice: str
     computer_choice: str
     result: str
     tokens_change: int
     balance: int
 
-# 의존성 주입
+# Dependency injection
 def get_game_service() -> GameService:
-    """게임 서비스 의존성"""
+    """Game service dependency"""
     return GameService()
 
-@router.post("/slot/spin", response_model=SlotSpinResponse)
-async def spin_slot(
+# API endpoints
+@router.post("/slot/spin", response_model=Dict[str, Any])
+async def slot_spin(
     current_user = Depends(get_current_user),
     db = Depends(get_db),
     game_service: GameService = Depends(get_game_service)
 ):
-    """슬롯 머신 스핀"""
+    """Slot machine spin"""
     try:
         result = game_service.slot_spin(current_user.id, db)
-        return SlotSpinResponse(
-            result=result.result,
-            tokens_change=result.tokens_change,
-            balance=result.balance,
-            daily_spin_count=result.daily_spin_count,
-            animation=result.animation
-        )
+        return {
+            "success": True,
+            "message": "Slot spin completed",
+            "result": result,
+            "user_id": current_user.id
+        }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Slot spin failed")
 
-@router.post("/roulette/spin", response_model=PrizeRouletteSpinResponse)
-async def spin_prize_roulette(
+@router.post("/prize-roulette/spin", response_model=PrizeRouletteSpinResponse)
+async def prize_roulette_spin(
     current_user = Depends(get_current_user),
     db = Depends(get_db),
     game_service: GameService = Depends(get_game_service)
 ):
-    """경품추첨 룰렛 스핀"""
+    """Prize roulette spin"""
     try:
-        result = game_service.spin_prize_roulette(current_user.id)
-        
-        # Prize 객체를 딕셔너리로 변환 (속성이 없으면 기본값 사용)
-        prize_dict = None
-        if result.prize:
-            prize_dict = {
-                "id": getattr(result.prize, 'id', 1),
-                "name": getattr(result.prize, 'name', 'Prize'),
-                "value": getattr(result.prize, 'value', 100),
-                "color": getattr(result.prize, 'color', '#FFD700')
-            }
+        result = game_service.prize_roulette_spin(current_user.id, db)
         
         return PrizeRouletteSpinResponse(
-            success=result.success,
-            prize=prize_dict,
-            message=result.message,
-            spins_left=getattr(result, 'spins_left', 0),
-            cooldown_expires=getattr(result, 'cooldown_expires', None)
+            winner_prize=getattr(result, 'winner_prize', 'Unknown'),
+            tokens_change=getattr(result, 'tokens_change', 0),
+            balance=getattr(result, 'balance', 0)
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Prize roulette spin failed")
 
-@router.get("/roulette/info", response_model=PrizeRouletteInfoResponse)
-async def get_roulette_info(
+@router.get("/prize-roulette/info", response_model=PrizeRouletteInfoResponse)
+async def get_prize_roulette_info(
     current_user = Depends(get_current_user),
     db = Depends(get_db),
     game_service: GameService = Depends(get_game_service)
 ):
-    """룰렛 정보 조회"""
+    """Get prize roulette information"""
     try:
-        spins_left = game_service.get_roulette_spins_left(current_user.id)
-        prizes = game_service.get_roulette_prizes()
-        
+        info = game_service.get_prize_roulette_info(current_user.id, db)
         return PrizeRouletteInfoResponse(
-            spins_left=spins_left,
-            prizes=prizes,
-            max_daily_spins=3
+            prizes=getattr(info, 'prizes', []),
+            max_daily_spins=getattr(info, 'max_daily_spins', 5)
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Failed to get prize roulette info")
 
 @router.post("/gacha/pull", response_model=GachaPullResponse)
-async def pull_gacha(
+async def gacha_pull(
     request: GachaPullRequest,
     current_user = Depends(get_current_user),
     db = Depends(get_db),
     game_service: GameService = Depends(get_game_service)
 ):
-    """가챠 뽑기"""
+    """Gacha pull"""
     try:
         result = game_service.gacha_pull(current_user.id, request.count, db)
+        
         return GachaPullResponse(
-            results=result.results,
-            tokens_change=result.tokens_change,
-            balance=result.balance
+            results=getattr(result, 'results', []),
+            tokens_change=getattr(result, 'tokens_change', 0),
+            balance=getattr(result, 'balance', 0)
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Gacha pull failed")
 
 @router.post("/rps/play", response_model=RPSPlayResponse)
-async def play_rps(
+async def rps_play(
     request: RPSPlayRequest,
     current_user = Depends(get_current_user),
     db = Depends(get_db),
     game_service: GameService = Depends(get_game_service)
 ):
-    """가위바위보 게임"""
+    """Rock Paper Scissors play"""
     try:
-        result = game_service.rps_play(
-            current_user.id, 
-            request.choice, 
-            request.bet_amount, 
-            db
-        )
+        result = game_service.rps_play(current_user.id, request.choice, request.bet_amount, db)
+        
         return RPSPlayResponse(
-            user_choice=result.user_choice,
-            computer_choice=result.computer_choice,
-            result=result.result,
-            tokens_change=result.tokens_change,
-            balance=result.balance
+            user_choice=getattr(result, 'user_choice', request.choice),
+            computer_choice=getattr(result, 'computer_choice', 'rock'),
+            result=getattr(result, 'result', 'tie'),
+            tokens_change=getattr(result, 'tokens_change', 0),
+            balance=getattr(result, 'balance', 0)
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="RPS play failed")

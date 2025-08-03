@@ -1,10 +1,10 @@
 """
-🛠️ 간단한 관리자 API 라우터
-관리자 전용 기능들을 제공합니다.
+?���?간단??관리자 API ?�우??
+관리자 ?�용 기능?�을 ?�공?�니??
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+
 from typing import List, Optional
 from datetime import datetime
 
@@ -14,19 +14,19 @@ from app.auth.auth_service import AuthService
 
 router = APIRouter(
     prefix="/admin",
-    tags=["🛠️ 관리자"],
+    tags=["?���?관리자"],
     responses={404: {"description": "Not found"}},
 )
 
-def get_current_admin(db: Session = Depends(get_db)) -> User:
-    """관리자 권한이 있는 현재 사용자 반환"""
-    # 실제 구현에서는 토큰에서 사용자 정보를 가져와야 함
-    # 지금은 테스트용으로 관리자 사용자를 반환
+def get_current_admin(db = Depends(get_db)) -> User:
+    """관리자 권한???�는 ?�재 ?�용??반환"""
+    # ?�제 구현?�서???�큰?�서 ?�용???�보�?가?��?????
+    # 지금�? ?�스?�용?�로 관리자 ?�용?��? 반환
     admin_user = db.query(User).filter(User.nickname.like("%admin%")).first()
     if not admin_user:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="관리자 권한이 필요합니다"
+            detail="관리자 권한???�요?�니??
         )
     return admin_user
 
@@ -34,10 +34,10 @@ def get_current_admin(db: Session = Depends(get_db)) -> User:
 async def get_all_users(
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
-    """모든 사용자 조회 (관리자 전용)"""
+    """모든 ?�용??조회 (관리자 ?�용)"""
     users = db.query(User).offset(skip).limit(limit).all()
     return {
         "total": len(users),
@@ -55,20 +55,20 @@ async def get_all_users(
 
 @router.get("/stats")
 async def get_admin_stats(
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
-    """관리자 대시보드 통계"""
+    """관리자 ?�?�보???�계"""
     total_users = db.query(User).count()
     
     return {
         "total_users": total_users,
-        "active_users": total_users,  # 임시로 같은 값
+        "active_users": total_users,  # ?�시�?같�? �?
         "admin_count": db.query(User).filter(User.nickname.like("%admin%")).count(),
         "system_status": "healthy"
     }
 
 @router.get("/health")
 async def admin_health_check():
-    """관리자 API 상태 확인"""
+    """관리자 API ?�태 ?�인"""
     return {"status": "healthy", "timestamp": datetime.now()}

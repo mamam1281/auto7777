@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+
 from pydantic import BaseModel
 from typing import List, Dict
 
@@ -14,7 +14,7 @@ router = APIRouter(
 class AnswerRequest(BaseModel):
     answers: Dict[int, int] # {question_id: answer_id}
 
-def get_quiz_service(db: Session = Depends(get_db)):
+def get_quiz_service(db = Depends(get_db)):
     return QuizService(db)
 
 @router.get("/{quiz_id}")

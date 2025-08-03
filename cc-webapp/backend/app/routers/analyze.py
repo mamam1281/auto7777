@@ -7,14 +7,14 @@ from ..utils.sentiment_analyzer import SentimentAnalyzer
 router = APIRouter(prefix="/ai", tags=["ai"])
 
 class AnalyzeRequest(BaseModel):
-    """감정 분석 요청 모델"""
+    """감정 분석 ?�청 모델"""
     user_id: int
-    text: str = Field(..., description="분석할 텍스트")
-    context: Dict[str, Any] = Field(default_factory=dict, description="추가 컨텍스트")
+    text: str = Field(..., description="분석???�스??)
+    context: Dict[str, Any] = Field(default_factory=dict, description="추�? 컨텍?�트")
 
 @router.post("/analyze")
 async def analyze_emotion(request: AnalyzeRequest):
-    """고급 감정 분석 엔드포인트"""
+    """고급 감정 분석 ?�드?�인??""
     try:
         analyzer = SentimentAnalyzer()
         result = analyzer.analyze(request.text)

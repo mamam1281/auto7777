@@ -1,7 +1,7 @@
 import os
 import json
 from fastapi import APIRouter, Depends, HTTPException
-# from sqlalchemy.orm import Session # Will be needed later
+#  # Will be needed later
 try:
     from confluent_kafka import Producer
 except ImportError:  # In case library is not installed during lightweight tests
@@ -41,7 +41,7 @@ def delivery_report(err, msg):
 #         db.close()
 
 @router.post("/actions", tags=["actions"])
-# async def create_action(action: schemas.ActionCreate, db: Session = Depends(get_db)): # Full version with Pydantic and DB
+# async def create_action(action: schemas.ActionCreate, db = Depends(get_db)): # Full version with Pydantic and DB
 async def create_action(user_id: int, action_type: str): # Simplified for now, matching current subtask request
     """
     Logs an action and publishes it to Kafka.

@@ -1,6 +1,6 @@
 # cc-webapp/backend/app/routers/unlock.py
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+
 from sqlalchemy import desc # Correct import for desc
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
@@ -17,7 +17,7 @@ router = APIRouter()
 MAX_UNLOCK_STAGE = 3 # Define this based on your content stages. Consider making it configurable.
 
 # --- Dependencies ---
-def get_user_service(db: Session = Depends(get_db)) -> UserService:
+def get_user_service(db = Depends(get_db)) -> UserService:
     return UserService(db)
 
 # --- Pydantic Models ---
@@ -47,7 +47,7 @@ def get_segment_level(rfm_group: str | None) -> int:
 @router.get("/unlock", response_model=UnlockResponse, tags=["unlock", "content"])
 async def attempt_content_unlock(
     user_id: int = Query(..., description="ID of the user attempting to unlock content"),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     user_service: UserService = Depends(get_user_service)
 ):
     # 1. Fetch User record with unified error handling

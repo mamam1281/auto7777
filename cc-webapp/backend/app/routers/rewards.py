@@ -1,6 +1,6 @@
 # cc-webapp/backend/app/routers/rewards.py
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
-from sqlalchemy.orm import Session
+
 from typing import List, Any # Any might not be needed if using specific Pydantic models
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 from datetime import timezone
@@ -56,7 +56,7 @@ async def get_user_rewards(
     user_id: int = Path(..., title="The ID of the user to get rewards for", ge=1),
     page: int = Query(1, ge=1, description="Page number, 1-indexed"),
     page_size: int = Query(20, ge=1, le=100, description="Number of items per page"),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     user_service: UserService = Depends(lambda db=Depends(get_db): UserService(db))
 ):
     """
@@ -113,7 +113,7 @@ async def get_user_rewards(
 @router.post("/distribute", response_model=RewardItem, tags=["rewards"])
 async def distribute_reward_to_user(
     request: RewardDistributionRequest,
-    db: Session = Depends(get_db)
+    db = Depends(get_db)
 ):
     """
     Distributes a specific reward to a user.

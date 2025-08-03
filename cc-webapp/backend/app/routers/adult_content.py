@@ -3,7 +3,7 @@
 import logging
 from fastapi import APIRouter, HTTPException, Depends, Body, Path, Query
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
+
 from typing import List, Optional, Dict, Any
 
 from app.database import get_db
@@ -24,42 +24,42 @@ router = APIRouter(prefix="/v1/adult", tags=["Adult Content"])
 public_router = APIRouter(prefix="/v1/adult", tags=["Adult Content - Public"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
-# Authentication dependency - 단순 닉네임 기반 인증
-async def get_current_user(nickname: str, db: Session = Depends(get_db)) -> User:
-    """닉네임으로 사용자 인증 - 초대코드로 가입한 사용자"""
+# Authentication dependency - ?�순 ?�네??기반 ?�증
+async def get_current_user(nickname: str, db = Depends(get_db)) -> User:
+    """?�네?�으�??�용???�증 - 초�?코드�?가?�한 ?�용??""
     user = db.query(User).filter(User.nickname == nickname).first()
     if not user:
-        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다")
+        raise HTTPException(status_code=404, detail="?�용?��? 찾을 ???�습?�다")
     return user
 
 def check_rank_access(user: User, required_rank: str) -> bool:
-    """랭크 기반 접근 제어"""
+    """??�� 기반 ?�근 ?�어"""
     from app.auth.simple_auth import SimpleAuth
     return SimpleAuth.check_rank_access(str(user.rank), required_rank)
 
 # Service dependencies
-def get_token_service(db: Session = Depends(get_db)) -> TokenService:
+def get_token_service(db = Depends(get_db)) -> TokenService:
     return TokenService(db=db)
 
-def get_user_service(db: Session = Depends(get_db)) -> UserService:
+def get_user_service(db = Depends(get_db)) -> UserService:
     return UserService(db=db)
 
 def get_adult_content_service(
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     token_service: TokenService = Depends(get_token_service)
 ) -> AdultContentService:
     return AdultContentService(db=db, token_service=token_service)
 
 # Placeholder service dependencies for tests - TODO: implement actual services
-def get_vip_content_service(db: Session = Depends(get_db)) -> Any:
+def get_vip_content_service(db = Depends(get_db)) -> Any:
     """Placeholder VIP content service for testing."""
     return None
 
-def get_flash_offer_service(db: Session = Depends(get_db)) -> Any:
+def get_flash_offer_service(db = Depends(get_db)) -> Any:
     """Placeholder flash offer service for testing."""
     return None
 
-def get_age_verification_service(db: Session = Depends(get_db)) -> Any:
+def get_age_verification_service(db = Depends(get_db)) -> Any:
     """Placeholder age verification service for testing."""
     return None
 

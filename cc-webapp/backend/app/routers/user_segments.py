@@ -5,7 +5,7 @@ try:
 except Exception:  # noqa: BLE001
     redis = None
 from fastapi import APIRouter, Depends, HTTPException, Path
-from sqlalchemy.orm import Session
+
 from pydantic import BaseModel
 
 from .. import models  # Assuming UserSegment model is here
@@ -36,7 +36,7 @@ def get_db():
     with SessionLocal() as db:
         yield db
 
-def get_user_service(db: Session = Depends(get_db)) -> UserService:
+def get_user_service(db = Depends(get_db)) -> UserService:
     return UserService(db)
 
 class RecommendationResponse(BaseModel):
@@ -54,7 +54,7 @@ class RecommendationResponse(BaseModel):
 )
 async def get_user_recommendation(
     user_id: int = Path(..., title="The ID of the user to get recommendations for", ge=1),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     user_service: UserService = Depends(get_user_service)
 ):
     try:

@@ -1,6 +1,6 @@
 # cc-webapp/backend/app/routers/gacha.py
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+
 from typing import Dict, Any, Union
 import logging
 
@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 def get_service() -> GachaService:
-    """가챠 서비스 의존성"""
+    """가�??�비???�존??""
     return GachaService()
 
 
@@ -25,12 +25,12 @@ class GachaConfig(BaseModel):
 
 # --- Pydantic Models ---
 class GachaPullRequest(BaseModel):
-    """가챠 뽑기 요청"""
+    """가�?뽑기 ?�청"""
 
     user_id: int
 
 class GachaPullResponseItem(BaseModel):
-    """가챠 결과 응답"""
+    """가�?결과 ?�답"""
 
     type: str
     amount: Union[int, None] = None      # For COIN type
@@ -73,7 +73,7 @@ class GachaPullResponseItem(BaseModel):
 @router.post("/gacha/pull", response_model=GachaPullResponseItem, tags=["gacha"])
 async def pull_gacha_for_user(
     request_data: GachaPullRequest,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     service: GachaService = Depends(get_service),
 ):
     """
@@ -91,21 +91,21 @@ async def pull_gacha_for_user(
     user = db.query(User).filter(User.id == request_data.user_id).first()
     if not user:
         logger.warning(f"Gacha pull attempt by non-existent user_id: {request_data.user_id}")
-        raise HTTPException(status_code=404, detail=f"User with id {request_data.user_id} not found.")    # GachaService가 통화 차감 및 보상 풀 관리 등을 수행
+        raise HTTPException(status_code=404, detail=f"User with id {request_data.user_id} not found.")    # GachaService가 ?�화 차감 �?보상 ?� 관�??�을 ?�행
     result = service.pull(request_data.user_id, 1, db)
     gacha_result_dict = {"type": result.results[0]}
     
-    # 결과 객체에서 추가 정보 추출 (안전하게)
+    # 결과 객체?�서 추�? ?�보 추출 (?�전?�게)
     if hasattr(result, 'results') and len(result.results) > 1:
-        # results가 더 복잡한 구조일 수 있음
+        # results가 ??복잡??구조?????�음
         pass
-      # Dict 타입으로 변환을 위해 안전한 기본값 사용
+      # Dict ?�?�으�?변?�을 ?�해 ?�전??기본�??�용
     gacha_result_dict = {
         "type": str(result.results[0]) if result.results else "UNKNOWN"
     }
     
-    # 타입 안전성을 위해 명시적으로 없는 필드는 제외
-    # amount와 stage는 가챠 결과에 따라 동적으로 설정될 수 있음
+    # ?�???�전?�을 ?�해 명시?�으�??�는 ?�드???�외
+    # amount?� stage??가�?결과???�라 ?�적?�로 ?�정?????�음
 
     if not gacha_result_dict or not gacha_result_dict.get("type"):
         logger.error(
@@ -128,7 +128,7 @@ async def pull_gacha_for_user(
 
 @router.get("/gacha/config", response_model=GachaConfig, tags=["gacha"])
 async def get_gacha_config(service: GachaService = Depends(get_service)):
-    """현재 가챠 설정 조회"""
+    """?�재 가�??�정 조회"""
     return GachaConfig(**service.get_config())
 
 
@@ -137,6 +137,6 @@ async def update_gacha_config(
     config: GachaConfig,
     service: GachaService = Depends(get_service),
 ):
-    """가챠 설정 갱신"""
+    """가�??�정 갱신"""
     service.update_config(rarity_table=config.rarity_table, reward_pool=config.reward_pool)
     return GachaConfig(**service.get_config())

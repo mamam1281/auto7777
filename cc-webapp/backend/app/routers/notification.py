@@ -1,6 +1,6 @@
 # cc-webapp/backend/app/routers/notification.py
 from fastapi import APIRouter, Depends, HTTPException, Path
-from sqlalchemy.orm import Session
+
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
@@ -13,11 +13,11 @@ from ..services.user_service import UserService
 router = APIRouter()
 
 # Dependency provider for NotificationService
-def get_notification_service(db: Session = Depends(get_db)):
+def get_notification_service(db = Depends(get_db)):
     return NotificationService(db=db)
 
 # Dependency provider for UserService
-def get_user_service(db: Session = Depends(get_db)):
+def get_user_service(db = Depends(get_db)):
     return UserService(db)
 
 # Pydantic model for the pending notification response

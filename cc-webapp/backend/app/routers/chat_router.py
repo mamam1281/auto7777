@@ -1,11 +1,11 @@
 """
-💬 Casino-Club F2P - Chat API Router
+?�� Casino-Club F2P - Chat API Router
 ===================================
-채팅 시스템 및 AI 어시스턴트 API
+채팅 ?�스??�?AI ?�시?�턴??API
 """
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
-from sqlalchemy.orm import Session
+
 from typing import List, Optional
 import json
 from datetime import datetime, timedelta
@@ -30,7 +30,7 @@ from ..utils.emotion_engine import EmotionEngine
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
-# WebSocket 연결 관리자
+# WebSocket ?�결 관리자
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
@@ -53,21 +53,21 @@ class ConnectionManager:
             await websocket.send_text(message)
     
     async def broadcast_to_room(self, message: str, room_id: int):
-        # 실제로는 room_id별 연결 관리가 필요하지만 여기서는 단순화
+        # ?�제로는 room_id�??�결 관리�? ?�요?��?�??�기?�는 ?�순??
         for connection in self.active_connections:
             await connection.send_text(message)
 
 manager = ConnectionManager()
 
-# ========== 채팅방 관리 ==========
+# ========== 채팅�?관�?==========
 
 @router.post("/rooms", response_model=ChatRoomResponse)
 async def create_chat_room(
     room_data: ChatRoomCreate,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """채팅방 생성"""
+    """채팅�??�성"""
     try:
         chat_service = ChatService(db)
         room = await chat_service.create_room(current_user.id, room_data)
@@ -81,10 +81,10 @@ async def get_chat_rooms(
     room_type: Optional[str] = Query(None),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """채팅방 목록 조회"""
+    """채팅�?목록 조회"""
     try:
         query = db.query(ChatRoom).filter(ChatRoom.is_active == True)
         
@@ -93,7 +93,7 @@ async def get_chat_rooms(
         
         rooms = query.offset(offset).limit(limit).all()
         
-        # 참가자 수 추가
+        # 참�?????추�?
         for room in rooms:
             participant_count = db.query(ChatParticipant).filter(
                 ChatParticipant.room_id == room.id,
@@ -109,10 +109,10 @@ async def get_chat_rooms(
 @router.post("/rooms/{room_id}/join", response_model=ChatParticipantResponse)
 async def join_chat_room(
     room_id: int,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """채팅방 참가"""
+    """채팅�?참�?"""
     try:
         chat_service = ChatService(db)
         participant = await chat_service.join_room(current_user.id, room_id)
@@ -124,10 +124,10 @@ async def join_chat_room(
 @router.post("/rooms/{room_id}/leave")
 async def leave_chat_room(
     room_id: int,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """채팅방 나가기"""
+    """채팅�??��?�?""
     try:
         chat_service = ChatService(db)
         await chat_service.leave_room(current_user.id, room_id)
@@ -136,19 +136,19 @@ async def leave_chat_room(
         raise HTTPException(status_code=500, detail=f"Failed to leave room: {str(e)}")
 
 
-# ========== 메시지 관리 ==========
+# ========== 메시지 관�?==========
 
 @router.get("/rooms/{room_id}/messages", response_model=List[ChatMessageResponse])
 async def get_room_messages(
     room_id: int,
     limit: int = Query(50, ge=1, le=100),
     before_id: Optional[int] = Query(None),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """채팅방 메시지 조회"""
+    """채팅�?메시지 조회"""
     try:
-        # 참가자 확인
+        # 참�????�인
         participant = db.query(ChatParticipant).filter(
             ChatParticipant.room_id == room_id,
             ChatParticipant.user_id == current_user.id,
@@ -167,9 +167,9 @@ async def get_room_messages(
             query = query.filter(ChatMessage.id < before_id)
         
         messages = query.order_by(ChatMessage.created_at.desc()).limit(limit).all()
-        messages.reverse()  # 시간순 정렬
+        messages.reverse()  # ?�간???�렬
         
-        # 발신자 닉네임 추가
+        # 발신???�네??추�?
         for message in messages:
             if message.sender_id:
                 sender = db.query(User).filter(User.id == message.sender_id).first()
@@ -184,16 +184,16 @@ async def get_room_messages(
 async def send_message(
     room_id: int,
     message_data: ChatMessageCreate,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """메시지 전송"""
+    """메시지 ?�송"""
     try:
         chat_service = ChatService(db, redis)
         emotion_engine = EmotionEngine(redis)
         
-        # 메시지 생성
+        # 메시지 ?�성
         message = await chat_service.send_message(
             current_user.id, room_id, message_data
         )
@@ -203,7 +203,7 @@ async def send_message(
         message.emotion_detected = emotion_result["emotion"]
         message.sentiment_score = emotion_result["sentiment_score"]
         
-        # 사용자 감정 프로필 업데이트
+        # ?�용??감정 ?�로???�데?�트
         await emotion_engine.update_user_mood(
             current_user.id,
             emotion_result["emotion"],
@@ -212,7 +212,7 @@ async def send_message(
         
         db.commit()
         
-        # WebSocket으로 실시간 전송
+        # WebSocket?�로 ?�시�??�송
         message_dict = {
             "type": "new_message",
             "message": {
@@ -236,12 +236,12 @@ async def send_message(
 async def add_message_reaction(
     message_id: int,
     reaction_data: MessageReactionCreate,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """메시지 반응 추가"""
+    """메시지 반응 추�?"""
     try:
-        # 기존 반응 확인
+        # 기존 반응 ?�인
         existing_reaction = db.query(MessageReaction).filter(
             MessageReaction.message_id == message_id,
             MessageReaction.user_id == current_user.id,
@@ -249,11 +249,11 @@ async def add_message_reaction(
         ).first()
         
         if existing_reaction:
-            # 이미 같은 반응이 있으면 제거
+            # ?��? 같�? 반응???�으�??�거
             db.delete(existing_reaction)
             action = "removed"
         else:
-            # 새 반응 추가
+            # ??반응 추�?
             reaction = MessageReaction(
                 message_id=message_id,
                 user_id=current_user.id,
@@ -265,7 +265,7 @@ async def add_message_reaction(
         
         db.commit()
         
-        # 반응 수 업데이트
+        # 반응 ???�데?�트
         message = db.query(ChatMessage).filter(ChatMessage.id == message_id).first()
         if message:
             reactions = db.query(MessageReaction).filter(
@@ -284,15 +284,15 @@ async def add_message_reaction(
         raise HTTPException(status_code=500, detail=f"Failed to add reaction: {str(e)}")
 
 
-# ========== AI 어시스턴트 ==========
+# ========== AI ?�시?�턴??==========
 
 @router.get("/assistants", response_model=List[AIAssistantResponse])
 async def get_ai_assistants(
     assistant_type: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """AI 어시스턴트 목록 조회"""
+    """AI ?�시?�턴??목록 조회"""
     try:
         query = db.query(AIAssistant).filter(AIAssistant.is_active == True)
         
@@ -308,10 +308,10 @@ async def get_ai_assistants(
 @router.post("/conversations", response_model=AIConversationResponse)
 async def start_ai_conversation(
     conversation_data: AIConversationCreate,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """AI 대화 시작"""
+    """AI ?�???�작"""
     try:
         chat_service = ChatService(db)
         conversation = await chat_service.start_ai_conversation(
@@ -326,20 +326,20 @@ async def start_ai_conversation(
 async def send_ai_message(
     conversation_id: int,
     message_data: AIMessageCreate,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """AI와 메시지 주고받기"""
+    """AI?� 메시지 주고받기"""
     try:
         chat_service = ChatService(db, redis)
         
-        # 사용자 메시지 저장
+        # ?�용??메시지 ?�??
         user_message = await chat_service.add_ai_message(
             conversation_id, current_user.id, message_data
         )
         
-        # AI 응답 생성
+        # AI ?�답 ?�성
         ai_response = await chat_service.generate_ai_response(
             conversation_id, current_user.id, message_data.content
         )
@@ -353,12 +353,12 @@ async def send_ai_message(
 async def get_ai_conversation_messages(
     conversation_id: int,
     limit: int = Query(50, ge=1, le=100),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """AI 대화 메시지 조회"""
+    """AI ?�??메시지 조회"""
     try:
-        # 권한 확인
+        # 권한 ?�인
         conversation = db.query(AIConversation).filter(
             AIConversation.id == conversation_id,
             AIConversation.user_id == current_user.id
@@ -371,27 +371,27 @@ async def get_ai_conversation_messages(
             AIMessage.conversation_id == conversation_id
         ).order_by(AIMessage.created_at.desc()).limit(limit).all()
         
-        messages.reverse()  # 시간순 정렬
+        messages.reverse()  # ?�간???�렬
         return messages
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get AI messages: {str(e)}")
 
 
-# ========== 감정 프로필 ==========
+# ========== 감정 ?�로??==========
 
 @router.get("/emotion-profile", response_model=EmotionProfileResponse)
 async def get_emotion_profile(
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """사용자 감정 프로필 조회"""
+    """?�용??감정 ?�로??조회"""
     try:
         profile = db.query(EmotionProfile).filter(
             EmotionProfile.user_id == current_user.id
         ).first()
         
         if not profile:
-            # 프로필이 없으면 기본값으로 생성
+            # ?�로?�이 ?�으�?기본값으�??�성
             profile = EmotionProfile(user_id=current_user.id)
             db.add(profile)
             db.commit()
@@ -404,10 +404,10 @@ async def get_emotion_profile(
 @router.put("/emotion-profile", response_model=EmotionProfileResponse)
 async def update_emotion_profile(
     profile_data: EmotionProfileUpdate,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """사용자 감정 프로필 업데이트"""
+    """?�용??감정 ?�로???�데?�트"""
     try:
         profile = db.query(EmotionProfile).filter(
             EmotionProfile.user_id == current_user.id
@@ -417,7 +417,7 @@ async def update_emotion_profile(
             profile = EmotionProfile(user_id=current_user.id)
             db.add(profile)
         
-        # 필드 업데이트
+        # ?�드 ?�데?�트
         update_data = profile_data.dict(exclude_unset=True)
         for field, value in update_data.items():
             if hasattr(profile, field) and value is not None:
@@ -431,18 +431,18 @@ async def update_emotion_profile(
         raise HTTPException(status_code=500, detail=f"Failed to update emotion profile: {str(e)}")
 
 
-# ========== WebSocket 연결 ==========
+# ========== WebSocket ?�결 ==========
 
 @router.websocket("/ws/{room_id}")
 async def websocket_endpoint(
     websocket: WebSocket,
     room_id: int,
     user_id: int = Query(...),
-    db: Session = Depends(get_db)
+    db = Depends(get_db)
 ):
-    """WebSocket 채팅 연결"""
+    """WebSocket 채팅 ?�결"""
     try:
-        # 참가자 확인
+        # 참�????�인
         participant = db.query(ChatParticipant).filter(
             ChatParticipant.room_id == room_id,
             ChatParticipant.user_id == user_id,
@@ -460,12 +460,12 @@ async def websocket_endpoint(
                 data = await websocket.receive_text()
                 message_data = json.loads(data)
                 
-                # 메시지 타입에 따른 처리
+                # 메시지 ?�?�에 ?�른 처리
                 if message_data.get("type") == "message":
-                    # 실시간 메시지 브로드캐스트는 send_message에서 처리
+                    # ?�시�?메시지 브로?�캐?�트??send_message?�서 처리
                     pass
                 elif message_data.get("type") == "typing":
-                    # 타이핑 상태 브로드캐스트
+                    # ?�?�핑 ?�태 브로?�캐?�트
                     typing_data = {
                         "type": "typing",
                         "user_id": user_id,

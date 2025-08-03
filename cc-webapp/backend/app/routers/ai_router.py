@@ -5,7 +5,7 @@ AI 기반 개인??추천 ?�스??API
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+
 from typing import List, Optional
 import json
 from datetime import datetime
@@ -34,7 +34,7 @@ async def get_user_recommendations(
     recommendation_type: Optional[str] = Query(None),
     status: Optional[str] = Query("pending"),
     limit: int = Query(10, ge=1, le=50),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """?�용??추천 목록 조회"""
@@ -63,7 +63,7 @@ async def get_user_recommendations(
 async def generate_recommendations(
     recommendation_type: Optional[str] = Query(None),
     max_recommendations: int = Query(5, ge=1, le=20),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
@@ -85,7 +85,7 @@ async def generate_recommendations(
 async def record_recommendation_interaction(
     recommendation_id: int,
     interaction_data: RecommendationInteractionCreate,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
@@ -105,7 +105,7 @@ async def record_recommendation_interaction(
 
 @router.get("/preferences", response_model=UserPreferenceResponse)
 async def get_user_preferences(
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
@@ -125,7 +125,7 @@ async def get_user_preferences(
 @router.put("/preferences", response_model=UserPreferenceResponse)
 async def update_user_preferences(
     preference_data: UserPreferenceUpdate,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
@@ -145,11 +145,11 @@ async def update_user_preferences(
 @router.post("/personalize", response_model=PersonalizationResponse)
 async def get_personalized_content(
     request: PersonalizationRequest,
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """개인??콘텐�??�청"""
+    """개인??콘텐�??�청"""
     try:
         ai_service = AIRecommendationService(db, redis)
         
@@ -185,7 +185,7 @@ async def get_personalized_content(
 async def get_user_predictions(
     prediction_type: Optional[str] = Query(None),
     limit: int = Query(10, ge=1, le=50),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """?�용??AI ?�측 결과 조회"""
@@ -209,7 +209,7 @@ async def get_user_predictions(
 @router.get("/recommendations/stats", response_model=dict)
 async def get_recommendation_stats(
     days: int = Query(30, ge=1, le=365),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """추천 ?�스???�계"""
@@ -230,7 +230,7 @@ async def get_recommendation_stats(
             UserRecommendation.created_at >= start_date
         ).count()
         
-        # ?�?�별 추천 ??
+        # ?�?�별 추천 ??
         type_stats = db.query(
             UserRecommendation.recommendation_type,
             db.func.count(UserRecommendation.id).label('count')
@@ -264,10 +264,10 @@ async def get_recommendation_stats(
 async def submit_ai_feedback(
     recommendation_id: int,
     feedback: str = Query(..., regex="^(helpful|not_helpful|irrelevant)$"),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """AI 추천???�???�드�??�출"""
+    """AI 추천???�???�드�??�출"""
     try:
         # 추천 ?�인
         recommendation = db.query(UserRecommendation).filter(
@@ -297,7 +297,7 @@ async def submit_ai_feedback(
 
 @router.get("/learning-progress", response_model=dict)
 async def get_learning_progress(
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """AI ?�습 진행 ?�황"""
@@ -322,7 +322,7 @@ async def get_learning_progress(
         ).count()
         
         # ?�습 진행??계산
-        learning_progress = min(total_interactions / 50.0, 1.0)  # 50�??�호?�용?�로 ?�전 ?�습
+        learning_progress = min(total_interactions / 50.0, 1.0)  # 50�??�호?�용?�로 ?�전 ?�습
         
         return {
             "learning_progress": round(learning_progress * 100, 1),
