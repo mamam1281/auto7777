@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LoadingScreen } from './components/LoadingScreen';
 import { LoginScreen } from './components/LoginScreen';
@@ -28,8 +28,7 @@ import { useAuthHandlers } from './hooks/useAuthHandlers';
 import { 
   APP_CONFIG, 
   SCREENS_WITH_BOTTOM_NAV, 
-  NOTIFICATION_MESSAGES,
-  ScreenType 
+  NOTIFICATION_MESSAGES 
 } from './constants/appConstants';
 import { NOTIFICATION_STYLES } from './constants/notificationConstants';
 
@@ -108,7 +107,7 @@ export default function App() {
 
   // 🏠 하단 네비게이션 표시 여부 결정 (메모이제이션)
   const showBottomNavigation = useMemo(() => {
-    return SCREENS_WITH_BOTTOM_NAV.includes(currentScreen as ScreenType) && user;
+    return SCREENS_WITH_BOTTOM_NAV.includes(currentScreen as any) && user;
   }, [currentScreen, user]);
 
   return (

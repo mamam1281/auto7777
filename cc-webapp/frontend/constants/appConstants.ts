@@ -1,6 +1,4 @@
 // 🎯 앱 전체 상수 관리
-import type { AppScreen } from '../types';
-
 export const APP_CONFIG = {
   GAME_TITLE: 'NEON QUEST',
   NOTIFICATION_DURATION: 7000,
@@ -45,7 +43,7 @@ export const GAME_DEFAULTS = {
 } as const;
 
 // 🏠 하단 네비게이션이 있는 화면들
-export const SCREENS_WITH_BOTTOM_NAV: AppScreen[] = [
+export const SCREENS_WITH_BOTTOM_NAV = [
   'home-dashboard', 
   'game-dashboard', 
   'shop', 
