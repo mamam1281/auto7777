@@ -1,310 +1,307 @@
 """
-KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED Casino-Club F2P - Quiz API Router
-===================================
-KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ê²KOREAN_TEXT_REMOVED ï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED¦¬ KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDì¸¡ìKOREAN_TEXT_REMOVED API
+Quiz Router
+Handles psychometric quiz system for risk assessment and user profiling
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-
-from typing import List, Optional
-import json
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
+import logging
 
 from ..database import get_db
-from ..models.auth_models import User
-from ..models.quiz_models import (
-    Quiz, QuizCategory, QuizQuestion, QuizAnswer,
-    UserQuizAttempt, UserQuizAnswer, QuizLeaderboard
+from ..models import User, UserSegment, QuizResult
+from ..schemas.quiz import (
+    QuizQuestionResponse, 
+    QuizSubmissionRequest, 
+    QuizResultResponse,
+    QuizAnalyticsResponse
 )
-from ..schemas.quiz_schemas import (
-    QuizResponse, QuizCategoryResponse, QuizQuestionResponse,
-    QuizAttemptCreate, QuizAttemptResponse, QuizAnswerSubmit,
-    QuizLeaderboardResponse, QuizStatsResponse
-)
-from ..dependencies import get_current_user
+from ..services.auth_service import get_current_user
 from ..services.quiz_service import QuizService
-from ..utils.redis import get_redis_manager
-from ..utils.emotion_engine import EmotionEngine
+from ..services.user_service import UserService
+from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/api/quiz", tags=["Quiz"])
+router = APIRouter(tags=["quiz"])
+logger = logging.getLogger(__name__)
 
-@router.get("/categories", response_model=List[QuizCategoryResponse])
-async def get_quiz_categories(
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ì¹KOREAN_TEXT_REMOVEDê³KOREAN_TEXT_REMOVED¦¬ ëª©ëKOREAN_TEXT_REMOVED ì¡KOREAN_TEXT_REMOVED"""
-    try:
-        categories = db.query(QuizCategory).filter(
-            QuizCategory.is_active == True
-        ).all()
-        return categories
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch categories: {str(e)}")
-
-
-@router.get("/categories/{category_id}/quizzes", response_model=List[QuizResponse])
-async def get_quizzes_by_category(
-    category_id: int,
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """ì¹KOREAN_TEXT_REMOVEDê³KOREAN_TEXT_REMOVED¦¬ï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ëª©ëKOREAN_TEXT_REMOVED ì¡KOREAN_TEXT_REMOVED"""
-    try:
-        quizzes = db.query(Quiz).filter(
-            Quiz.category_id == category_id,
-            Quiz.is_active == True
-        ).all()
-        return quizzes
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch quizzes: {str(e)}")
-
-
-@router.get("/{quiz_id}", response_model=QuizResponse)
-async def get_quiz_details(
-    quiz_id: int,
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ì¡KOREAN_TEXT_REMOVED"""
-    try:
-        quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
-        if not quiz:
-            raise HTTPException(status_code=404, detail="Quiz not found")
-        return quiz
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch quiz: {str(e)}")
-
-
-@router.get("/{quiz_id}/questions", response_model=List[QuizQuestionResponse])
+@router.get("/questions", response_model=List[QuizQuestionResponse])
 async def get_quiz_questions(
-    quiz_id: int,
-    db = Depends(get_db),
+    quiz_type: str = "risk_assessment",
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ë¬KOREAN_TEXT_REMOVED ëª©ëKOREAN_TEXT_REMOVED ì¡KOREAN_TEXT_REMOVED"""
+    """Get quiz questions for risk assessment"""
     try:
-        questions = db.query(QuizQuestion).filter(
-            QuizQuestion.quiz_id == quiz_id
-        ).order_by(QuizQuestion.order).all()
+        questions = QuizService.get_quiz_questions(quiz_type)
+        logger.info(f"Quiz questions requested by user {current_user.id}")
         return questions
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch questions: {str(e)}")
+        logger.error(f"Error getting quiz questions: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get quiz questions"
+        )
 
+@router.post("/submit", response_model=QuizResultResponse)
+async def submit_quiz(
+    quiz_data: QuizSubmissionRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Submit quiz answers and get risk profile"""
+    try:
+        # Calculate risk score
+        risk_score = QuizService.calculate_risk_score(quiz_data.answers)
+        risk_level = QuizService.determine_risk_level(risk_score)
+        
+        # Save quiz result
+        quiz_result = QuizResult(
+            user_id=current_user.id,
+            quiz_type=quiz_data.quiz_type,
+            answers=quiz_data.answers,
+            risk_score=risk_score,
+            risk_level=risk_level,
+            completed_at=datetime.utcnow()
+        )
+        db.add(quiz_result)
+        
+        # Update user segment
+        user_segment = UserService.get_or_create_segment(current_user.id, db)
+        user_segment.risk_profile = risk_level
+        user_segment.last_updated = datetime.utcnow()
+        
+        db.commit()
+        
+        # Generate recommendations
+        recommendations = _get_risk_recommendations(risk_level)
+        
+        logger.info(f"Quiz completed by user {current_user.id}, risk level: {risk_level}")
+        
+        return QuizResultResponse(
+            quiz_id=quiz_result.id,
+            risk_score=risk_score,
+            risk_level=risk_level,
+            recommendations=recommendations,
+            completed_at=quiz_result.completed_at
+        )
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error submitting quiz: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to submit quiz"
+        )
 
-@router.post("/{quiz_id}/start", response_model=QuizAttemptResponse)
-async def start_quiz_attempt(
+@router.get("/results/{quiz_id}", response_model=QuizResultResponse)
+async def get_quiz_result(
     quiz_id: int,
-    attempt_data: QuizAttemptCreate,
-    db = Depends(get_db),
-    redis = Depends(get_redis_manager),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED"""
+    """Get specific quiz result"""
     try:
-        quiz_service = QuizService(db, redis)
-        attempt = await quiz_service.start_quiz_attempt(
-            user_id=current_user.id,
-            quiz_id=quiz_id,
-            attempt_data=attempt_data
-        )
-        return attempt
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to start quiz: {str(e)}")
-
-
-@router.post("/attempts/{attempt_id}/answer", response_model=dict)
-async def submit_quiz_answer(
-    attempt_id: int,
-    answer_data: QuizAnswerSubmit,
-    db = Depends(get_db),
-    redis = Depends(get_redis_manager),
-    current_user: User = Depends(get_current_user)
-):
-    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED"""
-    try:
-        quiz_service = QuizService(db, redis)
-        result = await quiz_service.submit_answer(
-            attempt_id=attempt_id,
-            user_id=current_user.id,
-            answer_data=answer_data
-        )
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to submit answer: {str(e)}")
-
-
-@router.post("/attempts/{attempt_id}/complete", response_model=QuizAttemptResponse)
-async def complete_quiz_attempt(
-    attempt_id: int,
-    db = Depends(get_db),
-    redis = Depends(get_redis_manager),
-    current_user: User = Depends(get_current_user)
-):
-    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED"""
-    try:
-        quiz_service = QuizService(db, redis)
-        result = await quiz_service.complete_quiz_attempt(
-            attempt_id=attempt_id,
-            user_id=current_user.id
-        )
-        
-        # ê°KOREAN_TEXT_REMOVED ê¸KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED
-        emotion_engine = EmotionEngine(redis)
-        feedback = await emotion_engine.generate_quiz_feedback(
-            user_id=current_user.id,
-            quiz_result=result
-        )
-        
-        result.feedback = feedback
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to complete quiz: {str(e)}")
-
-
-@router.get("/attempts/{attempt_id}", response_model=QuizAttemptResponse)
-async def get_quiz_attempt(
-    attempt_id: int,
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ì¡KOREAN_TEXT_REMOVED"""
-    try:
-        attempt = db.query(UserQuizAttempt).filter(
-            UserQuizAttempt.id == attempt_id,
-            UserQuizAttempt.user_id == current_user.id
+        quiz_result = db.query(QuizResult).filter(
+            QuizResult.id == quiz_id,
+            QuizResult.user_id == current_user.id
         ).first()
         
-        if not attempt:
-            raise HTTPException(status_code=404, detail="Quiz attempt not found")
+        if not quiz_result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Quiz result not found"
+            )
         
-        return attempt
+        recommendations = _get_risk_recommendations(quiz_result.risk_level)
+        
+        return QuizResultResponse(
+            quiz_id=quiz_result.id,
+            risk_score=quiz_result.risk_score,
+            risk_level=quiz_result.risk_level,
+            recommendations=recommendations,
+            completed_at=quiz_result.completed_at
+        )
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch attempt: {str(e)}")
+        logger.error(f"Error getting quiz result: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get quiz result"
+        )
 
-
-@router.get("/user/history", response_model=List[QuizAttemptResponse])
+@router.get("/user/history", response_model=List[QuizResultResponse])
 async def get_user_quiz_history(
-    limit: int = Query(10, ge=1, le=50),
-    offset: int = Query(0, ge=0),
-    db = Depends(get_db),
+    limit: int = 10,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ê¸KOREAN_TEXT_REMOVED ì¡KOREAN_TEXT_REMOVED"""
+    """Get user's quiz history"""
     try:
-        attempts = db.query(UserQuizAttempt).filter(
-            UserQuizAttempt.user_id == current_user.id
-        ).order_by(UserQuizAttempt.start_time.desc()).offset(offset).limit(limit).all()
+        quiz_results = db.query(QuizResult).filter(
+            QuizResult.user_id == current_user.id
+        ).order_by(QuizResult.completed_at.desc()).limit(limit).all()
         
-        return attempts
+        results = []
+        for result in quiz_results:
+            recommendations = _get_risk_recommendations(result.risk_level)
+            results.append(QuizResultResponse(
+                quiz_id=result.id,
+                risk_score=result.risk_score,
+                risk_level=result.risk_level,
+                recommendations=recommendations,
+                completed_at=result.completed_at
+            ))
+        
+        return results
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
+        logger.error(f"Error getting quiz history: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get quiz history"
+        )
 
-
-@router.get("/leaderboard/{quiz_id}", response_model=List[QuizLeaderboardResponse])
-async def get_quiz_leaderboard(
-    quiz_id: int,
-    period: str = Query("all_time", regex="^(daily|weekly|monthly|all_time)$"),
-    limit: int = Query(10, ge=1, le=100),
-    db = Depends(get_db),
+@router.get("/analytics", response_model=QuizAnalyticsResponse)
+async def get_quiz_analytics(
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ë¦¬ëKOREAN_TEXT_REMOVEDë³KOREAN_TEXT_REMOVED ì¡KOREAN_TEXT_REMOVED"""
+    """Get quiz analytics for admin users"""
     try:
-        leaderboard = db.query(QuizLeaderboard).filter(
-            QuizLeaderboard.quiz_id == quiz_id,
-            QuizLeaderboard.period_type == period
-        ).order_by(QuizLeaderboard.rank_position).limit(limit).all()
+        # Check admin permission
+        if current_user.vip_tier != "ADMIN":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin access required"
+            )
         
-        return leaderboard
+        analytics = QuizService.get_quiz_analytics(db)
+        
+        return QuizAnalyticsResponse(
+            total_quizzes=analytics["total_quizzes"],
+            risk_distribution=analytics["risk_distribution"],
+            completion_rate=analytics["completion_rate"],
+            average_risk_score=analytics["average_risk_score"]
+        )
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch leaderboard: {str(e)}")
-
-
-@router.get("/user/stats", response_model=QuizStatsResponse)
-async def get_user_quiz_stats(
-    db = Depends(get_db),
-    redis = Depends(get_redis_manager),
-    current_user: User = Depends(get_current_user)
-):
-    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ì¡KOREAN_TEXT_REMOVED"""
-    try:
-        quiz_service = QuizService(db, redis)
-        stats = await quiz_service.get_user_stats(current_user.id)
-        return stats
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch stats: {str(e)}")
-
-
-@router.get("/user/risk-profile", response_model=dict)
-async def get_user_risk_profile(
-    db = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDë¦¬ìKOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDì¡KOREAN_TEXT_REMOVED"""
-    try:
-        # ìµKOREAN_TEXT_REMOVED ë¦¬ìKOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ê²KOREAN_TEXT_REMOVED ì¡KOREAN_TEXT_REMOVED
-        recent_attempts = db.query(UserQuizAttempt).join(Quiz).filter(
-            UserQuizAttempt.user_id == current_user.id,
-            Quiz.quiz_type == "risk_profile",
-            UserQuizAttempt.status == "completed"
-        ).order_by(UserQuizAttempt.submitted_at.desc()).limit(5).all()
-        
-        if not recent_attempts:
-            return {
-                "risk_profile": "unknown",
-                "confidence": 0.0,
-                "last_assessment": None,
-                "recommendations": []
-            }
-        
-        # ë¦¬ìKOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVEDê³KOREAN_TEXT_REMOVED (ìµKOREAN_TEXT_REMOVED ê²KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED)
-        risk_scores = [attempt.final_score for attempt in recent_attempts if attempt.final_score]
-        avg_score = sum(risk_scores) / len(risk_scores) if risk_scores else 0
-        
-        # ë¦¬ìKOREAN_TEXT_REMOVEDï¿KOREAN_TEXT_REMOVED ê²KOREAN_TEXT_REMOVED
-        if avg_score >= 80:
-            risk_level = "high-risk"
-        elif avg_score >= 60:
-            risk_level = "moderate-risk"
-        elif avg_score >= 40:
-            risk_level = "calculated-risk"
-        else:
-            risk_level = "conservative"
-        
-        return {
-            "risk_profile": risk_level,
-            "confidence": min(len(recent_attempts) * 0.2, 1.0),
-            "last_assessment": recent_attempts[0].submitted_at,
-            "recent_scores": risk_scores,
-            "recommendations": _get_risk_recommendations(risk_level)
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch risk profile: {str(e)}")
-
+        logger.error(f"Error getting quiz analytics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get quiz analytics"
+        )
 
 def _get_risk_recommendations(risk_level: str) -> List[str]:
-    """ë¦¬ìKOREAN_TEXT_REMOVEDë³KOREAN_TEXT_REMOVEDì¶KOREAN_TEXT_REMOVED¬íKOREAN_TEXT_REMOVED"""
+    """Get recommendations based on risk level"""
     recommendations = {
         "high-risk": [
-            "KOREAN_TEXT_REMOVEDê²KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED ê¶KOREAN_TEXT_REMOVED©ëKOREAN_TEXT_REMOVED,
-            "KOREAN_TEXT_REMOVED ë²KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED",
-            "KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDë¥KOREAN_TEXT_REMOVED¤ìKOREAN_TEXT_REMOVED ê²KOREAN_TEXT_REMOVED ì¢KOREAN_TEXT_REMOVED"
+            "Consider setting daily spending limits",
+            "Take regular breaks from gaming",
+            "Monitor your gaming time and habits",
+            "Seek support if gambling becomes problematic"
         ],
         "moderate-risk": [
-            "ê·KOREAN_TEXT_REMOVED¡íKOREAN_TEXT_REMOVED ê²KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED ê¶KOREAN_TEXT_REMOVED,
-            "KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVEDì·¨íKOREAN_TEXT_REMOVED",
-            "KOREAN_TEXT_REMOVED ê´€ë¦¬ìKOREAN_TEXT_REMOVED ì£KOREAN_TEXT_REMOVED
+            "Set weekly spending budgets",
+            "Track your gaming sessions",
+            "Consider using cooling-off periods",
+            "Review your gaming habits regularly"
         ],
-        "calculated-risk": [
-            "KOREAN_TEXT_REMOVED ê²KOREAN_TEXT_REMOVED KOREAN_TEXT_REMOVED ê³KOREAN_TEXT_REMOVED,
-            "KOREAN_TEXT_REMOVED¤ìKOREAN_TEXT_REMOVEDê²KOREAN_TEXT_REMOVED",
-            "ë¦¬ìKOREAN_TEXT_REMOVEDìµKOREAN_TEXT_REMOVED ì§KOREAN_TEXT_REMOVED
-        ],
-        "conservative": [
-            "KOREAN_TEXT_REMOVED¤íKOREAN_TEXT_REMOVED ê¶KOREAN_TEXT_REMOVED¦½KOREAN_TEXT_REMOVED",
-            "ë³KOREAN_TEXT_REMOVED ì¤KOREAN_TEXT_REMOVEDê²KOREAN_TEXT_REMOVEDì¦KOREAN_TEXT_REMOVED",
-            "KOREAN_TEXT_REMOVEDë¡KOREAN_TEXT_REMOVED"
+        "low-risk": [
+            "Continue playing responsibly",
+            "Maintain awareness of your spending",
+            "Enjoy gaming as entertainment",
+            "Stay informed about responsible gaming"
         ]
     }
-    return recommendations.get(risk_level, [])
+    
+    return recommendations.get(risk_level, recommendations["low-risk"])
+
+def _calculate_weekly_insights(user_id: int, db: Session) -> Dict[str, Any]:
+    """Calculate weekly insights for user"""
+    try:
+        # Get recent quiz results
+        recent_results = db.query(QuizResult).filter(
+            QuizResult.user_id == user_id,
+            QuizResult.completed_at >= datetime.utcnow() - timedelta(days=7)
+        ).all()
+        
+        if not recent_results:
+            return {
+                "trend": "stable",
+                "score_change": 0,
+                "recommendation": "Take a quiz to track your gaming habits"
+            }
+        
+        scores = [result.risk_score for result in recent_results]
+        avg_score = sum(scores) / len(scores)
+        
+        # Determine trend
+        if len(scores) > 1:
+            score_change = scores[-1] - scores[0]
+            if score_change > 5:
+                trend = "increasing"
+            elif score_change < -5:
+                trend = "decreasing"
+            else:
+                trend = "stable"
+        else:
+            trend = "stable"
+            score_change = 0
+        
+        return {
+            "trend": trend,
+            "score_change": score_change,
+            "average_score": avg_score,
+            "quiz_count": len(recent_results)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error calculating weekly insights: {e}")
+        return {
+            "trend": "unknown",
+            "score_change": 0,
+            "recommendation": "Unable to calculate insights"
+        }
+
+def _validate_quiz_answers(answers: Dict[str, Any], quiz_type: str) -> bool:
+    """Validate quiz answers format and content"""
+    try:
+        required_fields = QuizService.get_required_fields(quiz_type)
+        
+        for field in required_fields:
+            if field not in answers:
+                return False
+                
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error validating quiz answers: {e}")
+        return False
+
+def _generate_personalized_feedback(risk_score: int, risk_level: str, user_data: Dict) -> str:
+    """Generate personalized feedback based on user profile"""
+    try:
+        base_feedback = {
+            "high-risk": "Your responses indicate a higher risk profile. We recommend implementing stricter controls.",
+            "moderate-risk": "Your responses show moderate risk indicators. Consider monitoring your gaming habits.",
+            "low-risk": "Your responses indicate responsible gaming habits. Keep up the good work!"
+        }
+        
+        feedback = base_feedback.get(risk_level, base_feedback["low-risk"])
+        
+        # Add personalized elements based on user data
+        if user_data.get("gaming_frequency") == "daily":
+            feedback += " Since you game daily, consider setting time limits."
+            
+        if user_data.get("spending_trend") == "increasing":
+            feedback += " We notice increased spending patterns. Monitor your budget carefully."
+        
+        return feedback
+        
+    except Exception as e:
+        logger.error(f"Error generating personalized feedback: {e}")
+        return "Thank you for completing the quiz. Please review our responsible gaming guidelines."

@@ -90,7 +90,7 @@ def get_game_statistics(
     # Game popularity by action count
     game_stats = db.query(
         models.UserAction.action_type,
-        db.func.count(models.UserAction.id).label('plays')
+        func.count(models.UserAction.id).label('plays')
     ).group_by(models.UserAction.action_type).all()
     
     games_data = [
