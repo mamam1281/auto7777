@@ -1,9 +1,9 @@
 # Casino-Club F2P Enhanced Docker Management Script v3.0
 param(
-    [Parameter(Position=0)]
+    [Parameter(Position = 0)]
     [string]$Command = "help",
 
-    [Parameter(Position=1)]
+    [Parameter(Position = 1)]
     [string]$Service = "",
 
     [switch]$Tools,
@@ -72,7 +72,8 @@ function Test-DockerRunning {
     try {
         docker info | Out-Null
         return $true
-    } catch {
+    }
+    catch {
         Write-ColoredOutput "❌ Docker is not running. Please start Docker Desktop." "Red"
         exit 1
     }
@@ -90,7 +91,8 @@ function Check-Environment {
     foreach ($file in $envFiles) {
         if (Test-Path $file) {
             Write-ColoredOutput "✅ $file : exists" "Green"
-        } else {
+        }
+        else {
             Write-ColoredOutput "❌ $file : missing" "Red"
         }
     }
@@ -99,7 +101,8 @@ function Check-Environment {
     Write-ColoredOutput "🔍 Checking frontend dependencies..." "Yellow"
     if (Test-Path "cc-webapp/frontend/node_modules") {
         Write-ColoredOutput "✅ node_modules: exists" "Green"
-    } else {
+    }
+    else {
         Write-ColoredOutput "⚠️ node_modules: missing - npm install needed" "Yellow"
     }
     
@@ -155,7 +158,8 @@ function Start-Services {
         & docker-compose @composeArgs
         Write-ColoredOutput "✅ Services started successfully!" "Green"
         Show-ServiceStatus
-    } catch {
+    }
+    catch {
         Write-ColoredOutput "❌ Failed to start services: $($_.Exception.Message)" "Red"
         exit 1
     }
@@ -167,7 +171,8 @@ function Stop-Services {
     try {
         docker-compose down
         Write-ColoredOutput "✅ Services stopped successfully!" "Green"
-    } catch {
+    }
+    catch {
         Write-ColoredOutput "❌ Failed to stop services: $($_.Exception.Message)" "Red"
     }
 }
@@ -204,7 +209,8 @@ function Show-Logs {
     if ($Service) {
         Write-ColoredOutput "📋 $Service logs:" "Cyan"
         docker-compose logs -f $Service
-    } else {
+    }
+    else {
         Write-ColoredOutput "📋 All service logs:" "Cyan"
         docker-compose logs -f
     }
@@ -266,13 +272,16 @@ function Run-Tests {
     if ($Service -eq "coverage") {
         Write-ColoredOutput "📊 Running backend tests with coverage..." "Yellow"
         docker-compose exec backend pytest --cov=app --cov-report=html --cov-report=term
-    } elseif ($Service -eq "frontend") {
+    }
+    elseif ($Service -eq "frontend") {
         Write-ColoredOutput "🖥️ Running frontend tests..." "Yellow"
         docker-compose exec frontend npm test
-    } elseif ($Service -eq "backend") {
+    }
+    elseif ($Service -eq "backend") {
         Write-ColoredOutput "⚙️ Running backend tests..." "Yellow"
         docker-compose exec backend pytest -v
-    } else {
+    }
+    else {
         Write-ColoredOutput "🧪 Running all tests..." "Yellow"
         docker-compose exec backend pytest -v
         docker-compose exec frontend npm test -- --passWithNoTests
@@ -287,7 +296,8 @@ function Build-Images {
     if ($Service) {
         Write-ColoredOutput "🎯 Building $Service service..." "Yellow"
         docker-compose build --no-cache $Service
-    } else {
+    }
+    else {
         Write-ColoredOutput "🎯 Building all services..." "Yellow"
         docker-compose build --no-cache
     }
@@ -302,11 +312,13 @@ function Clean-Environment {
         Write-ColoredOutput "📦 Cleaning volumes..." "Yellow"
         docker-compose down --volumes
         docker volume prune -f
-    } elseif ($Service -eq "containers") {
+    }
+    elseif ($Service -eq "containers") {
         Write-ColoredOutput "📦 Cleaning containers..." "Yellow"
         docker-compose down --remove-orphans
         docker container prune -f
-    } else {
+    }
+    else {
         Write-ColoredOutput "🗑️ General cleanup..." "Yellow"
         docker-compose down
         docker system prune -f --volumes
