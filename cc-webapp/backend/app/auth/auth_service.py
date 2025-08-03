@@ -1,12 +1,12 @@
 """
-🎰 Casino-Club F2P - 통합 인증 시스템 (Unified Authentication System)
+Casino-Club F2P - Unified Authentication System
 =============================================================================
-✅ 초대코드 기반 간소화된 가입 시스템
-✅ JWT 액세스/리프레시 토큰 관리 (블랙리스트 포함)
-✅ 세션 관리 및 보안 (로그인 시도 제한)
-✅ 랭크 기반 접근 제어 (VIP/PREMIUM/STANDARD)
-✅ Redis 기반 토큰 블랙리스트
-✅ 모든 auth 관련 기능 통합
+✅ Invite code based simplified registration system
+✅ JWT access/refresh token management (with blacklist)
+✅ Session management and security (login attempt limits)
+✅ Rank-based access control (VIP/PREMIUM/STANDARD)
+✅ Redis-based token blacklist
+✅ All auth-related features integrated
 
 🔧 Features:
 - 초대코드로 즉시 가입 → 모든 서비스 접근 가능

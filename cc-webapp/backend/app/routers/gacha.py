@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 def get_service() -> GachaService:
-    """ê°€ì±??œë¹„???˜ì¡´??""
+    """Get Gacha service dependency"""
     return GachaService()
 
 
@@ -25,12 +25,12 @@ class GachaConfig(BaseModel):
 
 # --- Pydantic Models ---
 class GachaPullRequest(BaseModel):
-    """ê°€ì±?ë½‘ê¸° ?”ì²­"""
+    """Gacha pull request"""
 
     user_id: int
 
 class GachaPullResponseItem(BaseModel):
-    """ê°€ì±?ê²°ê³¼ ?‘ë‹µ"""
+    """Gacha result response"""
 
     type: str
     amount: Union[int, None] = None      # For COIN type
@@ -91,21 +91,24 @@ async def pull_gacha_for_user(
     user = db.query(User).filter(User.id == request_data.user_id).first()
     if not user:
         logger.warning(f"Gacha pull attempt by non-existent user_id: {request_data.user_id}")
-        raise HTTPException(status_code=404, detail=f"User with id {request_data.user_id} not found.")    # GachaServiceê°€ ?µí™” ì°¨ê° ë°?ë³´ìƒ ?€ ê´€ë¦??±ì„ ?˜í–‰
+        raise HTTPException(status_code=404, detail=f"User with id {request_data.user_id} not found.")
+    
+    # GachaService performs currency deduction and reward management
     result = service.pull(request_data.user_id, 1, db)
     gacha_result_dict = {"type": result.results[0]}
     
-    # ê²°ê³¼ ê°ì²´?ì„œ ì¶”ê? ?•ë³´ ì¶”ì¶œ (?ˆì „?˜ê²Œ)
+    # Extract additional information from result object (safely)
     if hasattr(result, 'results') and len(result.results) > 1:
-        # resultsê°€ ??ë³µì¡??êµ¬ì¡°?????ˆìŒ
+        # Results may have more complex structure
         pass
-      # Dict ?€?…ìœ¼ë¡?ë³€?˜ì„ ?„í•´ ?ˆì „??ê¸°ë³¸ê°??¬ìš©
+    
+    # Use basic default for safe dict conversion
     gacha_result_dict = {
         "type": str(result.results[0]) if result.results else "UNKNOWN"
     }
     
-    # ?€???ˆì „?±ì„ ?„í•´ ëª…ì‹œ?ìœ¼ë¡??†ëŠ” ?„ë“œ???œì™¸
-    # amount?€ stage??ê°€ì±?ê²°ê³¼???°ë¼ ?™ì ?¼ë¡œ ?¤ì •?????ˆìŒ
+    # Explicitly return values for safe processing
+    # amount and stage are determined dynamically based on gacha results
 
     if not gacha_result_dict or not gacha_result_dict.get("type"):
         logger.error(
@@ -128,7 +131,7 @@ async def pull_gacha_for_user(
 
 @router.get("/gacha/config", response_model=GachaConfig, tags=["gacha"])
 async def get_gacha_config(service: GachaService = Depends(get_service)):
-    """?„ì¬ ê°€ì±??¤ì • ì¡°íšŒ"""
+    """Get current gacha configuration"""
     return GachaConfig(**service.get_config())
 
 
@@ -137,6 +140,6 @@ async def update_gacha_config(
     config: GachaConfig,
     service: GachaService = Depends(get_service),
 ):
-    """ê°€ì±??¤ì • ê°±ì‹ """
+    """Update gacha configuration"""
     service.update_config(rarity_table=config.rarity_table, reward_pool=config.reward_pool)
     return GachaConfig(**service.get_config())

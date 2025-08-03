@@ -2,10 +2,10 @@
 import os
 from celery import Celery
 
-# Redis URL 설정
+# Redis URL configuration
 redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
 
-# Celery 앱 생성
+# Create Celery app
 celery_app = Celery(
     "casino_club",
     broker=redis_url,
@@ -13,7 +13,7 @@ celery_app = Celery(
     include=["app.tasks"]
 )
 
-# Celery 설정
+# Celery configuration
 celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
@@ -23,7 +23,7 @@ celery_app.conf.update(
     beat_schedule={
         "sample-task": {
             "task": "app.tasks.sample_task",
-            "schedule": 30.0,  # 30초마다 실행
+            "schedule": 30.0,  # Run every 30 seconds
         },
     },
 )

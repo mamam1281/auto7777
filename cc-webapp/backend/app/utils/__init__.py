@@ -1,11 +1,11 @@
 """
-통합 유틸리티 모듈
-- 게임 확률 계산
-- 리워드 처리
-- 감정 피드백
-- 세그멘테이션
-- Redis 헬퍼
-- 웹훅 및 외부 API
+Integrated utility module
+- Game probability calculation
+- Reward processing
+- Emotion feedback
+- Segmentation
+- Redis helper
+- Webhooks and external APIs
 """
 
 __version__ = "1.0.0"

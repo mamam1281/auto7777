@@ -8,8 +8,8 @@ import os
 Base = declarative_base()
 
 def get_database_url():
-    """환경에 따른 데이터베이스 URL 반환"""
-    # Docker/Production 환경 - PostgreSQL
+    """Return database URL based on environment"""
+    # Docker/Production environment - PostgreSQL
     if os.getenv('DB_HOST'):
         db_host = os.getenv('DB_HOST', 'localhost')
         db_port = os.getenv('DB_PORT', '5432')

@@ -3,71 +3,83 @@ set -e
 
 echo "🚀 Starting Casino-Club Backend..."
 
-# 데이터베이스 연결 대기
+# Wait for database connection
 echo "⏳ Waiting for PostgreSQL..."
 sleep 5
 echo "✅ PostgreSQL is ready!"
 
-# 데이터베이스 마이그레이션 및 테이블 생성
+# Create database tables
 echo "📊 Creating database tables..."
 python -c "
-from app.database import engine
+import os
+import sys
+sys.path.insert(0, '/app')
+
+from app.database import engine, get_db
 from app.models import Base
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 try:
+    # Test database connection
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        result = conn.execute(text('SELECT 1'))
+        logger.info(f'✅ Database connection successful: postgres:5432/cc_webapp')
+    
+    # Create tables
     Base.metadata.create_all(bind=engine)
-    print('✅ Tables created successfully')
+    logger.info('✅ Database tables created successfully')
+    
 except Exception as e:
-    print(f'⚠️ Table creation warning: {e}')
+    logger.warning(f'⚠️ Table creation warning: {e}')
 "
 
-# 초기 데이터 생성
+# Create initial data
 echo "🌱 Creating initial data..."
 python -c "
-from app.database import SessionLocal
-from app.models.auth_models import User, InviteCode
-from datetime import datetime
-import hashlib
+import os
+import sys
+sys.path.insert(0, '/app')
 
-db = SessionLocal()
+from app.database import get_db
+from app.models import User, InviteCode
+from sqlalchemy.orm import Session
+import logging
+from datetime import datetime
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 try:
-    # 관리자 계정 생성
-    admin = db.query(User).filter(User.site_id == 'admin').first()
-    if not admin:
-        admin = User(
-            site_id='admin',
-            nickname='관리자',
-            email='admin@casino-club.local',
-            phone_number='000-0000-0000',
-            password_hash=hashlib.sha256('admin123'.encode()).hexdigest(),
-            vip_tier='PREMIUM',
-            battlepass_level=100,
-            cyber_tokens=10000,
-            created_at=datetime.utcnow()
-        )
-        db.add(admin)
+    db = next(get_db())
     
-    # 초대 코드 생성
-    invite = db.query(InviteCode).filter(InviteCode.code == '5858').first()
-    if not invite:
-        invite = InviteCode(
-            code='5858',
-            created_by='admin',
-            created_at=datetime.utcnow(),
-            expires_at=datetime(2025, 12, 31),
-            max_uses=1000,
-            used_count=0
-        )
-        db.add(invite)
+    # Create basic invite codes if they don't exist
+    existing_codes = db.query(InviteCode).count()
+    if existing_codes == 0:
+        logger.info('Creating basic invite codes...')
+        codes = ['ALPHA1', 'BETA22', 'GAMMA3', 'DELTA4', 'OMEGA5']
+        for code in codes:
+            invite_code = InviteCode(
+                code=code,
+                is_active=True,
+                created_at=datetime.utcnow(),
+                max_uses=100,
+                current_uses=0
+            )
+            db.add(invite_code)
+        db.commit()
+        logger.info(f'✅ Created {len(codes)} invite codes')
     
-    db.commit()
-    print('✅ Initial data created')
-except Exception as e:
-    print(f'⚠️ Initial data warning: {e}')
-    db.rollback()
-finally:
     db.close()
+    logger.info('✅ Initial data setup completed')
+    
+except Exception as e:
+    logger.warning(f'⚠️ Initial data warning: {e}')
 "
 
-# FastAPI 서버 시작
+# Start FastAPI server
 echo "🎮 Starting FastAPI server..."
-exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

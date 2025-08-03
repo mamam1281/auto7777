@@ -24,16 +24,16 @@ router = APIRouter(prefix="/v1/adult", tags=["Adult Content"])
 public_router = APIRouter(prefix="/v1/adult", tags=["Adult Content - Public"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
-# Authentication dependency - ?¨ìˆœ ?‰ë„¤??ê¸°ë°˜ ?¸ì¦
+# Authentication dependency - Simple nickname based authentication
 async def get_current_user(nickname: str, db = Depends(get_db)) -> User:
-    """?‰ë„¤?„ìœ¼ë¡??¬ìš©???¸ì¦ - ì´ˆë?ì½”ë“œë¡?ê°€?…í•œ ?¬ìš©??""
+    """User authentication by nickname - Simple invite code enabled user"""
     user = db.query(User).filter(User.nickname == nickname).first()
     if not user:
-        raise HTTPException(status_code=404, detail="?¬ìš©?ë? ì°¾ì„ ???†ìŠµ?ˆë‹¤")
+        raise HTTPException(status_code=404, detail="User not found")
     return user
 
 def check_rank_access(user: User, required_rank: str) -> bool:
-    """??¬ ê¸°ë°˜ ?‘ê·¼ ?œì–´"""
+    """Rank based access control"""
     from app.auth.simple_auth import SimpleAuth
     return SimpleAuth.check_rank_access(str(user.rank), required_rank)
 

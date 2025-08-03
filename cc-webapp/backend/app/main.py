@@ -20,39 +20,39 @@ from pydantic import BaseModel
 # Core imports
 from app.database import get_db
 from app.core.logging import setup_logging
-# from app.core.exceptions import add_exception_handlers  # 비활성화 - 파일 비어있음
-# from app.middleware.error_handling import error_handling_middleware  # 비활성화
-# from app.middleware.logging import LoggingContextMiddleware  # 비활성화
+# from app.core.exceptions import add_exception_handlers  # Disabled - empty file
+# from app.middleware.error_handling import error_handling_middleware  # Disabled
+# from app.middleware.logging import LoggingContextMiddleware  # Disabled
 
 # Import core routers only
 from app.routers import (
     auth,
-    users,  # 다시 활성화
+    users,  # Re-enabled
     admin,
     actions,
     gacha,
     rewards,
     shop,
     missions,
-    quiz,        # 퀴즈 시스템 활성화
+    quiz,        # Quiz system enabled
     dashboard,
     prize_roulette,
     rps,
     notifications,
-    doc_titles,  # Phase 1 추가
-    feedback,    # Phase 2 추가
-    games,       # Phase 3 추가
-    game_api,    # Phase 4 추가
-    invite_router,  # Phase 5 추가
-    analyze,     # Phase 6 추가
-    roulette,    # Phase 7 추가
-    segments,    # Phase 8 추가
-    tracking,    # Phase 9 추가
-    unlock,      # Phase 10 추가
-    chat,        # 채팅 시스템 추가
+    doc_titles,  # Phase 1 added
+    feedback,    # Phase 2 added
+    games,       # Phase 3 added
+    game_api,    # Phase 4 added
+    invite_router,  # Phase 5 added
+    analyze,     # Phase 6 added
+    roulette,    # Phase 7 added
+    segments,    # Phase 8 added
+    tracking,    # Phase 9 added
+    unlock,      # Phase 10 added
+    chat,        # Chat system added
 )
 
-# AI 추천 시스템 라우터 별도 import
+# AI recommendation system router separate import
 from app.routers import ai_router
 
 # Scheduler setup
@@ -141,10 +141,10 @@ app.include_router(gacha.router, prefix="/api/gacha", tags=["Gacha"])
 app.include_router(rewards.router, prefix="/api/rewards", tags=["Rewards"])
 app.include_router(shop.router, prefix="/api/shop", tags=["Shop"])
 app.include_router(missions.router, prefix="/api/missions", tags=["Missions"])
-# 새로 추가된 주요 기능들
-app.include_router(quiz.router, prefix="/api/quiz", tags=["Quiz"])  # 퀴즈 시스템
-app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])  # 채팅 시스템
-app.include_router(ai_router.router, prefix="/api/ai", tags=["AI Recommendation"])  # AI 추천
+# Newly added major features
+app.include_router(quiz.router, prefix="/api/quiz", tags=["Quiz"])  # Quiz system
+app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])  # Chat system
+app.include_router(ai_router.router, prefix="/api/ai", tags=["AI Recommendation"])  # AI recommendation
 
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(prize_roulette.router, prefix="/api/games/roulette", tags=["Prize Roulette"])
@@ -182,14 +182,14 @@ app.include_router(tracking.router, prefix="/api/tracking", tags=["Tracking"])
 app.include_router(unlock.router, prefix="/api/unlock", tags=["Unlock"])
 
 # ===== New AI & Chat Systems =====
-# AI 추천 시스템
+# AI recommendation system
 app.include_router(ai_router.router, prefix="/api/ai", tags=["AI Recommendations"])
 
-# 퀴즈 시스템 (확장)
+# Quiz system (extended)
 from app.routers import quiz_router
 app.include_router(quiz_router.router, prefix="/api/quiz", tags=["Quiz System"])
 
-# 채팅 시스템
+# Chat system
 from app.routers import chat_router
 app.include_router(chat_router.router, prefix="/api/chat", tags=["Chat System"])
 

@@ -29,24 +29,24 @@ def get_shop_service(db = Depends(get_db)) -> ShopService:
     """Dependency provider for ShopService."""
     return ShopService(db)
 
-@router.post("/purchase", response_model=ShopPurchaseResponse, summary="?„ì´??êµ¬ë§¤", description="?¬ìš©?ì˜ ? í°???¬ìš©?˜ì—¬ ?ì ???„ì´?œì„ êµ¬ë§¤?©ë‹ˆ??")
+@router.post("/purchase", response_model=ShopPurchaseResponse, summary="Purchase Item", description="Purchase shop item using user's gold tokens")
 def purchase_shop_item(
     request: ShopPurchaseRequest,
     shop_service: ShopService = Depends(get_shop_service)
 ):
     """
-    ### ?”ì²­ ë³¸ë¬¸:
-    - **user_id**: ?„ì´?œì„ êµ¬ë§¤?˜ëŠ” ?¬ìš©??ID
-    - **item_id**: êµ¬ë§¤???„ì´?œì˜ ID
-    - **item_name**: êµ¬ë§¤???„ì´?œì˜ ?´ë¦„
-    - **price**: ?„ì´??ê°€ê²?
-    - **description**: ?„ì´???¤ëª… (? íƒ ?¬í•­)
+    ### Request Body:
+    - **user_id**: ID of the user purchasing the item
+    - **item_id**: ID of the item to purchase
+    - **item_name**: Name of the item to purchase
+    - **price**: Price of the item
+    - **description**: Item description (optional)
 
-    ### ?‘ë‹µ:
-    - **success**: êµ¬ë§¤ ?±ê³µ ?¬ë?
-    - **message**: ì²˜ë¦¬ ê²°ê³¼ ë©”ì‹œì§€
-    - **new_gold_balance**: êµ¬ë§¤ ???¬ìš©?ì˜ ??? í° ?”ì•¡
-    - **item_id, item_name, new_item_count**: êµ¬ë§¤???„ì´???•ë³´ ë°?ë³´ìœ  ê°œìˆ˜
+    ### Response:
+    - **success**: Purchase success status
+    - **message**: Processing result message
+    - **new_gold_balance**: User's gold token balance after purchase
+    - **item_id, item_name, new_item_count**: Purchased item info and new count
     """
     try:
         result = shop_service.purchase_item(
