@@ -39,9 +39,9 @@ interface StreamingScreenProps {
   onAddNotification: (message: string) => void;
 }
 
-// 전속 VJ 정보
+// VJ 정보
 const EXCLUSIVE_VJ = {
-  name: 'Luna Star',
+  id: 'luna_exclusive',
   nickname: '루나',
   age: 25,
   location: '서울',
@@ -50,8 +50,8 @@ const EXCLUSIVE_VJ = {
   currentViewers: 18750,
   isLive: true,
   status: '💃 섹시 댄스 라이브쇼',
-  profileImage: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=600&fit=crop',
-  streamThumbnail: 'https://images.unsplash.com/photo-1516914943479-89db7d9ae7f2?w=800&h=600&fit=crop',
+  profileImage: '/images/003.png', // 실제 이미지 경로
+  streamThumbnail: '/images/004.png', // 실제 이미지 경로
   bio: '매일 밤 9시 특별한 시간을 함께해요 💕 개인 메시지 환영!',
   specialties: ['댄스', '토크', '게임', '노래'],
   vipPrice: 5000,
@@ -67,71 +67,77 @@ const GIFTS = [
   { id: 'crown', name: '왕관', icon: '👑', price: 10000, effect: 'crowns', benefit: 'VIP 대우 + 커스텀 쇼' },
 ];
 
-// 영상 갤러리
+// 영상 갤러리 - 실제 이미지 경로 적용
 const VIDEO_GALLERY = [
   {
     id: 1,
     title: '🔥 섹시 댄스 하이라이트',
-    thumbnail: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop',
+    thumbnail: '/images/001.png', // 실제 이미지 경로
     duration: '15:32',
     views: 45230,
     hearts: 8920,
     date: '2일 전',
     isHot: true,
-    price: 1000
+    price: 1000,
+    preview: '매혹적인 댄스 퍼포먼스'
   },
   {
     id: 2,
     title: '💋 개인방 미리보기',
-    thumbnail: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=300&fit=crop',
+    thumbnail: '/images/002.png', // 실제 이미지 경로
     duration: '8:45',
     views: 32100,
     hearts: 12400,
     date: '1주 전',
     isPrivate: true,
-    price: 3000
+    price: 3000,
+    preview: '프라이빗 세션 미리보기'
   },
   {
     id: 3,
     title: '✨ 코스프레 변신쇼',
-    thumbnail: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
+    thumbnail: '/images/003.png', // 실제 이미지 경로
     duration: '22:18',
     views: 28750,
     hearts: 6850,
     date: '3일 전',
     isNew: true,
-    price: 1500
+    price: 1500,
+    preview: '다양한 컨셉 변신'
   },
   {
     id: 4,
     title: '🌙 밤이 되면 미리보기',
-    thumbnail: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=300&fit=crop',
+    thumbnail: '/images/004.png', // 실제 이미지 경로
     duration: '12:05',
     views: 19800,
     hearts: 5940,
     date: '5일 전',
-    price: 800
+    price: 800,
+    preview: '야간 특별 방송'
   },
   {
     id: 5,
     title: '💎 VIP 전용 스페셜',
-    thumbnail: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=300&fit=crop',
+    thumbnail: '/images/001.png', // 실제 이미지 경로 (재사용)
     duration: '25:14',
     views: 15600,
     hearts: 9240,
     date: '1주 전',
     isVip: true,
-    price: 5000
+    price: 5000,
+    preview: 'VIP 회원 전용 컨텐츠'
   },
   {
     id: 6,
     title: '🎵 노래하는 루나',
-    thumbnail: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400&h=300&fit=crop',
+    thumbnail: '/images/002.png', // 실제 이미지 경로 (재사용)
     duration: '18:33',
     views: 41200,
     hearts: 7650,
     date: '4일 전',
-    price: 700
+    price: 700,
+    preview: '감미로운 노래 라이브'
   }
 ];
 
@@ -402,14 +408,14 @@ export function StreamingScreen({ user, onBack, onUpdateUser, onAddNotification 
               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-pink-400">
                 <img 
                   src={EXCLUSIVE_VJ.profileImage}
-                  alt={EXCLUSIVE_VJ.name}
+                  alt={EXCLUSIVE_VJ.nickname}
                   className="w-full h-full object-cover"
                 />
               </div>
               
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <h2 className="text-xl font-bold text-foreground">{EXCLUSIVE_VJ.name}</h2>
+                  <h2 className="text-xl font-bold text-foreground">{EXCLUSIVE_VJ.nickname}</h2>
                   <Badge className="bg-gold text-black">전속 VJ</Badge>
                   {user.level >= 10 && (
                     <Badge className="bg-purple-500 text-white">
@@ -556,25 +562,81 @@ export function StreamingScreen({ user, onBack, onUpdateUser, onAddNotification 
                   </div>
                 </div>
 
-                {/* 썸네일 */}
-                <div className="relative overflow-hidden">
+                {/* 썸네일 - 현실적인 VJ 이미지 */}
+                <div className="relative overflow-hidden group/thumbnail">
                   <img 
                     src={video.thumbnail} 
                     alt={video.title}
                     className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-110"
                   />
                   
+                  {/* 프라이버시 블러 효과 (VIP/Private 컨텐츠) */}
+                  {(video.isVip || video.isPrivate) && (
+                    <div className="absolute inset-0 backdrop-blur-sm bg-black/20 flex items-center justify-center">
+                      <div className="bg-black/60 text-white px-3 py-1 rounded-lg text-xs font-bold">
+                        {video.isVip ? '👑 VIP 전용' : '🔒 구매 후 시청'}
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* 재생 오버레이 */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50">
-                    <div className="w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
                       <Play className="w-5 h-5 text-white ml-1" />
                     </div>
                   </div>
+
+                  {/* 하트 플로팅 애니메이션 */}
+                  <div className="absolute top-2 left-2 opacity-0 group-hover/thumbnail:opacity-100 transition-opacity">
+                    {[...Array(3)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        animate={{
+                          y: [0, -20, -40],
+                          opacity: [0, 1, 0],
+                          scale: [0.5, 1, 0.5]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          delay: i * 0.3
+                        }}
+                        className="absolute text-pink-400 text-sm"
+                        style={{ left: i * 8 }}
+                      >
+                        💕
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* 라이브 표시 (Hot 컨텐츠) */}
+                  {video.isHot && (
+                    <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold animate-pulse">
+                      🔴 LIVE
+                    </div>
+                  )}
+
+                  {/* 미리보기 텍스트 */}
+                  {video.preview && (
+                    <div className="absolute bottom-8 left-2 right-2 bg-gradient-to-t from-black/60 to-transparent p-2">
+                      <div className="text-white text-xs opacity-90">
+                        {video.preview}
+                      </div>
+                    </div>
+                  )}
 
                   {/* 재생시간 */}
                   <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-xs">
                     {video.duration}
                   </div>
+                  
+                  {/* 시청자 수 (라이브용) */}
+                  {video.isHot && (
+                    <div className="absolute bottom-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                      <Eye className="w-3 h-3" />
+                      {Math.floor(Math.random() * 500 + 100)}
+                    </div>
+                  )}
                 </div>
 
                 {/* 영상 정보 */}
