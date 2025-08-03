@@ -95,3 +95,44 @@ export type AppScreen =
   | 'gacha-system'
   | 'neon-crash'
   | 'streaming';
+
+// 🎪 이벤트 타입
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  type: 'daily' | 'weekly' | 'special' | 'seasonal';
+  rewards: GameItem[];
+  requirements: string[];
+  isActive: boolean;
+  participants: number;
+  maxParticipants?: number;
+  difficulty: 'easy' | 'medium' | 'hard' | 'expert';
+  category: string;
+  imageUrl?: string;
+  progress?: number;
+  maxProgress?: number;
+}
+
+// 🎯 미션 타입
+export interface Mission {
+  id: string;
+  title: string;
+  description: string;
+  type: 'daily' | 'weekly' | 'achievement' | 'special';
+  category: string;
+  requirements: {
+    action: string;
+    target: number;
+    current: number;
+  };
+  rewards: GameItem[];
+  isCompleted: boolean;
+  isActive: boolean;
+  difficulty: 'easy' | 'medium' | 'hard' | 'expert';
+  expiresAt?: Date;
+  priority: number;
+  imageUrl?: string;
+}
