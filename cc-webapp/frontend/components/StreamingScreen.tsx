@@ -50,8 +50,8 @@ const EXCLUSIVE_VJ = {
   currentViewers: 18750,
   isLive: true,
   status: '💃 섹시 댄스 라이브쇼',
-  profileImage: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=600&fit=crop',
-  streamThumbnail: 'https://images.unsplash.com/photo-1516914943479-89db7d9ae7f2?w=800&h=600&fit=crop',
+  profileImage: '/images/streaming/model-1.png', // 스트리밍용 이미지로 변경
+  streamThumbnail: '/images/streaming/model-1.png', // 스트리밍용 이미지로 변경
   bio: '매일 밤 9시 특별한 시간을 함께해요 💕 개인 메시지 환영!',
   specialties: ['댄스', '토크', '게임', '노래'],
   vipPrice: 5000,
@@ -72,7 +72,7 @@ const VIDEO_GALLERY = [
   {
     id: 1,
     title: '🔥 섹시 댄스 하이라이트',
-    thumbnail: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop',
+    thumbnail: '/images/streaming/model-2.png', // 스트리밍용 이미지로 변경
     duration: '15:32',
     views: 45230,
     hearts: 8920,
@@ -83,7 +83,7 @@ const VIDEO_GALLERY = [
   {
     id: 2,
     title: '💋 개인방 미리보기',
-    thumbnail: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=300&fit=crop',
+    thumbnail: '/images/streaming/model-3.png', // 스트리밍용 이미지로 변경
     duration: '8:45',
     views: 32100,
     hearts: 12400,
@@ -94,7 +94,7 @@ const VIDEO_GALLERY = [
   {
     id: 3,
     title: '✨ 코스프레 변신쇼',
-    thumbnail: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
+    thumbnail: '/images/streaming/model-4.png', // 스트리밍용 이미지로 변경
     duration: '22:18',
     views: 28750,
     hearts: 6850,
@@ -105,7 +105,7 @@ const VIDEO_GALLERY = [
   {
     id: 4,
     title: '🌙 밤이 되면 미리보기',
-    thumbnail: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=300&fit=crop',
+    thumbnail: '/images/streaming/model-1.png', // 스트리밍용 이미지로 변경
     duration: '12:05',
     views: 19800,
     hearts: 5940,
@@ -115,7 +115,7 @@ const VIDEO_GALLERY = [
   {
     id: 5,
     title: '💎 VIP 전용 스페셜',
-    thumbnail: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=300&fit=crop',
+    thumbnail: '/images/streaming/model-2.png', // 스트리밍용 이미지로 변경
     duration: '25:14',
     views: 15600,
     hearts: 9240,
@@ -126,7 +126,7 @@ const VIDEO_GALLERY = [
   {
     id: 6,
     title: '🎵 노래하는 루나',
-    thumbnail: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400&h=300&fit=crop',
+    thumbnail: '/images/streaming/model-3.png', // 스트리밍용 이미지로 변경
     duration: '18:33',
     views: 41200,
     hearts: 7650,

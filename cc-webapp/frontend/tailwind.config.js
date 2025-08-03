@@ -13,60 +13,81 @@ const config = {
   theme: {
     extend: {
       colors: {
-        // CSS 변수 기반 색상 (v4 호환)
-        background: 'var(--background)',
-        foreground: 'var(--foreground)',
+        // 🎨 CSS 변수 기반 색상
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
         card: {
-          DEFAULT: 'var(--card)',
-          foreground: 'var(--card-foreground)'
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))'
         },
         popover: {
-          DEFAULT: 'var(--popover)',
-          foreground: 'var(--popover-foreground)'
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))'
         },
         primary: {
-          DEFAULT: 'var(--primary)',
-          foreground: 'var(--primary-foreground)',
-          hover: 'var(--primary-hover)',
-          light: 'var(--primary-light)',
-          dark: 'var(--primary-dark)',
-          soft: 'var(--primary-soft)'
+          DEFAULT: '#e6005e',
+          foreground: '#ffffff',
+          hover: '#cc0054',
+          light: '#ff4d9a',
+          dark: '#b30048'
         },
         secondary: {
-          DEFAULT: 'var(--secondary)',
-          foreground: 'var(--secondary-foreground)',
-          hover: 'var(--secondary-hover)'
+          DEFAULT: '#2d2d3a',
+          foreground: '#ffffff',
+          hover: '#3d3d4a'
         },
         muted: {
-          DEFAULT: 'var(--muted)',
-          foreground: 'var(--muted-foreground)'
+          DEFAULT: '#2d2d3a',
+          foreground: '#999999'
         },
         accent: {
-          DEFAULT: 'var(--accent)',
-          foreground: 'var(--accent-foreground)'
+          DEFAULT: '#e6005e',
+          foreground: '#ffffff'
         },
         destructive: {
-          DEFAULT: 'var(--destructive)',
-          foreground: 'var(--destructive-foreground)'
+          DEFAULT: '#e6336b',
+          foreground: '#ffffff'
         },
         border: {
-          DEFAULT: 'var(--border)',
-          secondary: 'var(--border-secondary)'
+          DEFAULT: 'rgba(230, 0, 94, 0.12)',
+          secondary: 'rgba(255, 255, 255, 0.06)'
         },
         input: {
-          DEFAULT: 'var(--input)',
-          background: 'var(--input-background)',
-          border: 'var(--input-border)'
+          DEFAULT: '#1a1a24',
+          background: '#2d2d3a',
+          border: 'rgba(230, 0, 94, 0.15)'
         },
-        ring: 'var(--ring)',
+        ring: 'rgba(230, 0, 94, 0.25)',
         
-        // 게임 특화 색상
+        // 🎮 게임 특화 색상 (하드코딩)
         gold: {
-          DEFAULT: 'var(--gold)',
-          light: 'var(--gold-light)',
-          dark: 'var(--gold-dark)',
-          soft: 'var(--gold-soft)'
+          DEFAULT: '#e6c200',
+          light: '#f5d700',
+          dark: '#cc9e00',
+          soft: 'rgba(230, 194, 0, 0.08)'
         },
+        // ⚡ 상태 색상 (하드코딩)
+        success: {
+          DEFAULT: '#9c4dcc',
+          foreground: '#ffffff',
+          soft: 'rgba(156, 77, 204, 0.08)'
+        },
+        warning: {
+          DEFAULT: '#e89900',
+          foreground: '#000000',
+          soft: 'rgba(232, 153, 0, 0.08)'
+        },
+        error: {
+          DEFAULT: '#e6336b',
+          foreground: '#ffffff',
+          soft: 'rgba(230, 51, 107, 0.08)'
+        },
+        info: {
+          DEFAULT: '#4d9fcc',
+          foreground: '#ffffff',
+          soft: 'rgba(77, 159, 204, 0.08)'
+        },
+      },
         silver: {
           DEFAULT: 'var(--silver)',
           light: 'var(--silver-light)',
@@ -161,4 +182,4 @@ const config = {
   plugins: [],
 }
 
-export default config;
+module.exports = config;
