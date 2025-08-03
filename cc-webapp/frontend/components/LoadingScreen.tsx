@@ -62,29 +62,34 @@ export function LoadingScreen({
         >
           {/* Animated Background Elements */}
           <div className="absolute inset-0 overflow-hidden">
-            {[...Array(20)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ 
-                  opacity: 0, 
-                  scale: 0,
-                  x: Math.random() * window.innerWidth,
-                  y: Math.random() * window.innerHeight
-                }}
-                animate={{ 
-                  opacity: [0, 1, 0],
-                  scale: [0, 1, 0],
-                  rotate: 360
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  delay: i * 0.1,
-                  ease: "easeInOut"
-                }}
-                className="absolute w-2 h-2 bg-primary rounded-full"
-              />
-            ))}
+            {typeof window !== 'undefined' && [...Array(20)].map((_, i) => {
+              // 고정된 시드 기반 위치 생성 (하이드레이션 에러 방지)
+              const seedX = (i * 73 + 17) % 100;
+              const seedY = (i * 41 + 29) % 100;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ 
+                    opacity: 0, 
+                    scale: 0,
+                    x: (seedX / 100) * window.innerWidth,
+                    y: (seedY / 100) * window.innerHeight
+                  }}
+                  animate={{ 
+                    opacity: [0, 1, 0],
+                    scale: [0, 1, 0],
+                    rotate: 360
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    delay: i * 0.1,
+                    ease: "easeInOut"
+                  }}
+                  className="absolute w-2 h-2 bg-primary rounded-full"
+                />
+              );
+            })}
           </div>
 
           {/* Main Loading Content */}
