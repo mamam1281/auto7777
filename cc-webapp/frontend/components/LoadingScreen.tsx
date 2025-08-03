@@ -18,6 +18,7 @@ export function LoadingScreen({
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   const loadingSteps = [
     { text: "초기화 중...", icon: Gamepad2 },
@@ -25,6 +26,10 @@ export function LoadingScreen({
     { text: "사용자 데이터 동기화...", icon: Star },
     { text: "최종 준비 완료!", icon: Crown }
   ];
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -62,7 +67,7 @@ export function LoadingScreen({
         >
           {/* Animated Background Elements */}
           <div className="absolute inset-0 overflow-hidden">
-            {typeof window !== 'undefined' && [...Array(20)].map((_, i) => {
+            {isClient && [...Array(20)].map((_, i) => {
               // 고정된 시드 기반 위치 생성 (하이드레이션 에러 방지)
               const seedX = (i * 73 + 17) % 100;
               const seedY = (i * 41 + 29) % 100;
@@ -72,8 +77,8 @@ export function LoadingScreen({
                   initial={{ 
                     opacity: 0, 
                     scale: 0,
-                    x: (seedX / 100) * window.innerWidth,
-                    y: (seedY / 100) * window.innerHeight
+                    x: (seedX / 100) * (window?.innerWidth || 1000),
+                    y: (seedY / 100) * (window?.innerHeight || 1000)
                   }}
                   animate={{ 
                     opacity: [0, 1, 0],
