@@ -1,926 +1,695 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
+import {
   Heart,
-  Eye,
-  Star,
+  MessageCircle,
   Gift,
   Crown,
-  ThumbsUp,
-  Share2,
-  Volume2,
-  VolumeX,
-  Send,
-  Diamond,
   Users,
+  TrendingUp,
+  X,
+  ChevronRight,
   Play,
-  Pause,
-  Lock,
-  Info,
+  Mic,
   Video,
-  Image,
-  Calendar,
+  Settings,
+  MoreVertical,
+  AlertCircle,
+  Eye,
   Clock,
-  Sparkles,
-  Zap
+  Award,
+  Coins,
+  Trophy,
+  Flame,
+  Star as StarIcon,
+  Radio
 } from 'lucide-react';
-import { User } from '../types';
+import Image from 'next/image';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import { User } from '../types/user';
 
 interface StreamingScreenProps {
   user: User;
   onBack: () => void;
-  onUpdateUser: (user: User) => void;
-  onAddNotification: (message: string) => void;
+  onUpdateUser: (updates: Partial<User>) => void;
+  onAddNotification: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void;
 }
 
-// VJ 정보
-const EXCLUSIVE_VJ = {
-  id: 'luna_exclusive',
-  nickname: '루나',
-  age: 25,
-  location: '서울',
-  followers: 125400,
-  totalHearts: 2847320,
-  currentViewers: 18750,
-  isLive: true,
-  status: '💃 섹시 댄스 라이브쇼',
-  profileImage: '/images/003.png', // 실제 이미지 경로
-  streamThumbnail: '/images/004.png', // 실제 이미지 경로
-  bio: '매일 밤 9시 특별한 시간을 함께해요 💕 개인 메시지 환영!',
-  specialties: ['댄스', '토크', '게임', '노래'],
-  vipPrice: 5000,
-  privatePrice: 10000
-};
+interface Stream {
+  id: string;
+  title: string;
+  streamerName: string;
+  viewers: number;
+  thumbnail: string;
+  category: string;
+  isLive: boolean;
+  hearts: number;
+  donations: number;
+  tags: string[];
+  startedAt: Date;
+}
 
-// 선물 목록
-const GIFTS = [
-  { id: 'heart', name: '하트', icon: '❤️', price: 100, effect: 'hearts', benefit: '기본 애정 표현' },
-  { id: 'rose', name: '장미', icon: '🌹', price: 500, effect: 'roses', benefit: '특별한 인사 + VJ 멘션' },
-  { id: 'kiss', name: '키스', icon: '💋', price: 1000, effect: 'kisses', benefit: '개인 메시지 + 에어키스' },
-  { id: 'diamond', name: '다이아몬드', icon: '💎', price: 5000, effect: 'diamonds', benefit: '프리미엄 댄스 + 개인 영상' },
-  { id: 'crown', name: '왕관', icon: '👑', price: 10000, effect: 'crowns', benefit: 'VIP 대우 + 커스텀 쇼' },
-];
+interface Message {
+  id: string;
+  username: string;
+  content: string;
+  timestamp: Date;
+  isDonation?: boolean;
+  donationAmount?: number;
+  isStreamer?: boolean;
+  userLevel?: number;
+}
 
-// 영상 갤러리 - 실제 이미지 경로 적용
-const VIDEO_GALLERY = [
-  {
-    id: 1,
-    title: '🔥 섹시 댄스 하이라이트',
-    thumbnail: '/images/001.png', // 실제 이미지 경로
-    duration: '15:32',
-    views: 45230,
-    hearts: 8920,
-    date: '2일 전',
-    isHot: true,
-    price: 1000,
-    preview: '매혹적인 댄스 퍼포먼스'
-  },
-  {
-    id: 2,
-    title: '💋 개인방 미리보기',
-    thumbnail: '/images/002.png', // 실제 이미지 경로
-    duration: '8:45',
-    views: 32100,
-    hearts: 12400,
-    date: '1주 전',
-    isPrivate: true,
-    price: 3000,
-    preview: '프라이빗 세션 미리보기'
-  },
-  {
-    id: 3,
-    title: '✨ 코스프레 변신쇼',
-    thumbnail: '/images/003.png', // 실제 이미지 경로
-    duration: '22:18',
-    views: 28750,
-    hearts: 6850,
-    date: '3일 전',
-    isNew: true,
-    price: 1500,
-    preview: '다양한 컨셉 변신'
-  },
-  {
-    id: 4,
-    title: '🌙 밤이 되면 미리보기',
-    thumbnail: '/images/004.png', // 실제 이미지 경로
-    duration: '12:05',
-    views: 19800,
-    hearts: 5940,
-    date: '5일 전',
-    price: 800,
-    preview: '야간 특별 방송'
-  },
-  {
-    id: 5,
-    title: '💎 VIP 전용 스페셜',
-    thumbnail: '/images/001.png', // 실제 이미지 경로 (재사용)
-    duration: '25:14',
-    views: 15600,
-    hearts: 9240,
-    date: '1주 전',
-    isVip: true,
-    price: 5000,
-    preview: 'VIP 회원 전용 컨텐츠'
-  },
-  {
-    id: 6,
-    title: '🎵 노래하는 루나',
-    thumbnail: '/images/002.png', // 실제 이미지 경로 (재사용)
-    duration: '18:33',
-    views: 41200,
-    hearts: 7650,
-    date: '4일 전',
-    price: 700,
-    preview: '감미로운 노래 라이브'
-  }
-];
+interface Donation {
+  id: string;
+  username: string;
+  amount: number;
+  message?: string;
+  timestamp: Date;
+}
 
-export function StreamingScreen({ user, onBack, onUpdateUser, onAddNotification }: StreamingScreenProps) {
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [currentViewers, setCurrentViewers] = useState(EXCLUSIVE_VJ.currentViewers);
-  const [heartAnimations, setHeartAnimations] = useState<Array<{id: number, x: number, y: number, type: string}>>([]);
-  const [showGiftMenu, setShowGiftMenu] = useState(false);
-  const [showBenefitsModal, setShowBenefitsModal] = useState(false);
-  const [benefitType, setBenefitType] = useState<'gift' | 'vip' | 'private' | null>(null);
-  const [myHearts, setMyHearts] = useState(user.stats.gamesWon * 15);
-  const [selectedVideo, setSelectedVideo] = useState<typeof VIDEO_GALLERY[0] | null>(null);
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  count: number;
+}
 
-  // 실시간 뷰어 수 변화
+export function StreamingScreen({
+  user,
+  onBack,
+  onUpdateUser,
+  onAddNotification
+}: StreamingScreenProps) {
+  const [selectedStream, setSelectedStream] = useState<Stream | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [showDonation, setShowDonation] = useState(false);
+  const [donationAmount, setDonationAmount] = useState('');
+  const [donationMessage, setDonationMessage] = useState('');
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 인기 스트림 목록
+  const popularStreams: Stream[] = [
+    {
+      id: '1',
+      title: '🎰 슬롯머신 대박 도전! 오늘은 꼭 터뜨린다!',
+      streamerName: 'LuckyGambler777',
+      viewers: 15234,
+      thumbnail: '/api/placeholder/320/180',
+      category: '슬롯게임',
+      isLive: true,
+      hearts: 89234,
+      donations: 125000,
+      tags: ['슬롯', '잭팟', '실시간'],
+      startedAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
+    },
+    {
+      id: '2',
+      title: '가위바위보 1000연승 도전중! 함께해요~',
+      streamerName: 'RPSMaster',
+      viewers: 8956,
+      thumbnail: '/api/placeholder/320/180',
+      category: '가위바위보',
+      isLive: true,
+      hearts: 45678,
+      donations: 89000,
+      tags: ['RPS', '연승', '도전'],
+      startedAt: new Date(Date.now() - 1 * 60 * 60 * 1000)
+    },
+    {
+      id: '3',
+      title: '🎁 가챠 100연차 돌려봅니다! SSR 나올까?',
+      streamerName: 'GachaKing',
+      viewers: 12456,
+      thumbnail: '/api/placeholder/320/180',
+      category: '가챠',
+      isLive: true,
+      hearts: 67890,
+      donations: 156000,
+      tags: ['가챠', 'SSR', '100연차'],
+      startedAt: new Date(Date.now() - 3 * 60 * 60 * 1000)
+    },
+    {
+      id: '4',
+      title: '크래시 게임 전략 공개! 함께 수익내자',
+      streamerName: 'CrashExpert',
+      viewers: 6789,
+      thumbnail: '/api/placeholder/320/180',
+      category: '크래시',
+      isLive: true,
+      hearts: 34567,
+      donations: 67000,
+      tags: ['크래시', '전략', '수익'],
+      startedAt: new Date(Date.now() - 30 * 60 * 1000)
+    }
+  ];
+
+  // 카테고리 목록
+  const categories: Category[] = [
+    { id: 'all', name: '전체', icon: '🎮', color: 'bg-purple-500', count: 156 },
+    { id: 'slot', name: '슬롯게임', icon: '🎰', color: 'bg-yellow-500', count: 45 },
+    { id: 'rps', name: '가위바위보', icon: '✂️', color: 'bg-blue-500', count: 23 },
+    { id: 'gacha', name: '가챠', icon: '🎁', color: 'bg-pink-500', count: 34 },
+    { id: 'crash', name: '크래시', icon: '📈', color: 'bg-red-500', count: 28 },
+    { id: 'talk', name: '토크', icon: '💬', color: 'bg-green-500', count: 26 }
+  ];
+
+  // 채팅 메시지 자동 스크롤
   useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // 가상의 채팅 메시지 시뮬레이션
+  useEffect(() => {
+    if (!selectedStream) return;
+
     const interval = setInterval(() => {
-      setCurrentViewers(prev => prev + Math.floor(Math.random() * 100) - 50);
+      const randomMessages = [
+        { username: 'User123', content: '대박! 잭팟 터뜨려주세요!' },
+        { username: 'Gambler456', content: 'ㅋㅋㅋㅋ 이거 실화냐' },
+        { username: 'ProPlayer', content: '와 진짜 잘하시네요' },
+        { username: 'Viewer789', content: '하트 보냈어요 ❤️' },
+        { username: 'RichGuy', content: '100 코인 후원합니다!', isDonation: true, donationAmount: 100 }
+      ];
+
+      const randomMessage = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+      const newMsg: Message = {
+        id: Date.now().toString(),
+        ...randomMessage,
+        timestamp: new Date(),
+        userLevel: Math.floor(Math.random() * 50) + 1
+      };
+
+      setMessages(prev => [...prev.slice(-50), newMsg]);
     }, 3000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedStream]);
 
-  // 하트 애니메이션 생성
-  const generateHeartEffect = (type: string = 'heart') => {
-    const newHearts = Array.from({ length: 8 }, (_, i) => ({
-      id: Date.now() + i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      type
-    }));
-    
-    setHeartAnimations(prev => [...prev, ...newHearts]);
-    setTimeout(() => {
-      setHeartAnimations(prev => prev.filter(heart => !newHearts.find(h => h.id === heart.id)));
-    }, 3000);
-  };
+  const handleSendMessage = () => {
+    if (!newMessage.trim() || !selectedStream) return;
 
-  // 혜택 모달 열기
-  const showBenefits = (type: 'gift' | 'vip' | 'private') => {
-    setBenefitType(type);
-    setShowBenefitsModal(true);
-  };
-
-  // 선물 보내기
-  const sendGift = (gift: typeof GIFTS[0]) => {
-    if (user.goldBalance < gift.price) {
-      onAddNotification(`❌ ${gift.price}G가 필요합니다!`);
-      return;
-    }
-
-    const updatedUser = {
-      ...user,
-      goldBalance: user.goldBalance - gift.price
+    const message: Message = {
+      id: Date.now().toString(),
+      username: user.username,
+      content: newMessage,
+      timestamp: new Date(),
+      userLevel: user.level || 1
     };
-    
-    onUpdateUser(updatedUser);
-    generateHeartEffect(gift.effect);
-    onAddNotification(`${gift.icon} ${gift.name}을 보냈습니다! (${gift.price}G)`);
-    setShowGiftMenu(false);
+
+    setMessages(prev => [...prev, message]);
+    setNewMessage('');
   };
 
-  // VIP 구독
-  const subscribeVip = () => {
-    if (user.goldBalance < EXCLUSIVE_VJ.vipPrice) {
-      onAddNotification(`❌ VIP 구독에 ${EXCLUSIVE_VJ.vipPrice}G가 필요합니다!`);
+  const handleDonation = () => {
+    const amount = parseInt(donationAmount);
+    if (isNaN(amount) || amount <= 0) {
+      onAddNotification('올바른 후원 금액을 입력해주세요.', 'error');
       return;
     }
 
-    const updatedUser = {
-      ...user,
-      goldBalance: user.goldBalance - EXCLUSIVE_VJ.vipPrice
+    if (user.gold < amount) {
+      onAddNotification('골드가 부족합니다.', 'error');
+      return;
+    }
+
+    const donation: Message = {
+      id: Date.now().toString(),
+      username: user.username,
+      content: donationMessage || `${amount} 코인 후원!`,
+      timestamp: new Date(),
+      isDonation: true,
+      donationAmount: amount,
+      userLevel: user.level || 1
     };
+
+    setMessages(prev => [...prev, donation]);
+    onUpdateUser({ gold: user.gold - amount });
+    onAddNotification(`${amount} 코인을 후원했습니다!`, 'success');
     
-    onUpdateUser(updatedUser);
-    onAddNotification(`👑 VIP 구독 완료! 특별 혜택을 누리세요!`);
-    generateHeartEffect('crowns');
+    setShowDonation(false);
+    setDonationAmount('');
+    setDonationMessage('');
   };
 
-  // 개인방 신청
-  const requestPrivate = () => {
-    if (user.goldBalance < EXCLUSIVE_VJ.privatePrice) {
-      onAddNotification(`❌ 개인방에 ${EXCLUSIVE_VJ.privatePrice}G가 필요합니다!`);
-      return;
+  const handleSendHeart = () => {
+    if (selectedStream) {
+      onAddNotification('하트를 보냈습니다! ❤️', 'success');
     }
-
-    const updatedUser = {
-      ...user,
-      goldBalance: user.goldBalance - EXCLUSIVE_VJ.privatePrice
-    };
-    
-    onUpdateUser(updatedUser);
-    onAddNotification(`💎 개인방 신청 완료! 곧 연결됩니다...`);
-    generateHeartEffect('diamonds');
   };
 
-  // 영상 구매/시청
-  const watchVideo = (video: typeof VIDEO_GALLERY[0]) => {
-    if (video.isVip && user.level < 30) {
-      onAddNotification(`❌ VIP 영상은 레벨 30 이상부터 시청 가능합니다!`);
-      return;
-    }
-
-    if (user.goldBalance < video.price) {
-      onAddNotification(`❌ ${video.price}G가 필요합니다!`);
-      return;
-    }
-
-    const updatedUser = {
-      ...user,
-      goldBalance: user.goldBalance - video.price
-    };
-    
-    onUpdateUser(updatedUser);
-    setSelectedVideo(video);
-    onAddNotification(`🎬 영상 시청 시작! ${video.price}G 차감`);
-    generateHeartEffect('hearts');
+  const formatViewers = (num: number) => {
+    if (num >= 10000) return `${(num / 1000).toFixed(1)}K`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-black to-pink-900/10 relative overflow-hidden">
-      {/* 하트 애니메이션 */}
-      <AnimatePresence>
-        {heartAnimations.map((heart) => (
-          <motion.div
-            key={heart.id}
-            initial={{ 
-              opacity: 0,
-              scale: 0,
-              x: `${heart.x}vw`,
-              y: `${heart.y}vh`
-            }}
-            animate={{ 
-              opacity: [0, 1, 0],
-              scale: [0, 2, 0],
-              y: `${heart.y - 30}vh`,
-              rotate: [0, 360]
-            }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 3, ease: "easeOut" }}
-            className="fixed text-pink-400 pointer-events-none z-20"
-          >
-            {heart.type === 'hearts' && '❤️'}
-            {heart.type === 'roses' && '🌹'}
-            {heart.type === 'kisses' && '💋'}
-            {heart.type === 'diamonds' && '💎'}
-            {heart.type === 'crowns' && '👑'}
-          </motion.div>
-        ))}
-      </AnimatePresence>
+  const formatDuration = (startedAt: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - startedAt.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `${hours}시간 ${minutes}분`;
+    }
+    return `${minutes}분`;
+  };
 
-      {/* 간소화된 헤더 */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative z-30 p-4 border-b border-border-secondary backdrop-blur-sm"
-      >
-        <div className="flex items-center justify-between max-w-6xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={onBack}
-              className="border-border-secondary hover:border-primary"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              뒤로가기
-            </Button>
+  if (selectedStream) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white">
+        {/* 헤더 */}
+        <div className="bg-gray-800 border-b border-gray-700 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setSelectedStream(null)}
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div>
+                <h2 className="font-semibold text-lg">{selectedStream.title}</h2>
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <span>{selectedStream.streamerName}</span>
+                  <span>•</span>
+                  <span className="text-red-500 flex items-center gap-1">
+                    <Radio className="w-3 h-3" />
+                    LIVE
+                  </span>
+                  <span>•</span>
+                  <span>{formatDuration(selectedStream.startedAt)}</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => setIsFollowing(!isFollowing)}
+                variant={isFollowing ? "secondary" : "default"}
+                size="sm"
+                className={isFollowing ? "bg-gray-600" : "bg-purple-600 hover:bg-purple-700"}
+              >
+                {isFollowing ? '팔로잉' : '팔로우'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-gray-700"
+              >
+                <Settings className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-gray-700"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex h-[calc(100vh-80px)]">
+          {/* 스트림 영역 */}
+          <div className="flex-1 bg-black relative">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Image
+                src={selectedStream.thumbnail}
+                alt={selectedStream.title}
+                width={1280}
+                height={720}
+                className="w-full h-full object-contain"
+                unoptimized
+              />
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                <Play className="w-20 h-20 text-white/80" />
+              </div>
+            </div>
             
-            <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-gradient-primary">
-                💕 전속 VJ 루나의 방
-              </h1>
+            {/* 스트림 정보 오버레이 */}
+            <div className="absolute top-4 left-4 right-4 flex justify-between">
+              <div className="bg-black/60 backdrop-blur px-3 py-2 rounded-lg flex items-center gap-2">
+                <Eye className="w-4 h-4 text-red-500" />
+                <span className="text-sm font-medium">{formatViewers(selectedStream.viewers)} 시청중</span>
+              </div>
+              <div className="flex gap-2">
+                <div className="bg-black/60 backdrop-blur px-3 py-2 rounded-lg flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-pink-500" />
+                  <span className="text-sm font-medium">{formatViewers(selectedStream.hearts)}</span>
+                </div>
+                <div className="bg-black/60 backdrop-blur px-3 py-2 rounded-lg flex items-center gap-2">
+                  <Coins className="w-4 h-4 text-yellow-500" />
+                  <span className="text-sm font-medium">{formatViewers(selectedStream.donations)}</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className="border-border-secondary hover:border-primary"
-            >
-              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            </Button>
-            
-            <div className="text-right">
-              <div className="text-sm text-muted-foreground">보유 골드</div>
-              <div className="text-xl font-bold text-gold">
-                {user.goldBalance.toLocaleString()}G
+          {/* 채팅 영역 */}
+          <div className="w-96 bg-gray-800 flex flex-col">
+            {/* 채팅 헤더 */}
+            <div className="p-4 border-b border-gray-700">
+              <h3 className="font-semibold">실시간 채팅</h3>
+            </div>
+
+            {/* 채팅 메시지 */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`${
+                    message.isDonation 
+                      ? 'bg-yellow-500/20 border border-yellow-500/30 p-2 rounded' 
+                      : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="flex-shrink-0">
+                      <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-xs">
+                        {message.userLevel}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-1">
+                        <span className={`font-medium text-sm ${
+                          message.isDonation ? 'text-yellow-400' : 'text-purple-400'
+                        }`}>
+                          {message.username}
+                        </span>
+                        {message.isDonation && (
+                          <span className="text-yellow-400 text-xs">
+                            💰 {message.donationAmount} 코인
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-200 break-words">
+                        {message.content}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* 채팅 입력 */}
+            <div className="p-4 border-t border-gray-700 space-y-3">
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSendHeart}
+                  size="icon"
+                  variant="ghost"
+                  className="hover:bg-gray-700 text-pink-500"
+                >
+                  <Heart className="w-5 h-5" />
+                </Button>
+                <Button
+                  onClick={() => setShowDonation(!showDonation)}
+                  size="icon"
+                  variant="ghost"
+                  className="hover:bg-gray-700 text-yellow-500"
+                >
+                  <Gift className="w-5 h-5" />
+                </Button>
+              </div>
+
+              {showDonation && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-2"
+                >
+                  <Input
+                    type="number"
+                    placeholder="후원 금액"
+                    value={donationAmount}
+                    onChange={(e) => setDonationAmount(e.target.value)}
+                    className="bg-gray-700 border-gray-600"
+                  />
+                  <Input
+                    placeholder="메시지 (선택사항)"
+                    value={donationMessage}
+                    onChange={(e) => setDonationMessage(e.target.value)}
+                    className="bg-gray-700 border-gray-600"
+                  />
+                  <Button
+                    onClick={handleDonation}
+                    className="w-full bg-yellow-600 hover:bg-yellow-700"
+                  >
+                    후원하기
+                  </Button>
+                </motion.div>
+              )}
+
+              <div className="flex gap-2">
+                <Input
+                  placeholder="메시지를 입력하세요..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  className="bg-gray-700 border-gray-600"
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  size="icon"
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
               </div>
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
+    );
+  }
 
-      {/* 메인 콘텐츠 */}
-      <div className="relative z-20 p-4 max-w-7xl mx-auto space-y-6">
-        
-        {/* 라이브 스트림 섹션 */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3 }}
-          className="glass-effect rounded-2xl overflow-hidden"
-        >
-          {/* 방송 화면 */}
-          <div className="relative aspect-video bg-gradient-to-br from-pink-900/20 to-purple-900/20">
-            <img 
-              src={EXCLUSIVE_VJ.streamThumbnail}
-              alt="Live Stream"
-              className="w-full h-full object-cover"
-            />
-            
-            {/* 라이브 배지 */}
-            <div className="absolute top-4 left-4">
-              <Badge className="bg-red-500 text-white animate-pulse px-3 py-1">
-                🔴 LIVE
-              </Badge>
-            </div>
-            
-            {/* 시청자 수 */}
-            <div className="absolute top-4 right-4 bg-black/60 rounded-lg px-3 py-1 text-white text-sm">
-              <Eye className="w-4 h-4 inline mr-1" />
-              {currentViewers.toLocaleString()}
-            </div>
-            
-            {/* 재생 컨트롤 */}
-            <div className="absolute bottom-4 left-4">
-              <Button
-                size="icon"
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="bg-black/60 hover:bg-black/80 text-white border-none"
-              >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-              </Button>
-            </div>
-
-            {/* 플로팅 하트들 */}
-            <div className="absolute inset-0 pointer-events-none">
-              {[...Array(5)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  animate={{
-                    y: [0, -100],
-                    opacity: [0, 1, 0],
-                    scale: [0.5, 1.5, 0.5]
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    delay: i * 0.6,
-                    ease: "easeOut"
-                  }}
-                  className="absolute text-pink-400 text-2xl"
-                  style={{
-                    left: `${20 + i * 15}%`,
-                    bottom: '10%'
-                  }}
-                >
-                  ❤️
-                </motion.div>
-              ))}
+  return (
+    <div className="min-h-screen bg-gray-900">
+      {/* 헤더 */}
+      <div className="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onBack}
+              className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
+            <h1 className="text-2xl font-bold text-white">라이브 스트리밍</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="bg-gray-700 px-3 py-1.5 rounded-lg flex items-center gap-2">
+              <Eye className="w-4 h-4 text-red-500" />
+              <span className="text-sm text-gray-300">
+                {popularStreams.reduce((sum, s) => sum + s.viewers, 0).toLocaleString()} 시청중
+              </span>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* VJ 정보 및 인터랙션 */}
-          <div className="p-6">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-pink-400">
-                <img 
-                  src={EXCLUSIVE_VJ.profileImage}
-                  alt={EXCLUSIVE_VJ.nickname}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h2 className="text-xl font-bold text-foreground">{EXCLUSIVE_VJ.nickname}</h2>
-                  <Badge className="bg-gold text-black">전속 VJ</Badge>
-                  {user.level >= 10 && (
-                    <Badge className="bg-purple-500 text-white">
-                      <Crown className="w-3 h-3 mr-1" />
-                      VIP
-                    </Badge>
-                  )}
-                </div>
-                
-                <p className="text-sm text-muted-foreground mb-3">{EXCLUSIVE_VJ.bio}</p>
-                
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {EXCLUSIVE_VJ.specialties.map((specialty, idx) => (
-                    <span 
-                      key={idx}
-                      className="bg-pink-500/20 text-pink-300 px-2 py-1 rounded-full text-xs"
-                    >
-                      #{specialty}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    {EXCLUSIVE_VJ.followers.toLocaleString()} 팔로워
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Heart className="w-4 h-4 text-pink-400" />
-                    {EXCLUSIVE_VJ.totalHearts.toLocaleString()} 하트
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 액션 버튼들 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* 선물하기 카드 */}
-              <Card 
-                className="cursor-pointer hover:scale-105 transition-transform border-pink-500/30 bg-gradient-to-br from-pink-500/10 to-purple-500/10"
-                onClick={() => showBenefits('gift')}
+      {/* 카테고리 필터 */}
+      <div className="bg-gray-800/50 border-b border-gray-700 px-4 py-3 sticky top-16 z-10 backdrop-blur">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                  selectedCategory === category.id
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
               >
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Gift className="w-4 h-4 text-pink-400" />
-                    선물하기
-                    <Info className="w-3 h-3 text-muted-foreground ml-auto" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-muted-foreground mb-2">100G ~ 10,000G</p>
-                  <p className="text-xs">특별한 반응과 개인 메시지를 받아보세요!</p>
-                </CardContent>
-              </Card>
-
-              {/* VIP 구독 카드 */}
-              <Card 
-                className="cursor-pointer hover:scale-105 transition-transform border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-gold/10"
-                onClick={() => showBenefits('vip')}
-              >
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Crown className="w-4 h-4 text-purple-400" />
-                    VIP 구독
-                    <Info className="w-3 h-3 text-muted-foreground ml-auto" />
-                  </CardTitle>     
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-muted-foreground mb-2">{EXCLUSIVE_VJ.vipPrice}G / 월</p>
-                  <p className="text-xs">독점 콘텐츠와 특별 혜택을 누리세요!</p>
-                </CardContent>
-              </Card>
-
-              {/* 개인방 카드 */}
-              <Card 
-                className="cursor-pointer hover:scale-105 transition-transform border-gold/30 bg-gradient-to-br from-gold/10 to-pink-500/10"
-                onClick={() => showBenefits('private')}
-              >
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Diamond className="w-4 h-4 text-gold" />
-                    개인방
-                    <Info className="w-3 h-3 text-muted-foreground ml-auto" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-muted-foreground mb-2">{EXCLUSIVE_VJ.privatePrice}G / 세션</p>
-                  <p className="text-xs">1:1 프라이빗 세션을 경험해보세요!</p>
-                </CardContent>
-              </Card>
-            </div>
+                <span className="text-lg">{category.icon}</span>
+                <span className="font-medium">{category.name}</span>
+                <span className="text-xs bg-black/20 px-1.5 py-0.5 rounded">
+                  {category.count}
+                </span>
+              </button>
+            ))}
           </div>
-        </motion.div>
+        </div>
+      </div>
 
-        {/* 영상 갤러리 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="glass-effect rounded-xl p-6"
-        >
-          <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-            <Video className="w-5 h-5 text-pink-400" />
-            💕 루나의 영상 모음
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {VIDEO_GALLERY.map((video) => (
+      {/* 스트림 목록 */}
+      <div className="max-w-7xl mx-auto p-4">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Flame className="w-5 h-5 text-orange-500" />
+            인기 라이브
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {popularStreams.map((stream) => (
               <motion.div
-                key={video.id}
+                key={stream.id}
                 whileHover={{ scale: 1.02 }}
-                onClick={() => watchVideo(video)}
-                className="glass-effect rounded-lg overflow-hidden cursor-pointer relative group"
+                whileTap={{ scale: 0.98 }}
               >
-                {/* 배지들 */}
-                <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
-                  {video.isHot && (
-                    <Badge className="bg-red-500 text-white text-xs">
-                      🔥 HOT
-                    </Badge>
-                  )}
-                  {video.isNew && (
-                    <Badge className="bg-green-500 text-white text-xs">
-                      ✨ NEW
-                    </Badge>
-                  )}
-                  {video.isVip && (
-                    <Badge className="bg-purple-500 text-white text-xs">
-                      👑 VIP
-                    </Badge>
-                  )}
-                  {video.isPrivate && (
-                    <Badge className="bg-gold text-black text-xs">
-                      <Lock className="w-3 h-3 mr-1" />
-                      PRIVATE
-                    </Badge>
-                  )}
-                </div>
-
-                {/* 가격 */}
-                <div className="absolute top-2 right-2 z-10">
-                  <div className="bg-black/60 text-gold px-2 py-1 rounded text-xs font-bold">
-                    {video.price}G
-                  </div>
-                </div>
-
-                {/* 썸네일 - 현실적인 VJ 이미지 */}
-                <div className="relative overflow-hidden group/thumbnail">
-                  <img 
-                    src={video.thumbnail} 
-                    alt={video.title}
-                    className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
-                  
-                  {/* 프라이버시 블러 효과 (VIP/Private 컨텐츠) */}
-                  {(video.isVip || video.isPrivate) && (
-                    <div className="absolute inset-0 backdrop-blur-sm bg-black/20 flex items-center justify-center">
-                      <div className="bg-black/60 text-white px-3 py-1 rounded-lg text-xs font-bold">
-                        {video.isVip ? '👑 VIP 전용' : '🔒 구매 후 시청'}
-                      </div>
+                <Card 
+                  className="bg-gray-800 border-gray-700 cursor-pointer hover:bg-gray-750 transition-colors overflow-hidden"
+                  onClick={() => setSelectedStream(stream)}
+                >
+                  <div className="relative">
+                    <Image
+                      src={stream.thumbnail}
+                      alt={stream.title}
+                      width={320}
+                      height={180}
+                      className="w-full h-40 object-cover"
+                      unoptimized
+                    />
+                    <div className="absolute top-2 left-2 bg-red-600 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                      <Radio className="w-3 h-3" />
+                      LIVE
                     </div>
-                  )}
-                  
-                  {/* 재생 오버레이 */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50">
-                    <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
-                      <Play className="w-5 h-5 text-white ml-1" />
-                    </div>
-                  </div>
-
-                  {/* 하트 플로팅 애니메이션 */}
-                  <div className="absolute top-2 left-2 opacity-0 group-hover/thumbnail:opacity-100 transition-opacity">
-                    {[...Array(3)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        animate={{
-                          y: [0, -20, -40],
-                          opacity: [0, 1, 0],
-                          scale: [0.5, 1, 0.5]
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          delay: i * 0.3
-                        }}
-                        className="absolute text-pink-400 text-sm"
-                        style={{ left: i * 8 }}
-                      >
-                        💕
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* 라이브 표시 (Hot 컨텐츠) */}
-                  {video.isHot && (
-                    <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold animate-pulse">
-                      🔴 LIVE
-                    </div>
-                  )}
-
-                  {/* 미리보기 텍스트 */}
-                  {video.preview && (
-                    <div className="absolute bottom-8 left-2 right-2 bg-gradient-to-t from-black/60 to-transparent p-2">
-                      <div className="text-white text-xs opacity-90">
-                        {video.preview}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 재생시간 */}
-                  <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-xs">
-                    {video.duration}
-                  </div>
-                  
-                  {/* 시청자 수 (라이브용) */}
-                  {video.isHot && (
-                    <div className="absolute bottom-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                    <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur px-2 py-1 rounded text-xs flex items-center gap-1">
                       <Eye className="w-3 h-3" />
-                      {Math.floor(Math.random() * 500 + 100)}
-                    </div>
-                  )}
-                </div>
-
-                {/* 영상 정보 */}
-                <div className="p-3">
-                  <h4 className="font-medium text-sm mb-2 line-clamp-2 text-foreground">
-                    {video.title}
-                  </h4>
-                  
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1">
-                        <Eye className="w-3 h-3" />
-                        {video.views.toLocaleString()}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Heart className="w-3 h-3 text-pink-400" />
-                        {video.hearts.toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {video.date}
+                      {formatViewers(stream.viewers)}
                     </div>
                   </div>
-                </div>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-white mb-1 line-clamp-2">
+                      {stream.title}
+                    </h3>
+                    <p className="text-sm text-gray-400 mb-2">{stream.streamerName}</p>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-purple-400">{stream.category}</span>
+                      <div className="flex items-center gap-3 text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <Heart className="w-3 h-3 text-pink-500" />
+                          {formatViewers(stream.hearts)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Coins className="w-3 h-3 text-yellow-500" />
+                          {formatViewers(stream.donations)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {stream.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-xs bg-gray-700 px-2 py-0.5 rounded text-gray-300"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             ))}
           </div>
-        </motion.div>
-      </div>
+        </div>
 
-      {/* 혜택 설명 모달 */}
-      <AnimatePresence>
-        {showBenefitsModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-            onClick={() => setShowBenefitsModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="glass-effect rounded-2xl p-8 max-w-md w-full"
-            >
-              {benefitType === 'gift' && (
-                <>
-                  <div className="text-center mb-6">
-                    <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Gift className="w-10 h-10 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">선물하기 혜택</h3>
-                    <p className="text-muted-foreground text-sm">VJ와 특별한 소통을 경험하세요!</p>
-                  </div>
-
-                  <div className="space-y-3 mb-6">
-                    {GIFTS.map((gift) => (
-                      <div key={gift.id} className="bg-secondary/30 rounded-lg p-3">
-                        <div className="flex items-center gap-3 mb-1">
-                          <span className="text-2xl">{gift.icon}</span>
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-foreground">{gift.name}</div>
-                            <div className="text-xs text-gold">{gift.price}G</div>
-                          </div>
-                        </div>
-                        <div className="text-xs text-muted-foreground">{gift.benefit}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setShowBenefitsModal(false)} className="flex-1">
-                      닫기
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        setShowBenefitsModal(false);
-                        setShowGiftMenu(true);
-                      }}
-                      className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white"
-                    >
-                      선물하기
-                    </Button>
-                  </div>
-                </>
-              )}
-
-              {benefitType === 'vip' && (
-                <>
-                  <div className="text-center mb-6">
-                    <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-gold rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Crown className="w-10 h-10 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">VIP 구독 혜택</h3>
-                    <p className="text-muted-foreground text-sm">월 {EXCLUSIVE_VJ.vipPrice}G로 프리미엄 경험을!</p>
-                  </div>
-
-                  <div className="space-y-3 mb-6">
-                    <div className="bg-secondary/30 rounded-lg p-3">
-                      <div className="text-sm font-medium text-purple-400 mb-1">👑 VIP 전용 콘텐츠</div>
-                      <div className="text-xs text-muted-foreground">일반 회원이 볼 수 없는 특별 영상</div>
-                    </div>
-                    <div className="bg-secondary/30 rounded-lg p-3">
-                      <div className="text-sm font-medium text-purple-400 mb-1">💎 우선 채팅</div>
-                      <div className="text-xs text-muted-foreground">VJ가 먼저 확인하는 특별 채팅</div>
-                    </div>
-                    <div className="bg-secondary/30 rounded-lg p-3">
-                      <div className="text-sm font-medium text-purple-400 mb-1">🎁 월간 선물</div>
-                      <div className="text-xs text-muted-foreground">매달 특별 선물과 보너스 골드</div>
-                    </div>
-                    <div className="bg-secondary/30 rounded-lg p-3">
-                      <div className="text-sm font-medium text-purple-400 mb-1">⭐ 개인방 할인</div>
-                      <div className="text-xs text-muted-foreground">개인방 이용료 30% 할인</div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setShowBenefitsModal(false)} className="flex-1">
-                      닫기
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        setShowBenefitsModal(false);
-                        subscribeVip();
-                      }}
-                      className="flex-1 bg-gradient-to-r from-purple-500 to-gold text-white"
-                    >
-                      VIP 구독
-                    </Button>
-                  </div>
-                </>
-              )}
-
-              {benefitType === 'private' && (
-                <>
-                  <div className="text-center mb-6">
-                    <div className="w-20 h-20 bg-gradient-to-r from-gold to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Diamond className="w-10 h-10 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">개인방 혜택</h3>
-                    <p className="text-muted-foreground text-sm">세션당 {EXCLUSIVE_VJ.privatePrice}G로 1:1 프라이빗!</p>
-                  </div>
-
-                  <div className="space-y-3 mb-6">
-                    <div className="bg-secondary/30 rounded-lg p-3">
-                      <div className="text-sm font-medium text-gold mb-1">💎 완전 개인 공간</div>
-                      <div className="text-xs text-muted-foreground">오직 당신만을 위한 전용 방송</div>
-                    </div>
-                    <div className="bg-secondary/30 rounded-lg p-3">
-                      <div className="text-sm font-medium text-gold mb-1">🎭 커스텀 쇼</div>
-                      <div className="text-xs text-muted-foreground">원하는 컨셉과 스타일로 진행</div>
-                    </div>
-                    <div className="bg-secondary/30 rounded-lg p-3">
-                      <div className="text-sm font-medium text-gold mb-1">💬 실시간 소통</div>
-                      <div className="text-xs text-muted-foreground">음성/텍스트 실시간 대화</div>
-                    </div>
-                    <div className="bg-secondary/30 rounded-lg p-3">
-                      <div className="text-sm font-medium text-gold mb-1">📹 녹화 서비스</div>
-                      <div className="text-xs text-muted-foreground">개인방 영상을 저장해드려요</div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setShowBenefitsModal(false)} className="flex-1">
-                      닫기
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        setShowBenefitsModal(false);
-                        requestPrivate();
-                      }}
-                      className="flex-1 bg-gradient-to-r from-gold to-pink-500 text-white"
-                    >
-                      개인방 신청
-                    </Button>
-                  </div>
-                </>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 선물 메뉴 */}
-      <AnimatePresence>
-        {showGiftMenu && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-20 left-4 right-4 z-40 max-w-md mx-auto"
-          >
-            <div className="glass-effect rounded-xl p-4">
-              <h3 className="font-bold text-foreground mb-3 flex items-center justify-between">
-                💝 선물 보내기
+        {/* 추천 스트리머 */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Crown className="w-5 h-5 text-yellow-500" />
+            추천 스트리머
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="bg-gray-800 border-gray-700 p-4 text-center hover:bg-gray-750 transition-colors cursor-pointer">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                  <StarIcon className="w-8 h-8 text-white" />
+                </div>
+                <h4 className="font-medium text-white text-sm mb-1">Streamer{i}</h4>
+                <p className="text-xs text-gray-400">12.5K 팔로워</p>
                 <Button 
-                  variant="outline" 
                   size="sm" 
-                  onClick={() => setShowGiftMenu(false)}
+                  className="mt-2 w-full bg-purple-600 hover:bg-purple-700 text-xs"
                 >
-                  닫기
+                  팔로우
                 </Button>
-              </h3>
-              <div className="grid grid-cols-5 gap-3">
-                {GIFTS.map((gift) => (
-                  <motion.button
-                    key={gift.id}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => sendGift(gift)}
-                    className="bg-secondary/50 hover:bg-secondary/80 rounded-lg p-3 text-center transition-all"
-                  >
-                    <div className="text-2xl mb-1">{gift.icon}</div>
-                    <div className="text-xs font-medium text-foreground">{gift.name}</div>
-                    <div className="text-xs text-gold">{gift.price}G</div>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              </Card>
+            ))}
+          </div>
+        </div>
 
-      {/* 영상 시청 모달 */}
-      <AnimatePresence>
-        {selectedVideo && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
-            onClick={() => setSelectedVideo(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="glass-effect rounded-2xl overflow-hidden max-w-2xl w-full"
-            >
-              <div className="relative aspect-video">
-                <img 
-                  src={selectedVideo.thumbnail}
-                  alt={selectedVideo.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 bg-pink-500 rounded-full flex items-center justify-center animate-pulse">
-                    <Play className="w-8 h-8 text-white ml-1" />
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedVideo(null)}
-                  className="absolute top-4 right-4"
-                >
-                  닫기
-                </Button>
-              </div>
-              <div className="p-6">
-                <h3 className="text-lg font-bold text-foreground mb-2">{selectedVideo.title}</h3>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {selectedVideo.duration}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-4 h-4" />
-                    {selectedVideo.views.toLocaleString()}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Heart className="w-4 h-4 text-pink-400" />
-                    {selectedVideo.hearts.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        {/* 스트리밍 시작 안내 */}
+        <Card className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-purple-700/50">
+          <CardContent className="p-6 text-center">
+            <div className="w-16 h-16 bg-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <Video className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">스트리밍을 시작해보세요!</h3>
+            <p className="text-gray-300 mb-4">
+              당신의 게임 플레이를 공유하고 팬들과 소통하세요
+            </p>
+            <Button className="bg-purple-600 hover:bg-purple-700">
+              스트리밍 시작하기
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* 주간 랭킹 */}
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-yellow-500" />
+            주간 스트리머 랭킹
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {['후원 랭킹', '시청자 랭킹', '하트 랭킹'].map((rankType, index) => (
+              <Card key={rankType} className="bg-gray-800 border-gray-700">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    {index === 0 && <Coins className="w-5 h-5 text-yellow-500" />}
+                    {index === 1 && <Users className="w-5 h-5 text-blue-500" />}
+                    {index === 2 && <Heart className="w-5 h-5 text-pink-500" />}
+                    {rankType}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {[1, 2, 3, 4, 5].map((rank) => (
+                    <div key={rank} className="flex items-center justify-between p-2 hover:bg-gray-700 rounded-lg transition-colors">
+                      <div className="flex items-center gap-3">
+                        <span className={`font-bold ${
+                          rank === 1 ? 'text-yellow-500' :
+                          rank === 2 ? 'text-gray-400' :
+                          rank === 3 ? 'text-orange-600' :
+                          'text-gray-500'
+                        }`}>
+                          {rank}
+                        </span>
+                        <Image
+                          src={`/api/placeholder/32/32`}
+                          alt={`Rank ${rank}`}
+                          width={32}
+                          height={32}
+                          className="rounded-full"
+                          unoptimized
+                        />
+                        <span className="text-sm text-white">Streamer{rank}</span>
+                      </div>
+                      <span className="text-sm text-gray-400">
+                        {index === 0 && `${1000 - rank * 100}K`}
+                        {index === 1 && `${500 - rank * 50}K`}
+                        {index === 2 && `${800 - rank * 80}K`}
+                      </span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

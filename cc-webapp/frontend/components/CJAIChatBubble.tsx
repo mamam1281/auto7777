@@ -106,6 +106,9 @@ export function CJAIChatBubble({
         }];
       });
     } catch (error) {
+      // 오류 로깅 추가 (개발 환경에서만)
+      console.error('AI 응답 처리 중 오류 발생:', error);
+      
       setMessages(prev => {
         const filtered = prev.filter(m => m.id !== 'typing');
         return [...filtered, {

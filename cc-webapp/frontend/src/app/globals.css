@@ -2,17 +2,21 @@
 
 /* Casino-Club F2P 글로벌 스타일 */
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --primary: #8B5CF6;
-  --primary-light: #A78BFA;
-  --gold: #ffd700;
-  --success: #00ff88;
-  --error: #ff4444;
-  --warning: #ffaa00;
-  --info: #00aaff;
-  --muted-foreground: #888;
+  --background: #0a0a0f;
+  --foreground: #ffffff;
+  --primary: #e6005e;
+  --primary-light: #ff4d9a;
+  --primary-dark: #b30048;
+  --gold: #e6c200;
+  --gold-light: #f5d700;
+  --success: #9c4dcc;
+  --error: #e6336b;
+  --warning: #e89900;
+  --info: #4d9fcc;
+  --muted-foreground: #999999;
   --border-secondary: #333;
+  --card: #1a1a24;
+  --secondary: #2d2d3a;
 }
 
 body {

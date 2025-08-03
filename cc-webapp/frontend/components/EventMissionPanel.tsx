@@ -1,42 +1,61 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { 
   ArrowLeft,
   Calendar,
   Target,
   Gift,
-  Trophy,
-  Star,
   Clock,
   CheckCircle,
   Plus,
   Edit,
   Trash2,
-  Play,
-  Pause,
   Users,
-  Coins,
-  Award,
-  Flame,
-  Zap,
-  Crown,
-  Sparkles,
-  Timer,
-  TrendingUp,
-  Eye,
-  Settings
+  Timer
 } from 'lucide-react';
-import { User, Event, Mission } from '../types';
+import { User } from '../types';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Label } from './ui/label';
+
+// 🎯 타입 정의
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  startDate: Date;
+  endDate: Date;
+  rewards: Array<{ type: string; amount: number; name?: string }>;
+  participants: number;
+  maxParticipants?: number;
+  requirements?: string[];
+  icon: string;
+}
+
+interface Mission {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  progress: number;
+  maxProgress: number;
+  rewards: Array<{ type: string; amount: number; name?: string }>;
+  difficulty: string;
+  icon: string;
+  expiresAt?: Date;
+  requirements?: string[];
+}
 
 interface EventMissionPanelProps {
   user: User;
@@ -50,6 +69,10 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingItem, setEditingItem] = useState<Event | Mission | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [eventFilter, setEventFilter] = useState('all');
+  const [missionFilter, setMissionFilter] = useState('all');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [autoClaimRewards, setAutoClaimRewards] = useState(false);
 
   // Mock events data
   const [events, setEvents] = useState<Event[]>([
@@ -166,6 +189,26 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
   const completedMissions = missions.filter(m => m.status === 'completed').length;
   const totalParticipants = events.reduce((sum, e) => sum + e.participants, 0);
 
+  // Filter events
+  const filteredEvents = events.filter(event => {
+    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         event.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = eventFilter === 'all' || 
+                         event.status === eventFilter || 
+                         event.type === eventFilter;
+    return matchesSearch && matchesFilter;
+  });
+
+  // Filter missions
+  const filteredMissions = missions.filter(mission => {
+    const matchesSearch = mission.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         mission.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = missionFilter === 'all' || 
+                         mission.type === missionFilter ||
+                         mission.status === missionFilter;
+    return matchesSearch && matchesFilter;
+  });
+
   // Handle mission completion
   const handleCompleteMission = (missionId: string) => {
     const mission = missions.find(m => m.id === missionId);
@@ -179,8 +222,9 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
     ));
 
     // Give rewards
-    const totalGold = mission.rewards.reduce((sum, r) => r.type === 'gold' ? sum + r.amount : sum, 0);
-    const totalExp = mission.rewards.reduce((sum, r) => r.type === 'exp' ? sum + r.amount : sum, 0);
+    type RewardItemType = { type: string; amount: number; name?: string };
+    const totalGold = mission.rewards.reduce((sum: number, r: RewardItemType) => r.type === 'gold' ? sum + r.amount : sum, 0);
+    const totalExp = mission.rewards.reduce((sum: number, r: RewardItemType) => r.type === 'exp' ? sum + r.amount : sum, 0);
 
     if (totalGold > 0 || totalExp > 0) {
       const updatedUser = {
@@ -286,8 +330,38 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
             </h1>
           </div>
 
-          <div className="ml-auto text-gold font-bold">
-            {completedMissions}/{missions.length}
+          {/* Settings Panel */}
+          <div className="ml-auto flex items-center gap-4">
+            <Card className="bg-secondary/20 border-border-secondary">
+              <CardContent className="p-3">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="notifications" className="text-sm text-muted-foreground">
+                      알림
+                    </Label>
+                    <Switch
+                      id="notifications"
+                      checked={notificationsEnabled}
+                      onCheckedChange={setNotificationsEnabled}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="auto-claim" className="text-sm text-muted-foreground">
+                      자동수령
+                    </Label>
+                    <Switch
+                      id="auto-claim"
+                      checked={autoClaimRewards}
+                      onCheckedChange={setAutoClaimRewards}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="text-gold font-bold">
+              {completedMissions}/{missions.length}
+            </div>
           </div>
         </div>
       </motion.div>
@@ -334,14 +408,30 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
           {/* Events Tab */}
           <TabsContent value="events" className="space-y-6">
             {/* Event Controls */}
-            <div className="flex items-center justify-between">
-              <div className="relative flex-1 max-w-md">
-                <Input
-                  placeholder="이벤트 검색..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="relative flex-1 max-w-md">
+                  <Input
+                    placeholder="이벤트 검색..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                
+                <Select value={eventFilter} onValueChange={setEventFilter}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="필터 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">전체</SelectItem>
+                    <SelectItem value="active">진행중</SelectItem>
+                    <SelectItem value="scheduled">예정</SelectItem>
+                    <SelectItem value="seasonal">시즌</SelectItem>
+                    <SelectItem value="limited">한정</SelectItem>
+                    <SelectItem value="special">특별</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               {user.isAdmin && (
@@ -357,7 +447,7 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
 
             {/* Events Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {events.map((event, index) => (
+              {filteredEvents.map((event, index) => (
                 <motion.div
                   key={event.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -411,7 +501,8 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
                   <div className="mb-4">
                     <div className="text-sm font-medium text-foreground mb-2">보상:</div>
                     <div className="flex flex-wrap gap-2">
-                      {event.rewards.map((reward, idx) => (
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {event.rewards.map((reward: any, idx: number) => (
                         <Badge key={idx} variant="secondary" className="text-xs">
                           {reward.type === 'gold' ? `${reward.amount.toLocaleString()}G` :
                            reward.type === 'exp' ? `${reward.amount.toLocaleString()}XP` :
@@ -426,7 +517,7 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
                     <div className="mb-4">
                       <div className="text-sm font-medium text-foreground mb-2">조건:</div>
                       <div className="space-y-1">
-                        {event.requirements.map((req, idx) => (
+                        {event.requirements.map((req: string, idx: number) => (
                           <div key={idx} className="text-xs text-muted-foreground flex items-center gap-2">
                             <CheckCircle className="w-3 h-3 text-success" />
                             {req}
@@ -484,6 +575,35 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
 
           {/* Missions Tab */}
           <TabsContent value="missions" className="space-y-6">
+            {/* Mission Controls */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="relative flex-1 max-w-md">
+                  <Input
+                    placeholder="미션 검색..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                
+                <Select value={missionFilter} onValueChange={setMissionFilter}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="필터 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">전체</SelectItem>
+                    <SelectItem value="daily">일일</SelectItem>
+                    <SelectItem value="weekly">주간</SelectItem>
+                    <SelectItem value="achievement">업적</SelectItem>
+                    <SelectItem value="special">특별</SelectItem>
+                    <SelectItem value="completed">완료됨</SelectItem>
+                    <SelectItem value="active">진행중</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             {/* Mission Categories */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {['daily', 'weekly', 'achievement', 'special'].map((type) => {
@@ -491,28 +611,32 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
                 const completed = typeMissions.filter(m => m.status === 'completed').length;
                 
                 return (
-                  <div key={type} className="glass-effect rounded-xl p-4 text-center">
-                    <div className="text-xl mb-2">
-                      {type === 'daily' ? '📅' :
-                       type === 'weekly' ? '📆' :
-                       type === 'achievement' ? '🏆' : '✨'}
-                    </div>
-                    <div className="text-lg font-bold text-foreground">
-                      {completed}/{typeMissions.length}
-                    </div>
-                    <div className="text-sm text-muted-foreground capitalize">
-                      {type === 'daily' ? '일일' :
-                       type === 'weekly' ? '주간' :
-                       type === 'achievement' ? '업적' : '특별'} 미션
-                    </div>
-                  </div>
+                  <Card key={type} className="bg-secondary/20 border-border-secondary card-hover-float">
+                    <CardHeader className="text-center pb-2">
+                      <CardTitle className="text-xl mb-2">
+                        {type === 'daily' ? '📅' :
+                         type === 'weekly' ? '📆' :
+                         type === 'achievement' ? '🏆' : '✨'}
+                      </CardTitle>
+                      <CardDescription className="text-lg font-bold text-foreground">
+                        {completed}/{typeMissions.length}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0 text-center">
+                      <div className="text-sm text-muted-foreground capitalize">
+                        {type === 'daily' ? '일일' :
+                         type === 'weekly' ? '주간' :
+                         type === 'achievement' ? '업적' : '특별'} 미션
+                      </div>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
 
             {/* Missions List */}
             <div className="space-y-4">
-              {missions.map((mission, index) => (
+              {filteredMissions.map((mission, index) => (
                 <motion.div
                   key={mission.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -566,7 +690,8 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
                         
                         {/* Rewards */}
                         <div className="flex flex-wrap gap-2 mb-3">
-                          {mission.rewards.map((reward, idx) => (
+                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                          {mission.rewards.map((reward: any, idx: number) => (
                             <Badge key={idx} variant="secondary" className="text-xs">
                               {reward.type === 'gold' ? `${reward.amount.toLocaleString()}G` :
                                reward.type === 'exp' ? `${reward.amount.toLocaleString()}XP` :
@@ -616,6 +741,41 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Create/Edit Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md bg-background border-border-secondary">
+            <CardHeader>
+              <CardTitle className="text-gradient-primary">
+                {editingItem ? 'Edit Item' : 'Create New Item'}
+              </CardTitle>
+              <CardDescription>
+                {editingItem ? 'Edit existing item' : 'Create a new event or mission'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                Modal implementation coming soon...
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => {
+                  setShowCreateModal(false);
+                  setEditingItem(null);
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={() => {
+                  setShowCreateModal(false);
+                  setEditingItem(null);
+                }}>
+                  Save
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
