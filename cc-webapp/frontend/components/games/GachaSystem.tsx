@@ -10,7 +10,7 @@ import {
   Heart,
   Crown
 } from 'lucide-react';
-import { User } from '../../App';
+import { User } from '../../types';
 import { Button } from '../ui/button';
 import { GACHA_BANNERS, ANIMATION_DURATIONS } from './gacha/constants';
 import { 

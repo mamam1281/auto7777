@@ -18,6 +18,7 @@ export function LoadingScreen({
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [particles, setParticles] = useState<{x: number, y: number}[]>([]);
 
   const loadingSteps = [
     { text: "초기화 중...", icon: Gamepad2 },
@@ -25,6 +26,22 @@ export function LoadingScreen({
     { text: "사용자 데이터 동기화...", icon: Star },
     { text: "최종 준비 완료!", icon: Crown }
   ];
+
+  // Generate particle positions only on client side
+  useEffect(() => {
+    const generateParticles = () => {
+      const newParticles = [];
+      for (let i = 0; i < 20; i++) {
+        newParticles.push({
+          x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1920),
+          y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1080)
+        });
+      }
+      setParticles(newParticles);
+    };
+
+    generateParticles();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -62,14 +79,14 @@ export function LoadingScreen({
         >
           {/* Animated Background Elements */}
           <div className="absolute inset-0 overflow-hidden">
-            {[...Array(20)].map((_, i) => (
+            {particles.map((particle, i) => (
               <motion.div
                 key={i}
                 initial={{ 
                   opacity: 0, 
                   scale: 0,
-                  x: Math.random() * window.innerWidth,
-                  y: Math.random() * window.innerHeight
+                  x: particle.x,
+                  y: particle.y
                 }}
                 animate={{ 
                   opacity: [0, 1, 0],

@@ -155,8 +155,8 @@ export function AdminLoginScreen({
             key={i}
             initial={{ 
               opacity: 0,
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight
+              x: typeof window !== 'undefined' ? Math.random() * window.innerWidth : Math.random() * 1920,
+              y: typeof window !== 'undefined' ? Math.random() * window.innerHeight : Math.random() * 1080
             }}
             animate={{ 
               opacity: [0, 0.3, 0],

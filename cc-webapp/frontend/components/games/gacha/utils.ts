@@ -1,4 +1,4 @@
-import { User } from '../../../App';
+import { User } from '../../../types';
 import { GachaItem, GachaBanner, GACHA_ITEMS, ANIMATION_DURATIONS } from './constants';
 
 export interface Particle {
@@ -18,7 +18,12 @@ export interface HeartParticle {
 // 고유 ID 생성기
 let idCounter = 0;
 const generateUniqueId = (prefix: string): string => {
-  return `${prefix}-${Date.now()}-${++idCounter}-${Math.random().toString(36).substr(2, 9)}`;
+  return `${prefix}-${idCounter++}-${Date.now()}`;
+};
+
+// Get animation duration for specific effect
+export const getAnimationDuration = (effect: string): number => {
+  return ANIMATION_DURATIONS[effect as keyof typeof ANIMATION_DURATIONS] || 1000;
 };
 
 // Generate particles based on rarity
@@ -33,7 +38,7 @@ export const generateParticles = (rarity: string): Particle[] => {
   
   const particleCount = rarity === 'mythic' ? 30 : rarity === 'legendary' ? 20 : 15;
   return Array.from({ length: particleCount }, (_, i) => ({
-    id: generateUniqueId(`particle-${rarity}`),
+    id: generateUniqueId(`particle-${rarity}-${i}`),
     x: Math.random() * 100,
     y: Math.random() * 100,
     color: colors[rarity as keyof typeof colors]?.[Math.floor(Math.random() * colors[rarity as keyof typeof colors].length)] || '#ec4899',
@@ -44,7 +49,7 @@ export const generateParticles = (rarity: string): Particle[] => {
 // Generate floating heart particles
 export const generateHeartParticles = (): HeartParticle[] => {
   return Array.from({ length: 3 }, (_, i) => ({
-    id: generateUniqueId('heart'),
+    id: generateUniqueId(`heart-${i}`),
     x: Math.random() * 100,
     y: Math.random() * 100
   }));

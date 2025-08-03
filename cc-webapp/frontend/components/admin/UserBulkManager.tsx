@@ -157,7 +157,7 @@ export function UserBulkManager({ onAddNotification, onUsersImported }: UserBulk
         }
 
         // Validate numeric fields
-        if (isNaN(userData.goldBalance) || userData.goldBalance < 0) {
+        if (userData.goldBalance === undefined || isNaN(userData.goldBalance) || userData.goldBalance < 0) {
           errors.push({
             row: row._rowNumber,
             error: '골드: 유효한 숫자여야 합니다 (0 이상)',
@@ -166,7 +166,7 @@ export function UserBulkManager({ onAddNotification, onUsersImported }: UserBulk
           continue;
         }
 
-        if (isNaN(userData.level) || userData.level < 1) {
+        if (userData.level === undefined || isNaN(userData.level) || userData.level < 1) {
           errors.push({
             row: row._rowNumber,
             error: '레벨: 유효한 숫자여야 합니다 (1 이상)',

@@ -79,7 +79,7 @@ export function GameDashboard({
       icon: Dice1,
       color: 'from-primary to-primary-light',
       description: '운을 시험해보세요! 잭팟의 짜릿함!',
-      playCount: user.gameStats.slot.spins,
+      playCount: user.gameStats.slot.totalSpins,
       bestScore: user.gameStats.slot.biggestWin,
       lastPlayed: new Date(),
       difficulty: 'Easy',
@@ -95,8 +95,8 @@ export function GameDashboard({
       icon: Swords,
       color: 'from-success to-info',
       description: 'AI와 두뇌 대결! 승부의 짜릿함!',
-      playCount: user.gameStats.rps.matches,
-      bestScore: user.gameStats.rps.winStreak,
+      playCount: user.gameStats.rps.totalGames,
+      bestScore: user.gameStats.rps.bestStreak,
       lastPlayed: new Date(),
       difficulty: 'Medium',
       rewards: ['골드', '전략 포인트', '승부사 배지'],
@@ -111,8 +111,8 @@ export function GameDashboard({
       icon: Gift,
       color: 'from-error to-warning',
       description: '전설의 아이템을 뽑아보세요!',
-      playCount: user.gameStats.gacha.pulls,
-      bestScore: user.gameStats.gacha.legendaryCount,
+      playCount: user.gameStats.gacha.totalPulls,
+      bestScore: user.gameStats.gacha.legendaryPulls,
       lastPlayed: new Date(),
       difficulty: 'Extreme',
       rewards: ['전설 아이템', '희귀 스킨', '특별 캐릭터'],
@@ -128,8 +128,8 @@ export function GameDashboard({
       icon: Zap,
       color: 'from-error to-primary',
       description: '배율 상승의 스릴! 언제 터질까?',
-      playCount: user.gameStats.crash?.games || 0,
-      bestScore: user.gameStats.crash?.biggestWin || 0,
+      playCount: user.gameStats.crash.totalGames,
+      bestScore: user.gameStats.crash.highestMultiplier,
       lastPlayed: new Date(),
       difficulty: 'Hard',
       rewards: ['고배율 골드', '크래시 배지', '스릴 포인트'],
@@ -178,7 +178,9 @@ export function GameDashboard({
   };
 
   const handleModelNavigation = () => {
-    window.open('https://local.com', '_blank');
+    if (typeof window !== 'undefined') {
+      window.open('https://local.com', '_blank');
+    }
   };
 
   const getDifficultyColor = (difficulty: string) => {

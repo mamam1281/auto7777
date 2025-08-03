@@ -287,8 +287,8 @@ export function NeonRouletteGame({ user, onBack, onUpdateUser, onAddNotification
       updatedUser.stats.winStreak = 0;
     }
     
-    if (finalReward > updatedUser.gameStats.roulette.biggestWin) {
-      updatedUser.gameStats.roulette.biggestWin = finalReward;
+    if (finalReward > updatedUser.gameStats.roulette.bestWin) {
+      updatedUser.gameStats.roulette.bestWin = finalReward;
     }
     
     updatedUser.stats.gamesPlayed += 1;
@@ -431,7 +431,7 @@ export function NeonRouletteGame({ user, onBack, onUpdateUser, onAddNotification
             <div className="text-sm text-muted-foreground">당첨</div>
           </div>
           <div className="glass-effect rounded-xl p-4 text-center">
-            <div className="text-xl font-bold text-gold">{user.gameStats.roulette.biggestWin.toLocaleString()}G</div>
+            <div className="text-xl font-bold text-gold">{user.gameStats.roulette.bestWin.toLocaleString()}G</div>
             <div className="text-sm text-muted-foreground">최대 당첨</div>
           </div>
           <div className="glass-effect rounded-xl p-4 text-center">

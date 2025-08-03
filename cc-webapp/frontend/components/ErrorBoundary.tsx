@@ -65,8 +65,8 @@ class ErrorBoundary extends Component<Props, State> {
       stack: error.stack,
       componentStack: errorInfo.componentStack,
       timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
+      url: typeof window !== 'undefined' ? window.location.href : 'Unknown'
     };
 
     // 여기서 에러 리포팅 서비스로 전송
@@ -74,13 +74,19 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleReload = () => {
-    window.location.reload();
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
   };
 
   private handleGoHome = () => {
     // 로컬 스토리지 정리 후 홈으로
-    localStorage.removeItem('game-user');
-    window.location.href = '/';
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('game-user');
+    }
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
   };
 
   private handleRetry = () => {

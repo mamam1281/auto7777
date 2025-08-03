@@ -201,10 +201,12 @@ export function RockPaperScissorsGame({
         ...user.gameStats,
         rps: {
           ...user.gameStats.rps,
-          matches: user.gameStats.rps.matches + 1,
+          totalGames: user.gameStats.rps.totalGames + 1,
           wins: result === 'win' ? user.gameStats.rps.wins + 1 : user.gameStats.rps.wins,
-          draws: result === 'draw' ? user.gameStats.rps.draws + 1 : user.gameStats.rps.draws,
-          winStreak: result === 'win' ? user.gameStats.rps.winStreak + 1 : 0
+          currentStreak: result === 'win' ? user.gameStats.rps.currentStreak + 1 : 0,
+          bestStreak: result === 'win' 
+            ? Math.max(user.gameStats.rps.bestStreak, user.gameStats.rps.currentStreak + 1)
+            : user.gameStats.rps.bestStreak
         }
       },
       stats: {
@@ -701,12 +703,12 @@ export function RockPaperScissorsGame({
               </div>
               <div className="text-center p-3 rounded-lg bg-error/10 border border-error/20">
                 <div className="text-xl font-bold text-error">
-                  {user.gameStats.rps.matches - user.gameStats.rps.wins - user.gameStats.rps.draws}
+                  {user.gameStats.rps.totalGames - user.gameStats.rps.wins - roundHistory.filter(r => r.result === 'draw').length}
                 </div>
                 <div className="text-sm text-muted-foreground">패배</div>
               </div>
               <div className="text-center p-3 rounded-lg bg-warning/10 border border-warning/20">
-                <div className="text-xl font-bold text-warning">{user.gameStats.rps.draws}</div>
+                <div className="text-xl font-bold text-warning">{roundHistory.filter(r => r.result === 'draw').length}</div>
                 <div className="text-sm text-muted-foreground">무승부</div>
               </div>
               <div className="text-center p-3 rounded-lg bg-success/10 border border-success/20">

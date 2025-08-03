@@ -59,49 +59,113 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
       description: '크리스마스를 맞아 특별한 보상을 드립니다! 매일 로그인하고 게임을 플레이하여 한정 아이템을 획득하세요.',
       type: 'seasonal',
       status: 'active',
+      isActive: true,
       startDate: new Date('2024-12-24'),
       endDate: new Date('2024-12-31'),
       rewards: [
-        { type: 'gold', amount: 50000 },
-        { type: 'item', amount: 1, name: '크리스마스 스킨' },
-        { type: 'exp', amount: 5000 }
+        { 
+          id: 'gold1', 
+          name: '골드', 
+          type: 'currency', 
+          rarity: 'common', 
+          quantity: 50000, 
+          description: '게임 내 화폐', 
+          icon: '💰' 
+        },
+        { 
+          id: 'skin1', 
+          name: '크리스마스 스킨', 
+          type: 'skin', 
+          rarity: 'rare', 
+          quantity: 1, 
+          description: '크리스마스 한정 스킨', 
+          icon: '🎄' 
+        },
+        { 
+          id: 'exp1', 
+          name: '경험치', 
+          type: 'currency', 
+          rarity: 'common', 
+          quantity: 5000, 
+          description: '캐릭터 경험치', 
+          icon: '⭐' 
+        }
       ],
       participants: 8432,
       maxParticipants: 10000,
       requirements: ['일일 로그인', '게임 3회 플레이', '친구 초대'],
+      difficulty: 'easy',
+      category: 'holiday',
       icon: '🎄'
     },
     {
       id: 'event_2',
       title: '⚡ 번개 더블 골드',
       description: '지금부터 2시간 동안 모든 게임에서 골드 2배 획득! 놓치지 마세요!',
-      type: 'limited',
+      type: 'special',
       status: 'active',
+      isActive: true,
       startDate: new Date(),
       endDate: new Date(Date.now() + 2 * 60 * 60 * 1000),
       rewards: [
-        { type: 'gold', amount: 0, name: '2배 골드 획득' }
+        { 
+          id: 'boost1', 
+          name: '2배 골드 획득', 
+          type: 'powerup', 
+          rarity: 'rare', 
+          quantity: 1, 
+          description: '골드 2배 부스터', 
+          icon: '⚡' 
+        }
       ],
       participants: 2156,
-      icon: '⚡'
+      requirements: ['즉시 참여 가능'],
+      difficulty: 'easy',
+      category: 'boost',
     },
     {
       id: 'event_3',
       title: '🏆 신년 토너먼트',
       description: '새해를 맞아 열리는 대규모 토너먼트! 최고의 게이머가 되어 거대한 보상을 차지하세요.',
       type: 'special',
-      status: 'scheduled',
+      status: 'active',
+      isActive: false,
       startDate: new Date('2025-01-01'),
       endDate: new Date('2025-01-07'),
       rewards: [
-        { type: 'gold', amount: 1000000 },
-        { type: 'item', amount: 1, name: '챔피언 트로피' },
-        { type: 'item', amount: 1, name: '전설 타이틀' }
+        { 
+          id: 'gold2', 
+          name: '골드', 
+          type: 'currency', 
+          rarity: 'legendary', 
+          quantity: 1000000, 
+          description: '대량의 골드', 
+          icon: '💰' 
+        },
+        { 
+          id: 'trophy1', 
+          name: '챔피언 트로피', 
+          type: 'collectible', 
+          rarity: 'legendary', 
+          quantity: 1, 
+          description: '챔피언의 증표', 
+          icon: '🏆' 
+        },
+        { 
+          id: 'title1', 
+          name: '전설 타이틀', 
+          type: 'collectible', 
+          rarity: 'legendary', 
+          quantity: 1, 
+          description: '전설의 타이틀', 
+          icon: '👑' 
+        }
       ],
       participants: 0,
       maxParticipants: 1000,
       requirements: ['레벨 10 이상', '랭킹 상위 30%'],
-      icon: '🏆'
+      difficulty: 'expert',
+      category: 'tournament',
     }
   ]);
 
@@ -112,12 +176,39 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
       title: '일일 로그인',
       description: '매일 게임에 접속하여 보상을 받으세요',
       type: 'daily',
+      category: 'login',
       status: user.dailyStreak > 0 ? 'completed' : 'active',
+      isCompleted: user.dailyStreak > 0,
+      isActive: true,
       progress: user.dailyStreak > 0 ? 1 : 0,
       maxProgress: 1,
-      rewards: [{ type: 'gold', amount: 1000 }, { type: 'exp', amount: 100 }],
+      requirements: {
+        action: 'login',
+        target: 1,
+        current: user.dailyStreak > 0 ? 1 : 0
+      },
+      rewards: [
+        { 
+          id: 'daily_gold', 
+          name: '골드', 
+          type: 'currency', 
+          rarity: 'common', 
+          quantity: 1000, 
+          description: '일일 보상 골드', 
+          icon: '💰' 
+        }, 
+        { 
+          id: 'daily_exp', 
+          name: '경험치', 
+          type: 'currency', 
+          rarity: 'common', 
+          quantity: 100, 
+          description: '일일 보상 경험치', 
+          icon: '⭐' 
+        }
+      ],
       difficulty: 'easy',
-      icon: '📅',
+      priority: 1,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
     },
     {
@@ -125,12 +216,39 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
       title: '게임 마스터',
       description: '하루에 10게임을 플레이하세요',
       type: 'daily',
+      category: 'gameplay',
       status: 'active',
+      isCompleted: false,
+      isActive: true,
       progress: Math.min(user.stats.gamesPlayed % 10, 10),
       maxProgress: 10,
-      rewards: [{ type: 'gold', amount: 5000 }, { type: 'exp', amount: 500 }],
+      requirements: {
+        action: 'play_games',
+        target: 10,
+        current: Math.min(user.stats.gamesPlayed % 10, 10)
+      },
+      rewards: [
+        { 
+          id: 'game_gold', 
+          name: '골드', 
+          type: 'currency', 
+          rarity: 'common', 
+          quantity: 5000, 
+          description: '게임 마스터 보상', 
+          icon: '💰' 
+        }, 
+        { 
+          id: 'game_exp', 
+          name: '경험치', 
+          type: 'currency', 
+          rarity: 'common', 
+          quantity: 500, 
+          description: '게임 마스터 경험치', 
+          icon: '⭐' 
+        }
+      ],
       difficulty: 'medium',
-      icon: '🎮',
+      priority: 2,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
     },
     {
@@ -138,12 +256,39 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
       title: '연승 챌린지',
       description: '5연승을 달성하세요',
       type: 'weekly',
+      category: 'challenge',
       status: user.stats.winStreak >= 5 ? 'completed' : 'active',
+      isCompleted: user.stats.winStreak >= 5,
+      isActive: true,
       progress: Math.min(user.stats.winStreak, 5),
       maxProgress: 5,
-      rewards: [{ type: 'gold', amount: 15000 }, { type: 'item', amount: 1, name: '연승 배지' }],
+      requirements: {
+        action: 'win_streak',
+        target: 5,
+        current: Math.min(user.stats.winStreak, 5)
+      },
+      rewards: [
+        { 
+          id: 'streak_gold', 
+          name: '골드', 
+          type: 'currency', 
+          rarity: 'rare', 
+          quantity: 15000, 
+          description: '연승 보상 골드', 
+          icon: '💰' 
+        }, 
+        { 
+          id: 'streak_badge', 
+          name: '연승 배지', 
+          type: 'collectible', 
+          rarity: 'rare', 
+          quantity: 1, 
+          description: '연승 달성 배지', 
+          icon: '🔥' 
+        }
+      ],
       difficulty: 'hard',
-      icon: '🔥',
+      priority: 3,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     },
     {
@@ -151,13 +296,39 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
       title: '레벨업 달성',
       description: '레벨 20에 도달하세요',
       type: 'achievement',
-      status: user.level >= 20 ? 'completed' : user.level >= 10 ? 'active' : 'locked',
+      category: 'progression',
+      status: user.level >= 20 ? 'completed' : user.level >= 10 ? 'active' : 'expired',
+      isCompleted: user.level >= 20,
+      isActive: user.level >= 10,
       progress: user.level,
       maxProgress: 20,
-      rewards: [{ type: 'gold', amount: 50000 }, { type: 'item', amount: 1, name: '마스터 타이틀' }],
-      difficulty: 'extreme',
-      icon: '⭐',
-      requirements: ['레벨 10 달성']
+      requirements: {
+        action: 'reach_level',
+        target: 20,
+        current: user.level
+      },
+      rewards: [
+        { 
+          id: 'master_gold', 
+          name: '골드', 
+          type: 'currency', 
+          rarity: 'legendary', 
+          quantity: 50000, 
+          description: '마스터 달성 보상', 
+          icon: '💰' 
+        }, 
+        { 
+          id: 'master_title', 
+          name: '마스터 타이틀', 
+          type: 'collectible', 
+          rarity: 'legendary', 
+          quantity: 1, 
+          description: '마스터 레벨 달성 타이틀', 
+          icon: '👑' 
+        }
+      ],
+      difficulty: 'expert',
+      priority: 4,
     }
   ]);
 
@@ -179,8 +350,8 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
     ));
 
     // Give rewards
-    const totalGold = mission.rewards.reduce((sum, r) => r.type === 'gold' ? sum + r.amount : sum, 0);
-    const totalExp = mission.rewards.reduce((sum, r) => r.type === 'exp' ? sum + r.amount : sum, 0);
+    const totalGold = mission.rewards.reduce((sum, r) => r.type === 'currency' && r.name === '골드' ? sum + r.quantity : sum, 0);
+    const totalExp = mission.rewards.reduce((sum, r) => r.type === 'currency' && r.name === '경험치' ? sum + r.quantity : sum, 0);
 
     if (totalGold > 0 || totalExp > 0) {
       const updatedUser = {
@@ -246,8 +417,8 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
             key={i}
             initial={{ 
               opacity: 0,
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight
+              x: typeof window !== 'undefined' ? Math.random() * window.innerWidth : Math.random() * 1920,
+              y: typeof window !== 'undefined' ? Math.random() * window.innerHeight : Math.random() * 1080
             }}
             animate={{ 
               opacity: [0, 0.3, 0],
@@ -413,9 +584,9 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
                     <div className="flex flex-wrap gap-2">
                       {event.rewards.map((reward, idx) => (
                         <Badge key={idx} variant="secondary" className="text-xs">
-                          {reward.type === 'gold' ? `${reward.amount.toLocaleString()}G` :
-                           reward.type === 'exp' ? `${reward.amount.toLocaleString()}XP` :
-                           reward.name || `아이템 x${reward.amount}`}
+                          {reward.type === 'currency' && reward.name === '골드' ? `${reward.quantity.toLocaleString()}G` :
+                           reward.type === 'currency' && reward.name === '경험치' ? `${reward.quantity.toLocaleString()}XP` :
+                           reward.name || `아이템 x${reward.quantity}`}
                         </Badge>
                       ))}
                     </div>
@@ -555,11 +726,13 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
                           <div className="flex justify-between text-sm mb-1">
                             <span className="text-muted-foreground">진행도</span>
                             <span className="font-medium text-foreground">
-                              {mission.progress}/{mission.maxProgress}
+                                          <div className="font-mono text-xs text-zinc-400">
+              {mission.progress ?? 0}/{mission.maxProgress ?? 1}
+            </div>
                             </span>
                           </div>
                           <Progress 
-                            value={(mission.progress / mission.maxProgress) * 100} 
+                            value={((mission.progress ?? 0) / (mission.maxProgress ?? 1)) * 100} 
                             className="h-2"
                           />
                         </div>
@@ -568,9 +741,9 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
                         <div className="flex flex-wrap gap-2 mb-3">
                           {mission.rewards.map((reward, idx) => (
                             <Badge key={idx} variant="secondary" className="text-xs">
-                              {reward.type === 'gold' ? `${reward.amount.toLocaleString()}G` :
-                               reward.type === 'exp' ? `${reward.amount.toLocaleString()}XP` :
-                               reward.name || `아이템 x${reward.amount}`}
+                              {reward.type === 'currency' && reward.name === '골드' ? `${reward.quantity.toLocaleString()}G` :
+                               reward.type === 'currency' && reward.name === '경험치' ? `${reward.quantity.toLocaleString()}XP` :
+                               reward.name || `아이템 x${reward.quantity}`}
                             </Badge>
                           ))}
                         </div>
@@ -595,7 +768,7 @@ export function EventMissionPanel({ user, onBack, onUpdateUser, onAddNotificatio
                         <Button disabled variant="outline">
                           잠금
                         </Button>
-                      ) : mission.progress >= mission.maxProgress ? (
+                      ) : (mission.progress ?? 0) >= (mission.maxProgress ?? 1) ? (
                         <Button
                           onClick={() => handleCompleteMission(mission.id)}
                           className="bg-gradient-game btn-hover-lift"

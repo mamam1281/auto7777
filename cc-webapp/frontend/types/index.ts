@@ -25,7 +25,7 @@ export interface GameItem {
   id: string;
   name: string;
   type: 'powerup' | 'skin' | 'currency' | 'collectible';
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
   quantity: number;
   description: string;
   icon: string;
@@ -60,12 +60,22 @@ export interface GameStatsDetail {
     totalPulls: number;
     legendaryPulls: number;
     totalValue: number;
+    pulls: number;
+    totalSpent: number;
+    epicCount: number;
+    legendaryCount: number;
   };
   crash: {
     totalGames: number;
     highestMultiplier: number;
     totalCashedOut: number;
     averageMultiplier: number;
+  };
+  roulette: {
+    spins: number;
+    wins: number;
+    totalWinnings: number;
+    bestWin: number;
   };
 }
 
@@ -103,15 +113,17 @@ export interface Event {
   description: string;
   startDate: Date;
   endDate: Date;
-  type: 'daily' | 'weekly' | 'special' | 'seasonal';
+  type: 'daily' | 'weekly' | 'special' | 'seasonal' | 'limited';
   rewards: GameItem[];
   requirements: string[];
   isActive: boolean;
+  status: 'active' | 'completed' | 'expired' | 'scheduled' | 'ended';
   participants: number;
   maxParticipants?: number;
-  difficulty: 'easy' | 'medium' | 'hard' | 'expert';
+  difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'extreme';
   category: string;
   imageUrl?: string;
+  icon?: string;
   progress?: number;
   maxProgress?: number;
 }
@@ -127,12 +139,16 @@ export interface Mission {
     action: string;
     target: number;
     current: number;
-  };
+  } | string[]; // string[] for legacy compatibility
   rewards: GameItem[];
   isCompleted: boolean;
   isActive: boolean;
-  difficulty: 'easy' | 'medium' | 'hard' | 'expert';
+  status: 'active' | 'completed' | 'expired' | 'locked';
+  difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'extreme';
   expiresAt?: Date;
   priority: number;
   imageUrl?: string;
+  icon?: string;
+  progress?: number;
+  maxProgress?: number;
 }

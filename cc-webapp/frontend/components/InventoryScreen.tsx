@@ -107,7 +107,7 @@ export function InventoryScreen({ user, onBack, onUpdateUser, onAddNotification 
             <circle cx="24" cy="24" r="4" fill="rgba(0,0,0,0.3)"/>
           </svg>
         );
-      case 'weapon':
+      case 'collectible':
         return (
           <svg width="48" height="48" viewBox="0 0 48 48" className={`text-${color}`}>
             <path d="M12 36L24 24L36 36L24 44L12 36Z" fill="currentColor" opacity="0.8"/>
@@ -137,11 +137,7 @@ export function InventoryScreen({ user, onBack, onUpdateUser, onAddNotification 
     skin: user.inventory.filter(item => item.type === 'skin').length,
     powerup: user.inventory.filter(item => item.type === 'powerup').length,
     currency: user.inventory.filter(item => item.type === 'currency').length,
-    collectible: user.inventory.filter(item => item.type === 'collectible').length,
-    character: user.inventory.filter(item => item.type === 'character').length,
-    weapon: user.inventory.filter(item => item.type === 'weapon').length,
-    premium: user.inventory.filter(item => item.type === 'premium').length,
-    special: user.inventory.filter(item => item.type === 'special').length
+    collectible: user.inventory.filter(item => item.type === 'collectible').length
   };
 
   return (

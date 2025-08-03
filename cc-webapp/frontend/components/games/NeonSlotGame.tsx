@@ -78,8 +78,8 @@ export function NeonSlotGame({ user, onBack, onUpdateUser, onAddNotification }: 
   
   // Jackpot calculation
   useEffect(() => {
-    setCurrentJackpot(50000 + (user.gameStats.slot.spins * 50));
-  }, [user.gameStats.slot.spins]);
+    setCurrentJackpot(50000 + (user.gameStats.slot.totalSpins * 50));
+  }, [user.gameStats.slot.totalSpins]);
 
   // Auto spin logic
   useEffect(() => {
@@ -168,7 +168,7 @@ export function NeonSlotGame({ user, onBack, onUpdateUser, onAddNotification }: 
 
     // Check for matching symbols
     let matchCount = 1;
-    let matchingSymbol = finalReels[0];
+    const matchingSymbol = finalReels[0];
     winPositions[0] = true;
     
     // Count consecutive matches from left
@@ -283,11 +283,10 @@ export function NeonSlotGame({ user, onBack, onUpdateUser, onAddNotification }: 
             ...user.gameStats,
             slot: {
               ...user.gameStats.slot,
-              spins: user.gameStats.slot.spins + 1,
+              totalSpins: user.gameStats.slot.totalSpins + 1,
               totalWinnings: user.gameStats.slot.totalWinnings + result.winAmount,
               biggestWin: Math.max(user.gameStats.slot.biggestWin, result.winAmount),
-              jackpots: result.isJackpot ? user.gameStats.slot.jackpots + 1 : user.gameStats.slot.jackpots,
-              wins: user.gameStats.slot.wins + 1
+              jackpotHits: result.isJackpot ? user.gameStats.slot.jackpotHits + 1 : user.gameStats.slot.jackpotHits
             }
           },
           stats: {
@@ -318,7 +317,7 @@ export function NeonSlotGame({ user, onBack, onUpdateUser, onAddNotification }: 
             ...user.gameStats,
             slot: {
               ...user.gameStats.slot,
-              spins: user.gameStats.slot.spins + 1
+              totalSpins: user.gameStats.slot.totalSpins + 1
             }
           },
           stats: {
@@ -712,13 +711,13 @@ export function NeonSlotGame({ user, onBack, onUpdateUser, onAddNotification }: 
         >
           <div className="glass-effect rounded-xl p-4 text-center card-hover-float">
             <div className="text-xl font-bold text-primary">
-              {user.gameStats.slot.spins}
+              {user.gameStats.slot.totalSpins}
             </div>
             <div className="text-sm text-muted-foreground">총 스핀</div>
           </div>
           <div className="glass-effect rounded-xl p-4 text-center card-hover-float">
             <div className="text-xl font-bold text-gold">
-              {user.gameStats.slot.jackpots}
+              {user.gameStats.slot.jackpotHits}
             </div>
             <div className="text-sm text-muted-foreground">잭팟 횟수</div>
           </div>

@@ -26,7 +26,7 @@ services:
     command: >
       sh -c "
         echo '🚀 Starting Backend Development Server...' &&
-        pip install -e . &&
+        pip install -r requirements.txt &&
         uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app --log-level debug
       "
 

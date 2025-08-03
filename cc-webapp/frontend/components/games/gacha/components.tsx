@@ -4,7 +4,7 @@ import { Package, Star, Crown, Heart, Sparkles } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { GachaItem, GachaBanner, RARITY_COLORS, SEXY_EMOJIS } from './constants';
 import { getBannerStyle, generateSparkles, getAnimationDelay } from './utils';
-import { User } from '../../../App';
+import { User } from '../../../types/index';
 
 interface SexyBannerSelectorProps {
   banners: GachaBanner[];
