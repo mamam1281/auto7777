@@ -23,9 +23,9 @@ from ..schemas.chat_schemas import (
     AIConversationResponse, AIMessageCreate, AIMessageResponse,
     EmotionProfileUpdate, EmotionProfileResponse, ChatModerationAction
 )
-from ..services.auth_service import get_current_user
+from ..dependencies import get_current_user
 from ..services.chat_service import ChatService
-from ..utils.redis_client import get_redis
+from ..utils.redis import get_redis_manager
 from ..utils.emotion_engine import EmotionEngine
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
@@ -185,7 +185,7 @@ async def send_message(
     room_id: int,
     message_data: ChatMessageCreate,
     db: Session = Depends(get_db),
-    redis = Depends(get_redis),
+    redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
     """메시지 전송"""
@@ -327,7 +327,7 @@ async def send_ai_message(
     conversation_id: int,
     message_data: AIMessageCreate,
     db: Session = Depends(get_db),
-    redis = Depends(get_redis),
+    redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
     """AI와 메시지 주고받기"""

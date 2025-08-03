@@ -7,9 +7,34 @@ import logging
 from typing import Dict, List, Optional, Tuple
 from enum import Enum
 from pathlib import Path
-from app.emotion_models import EmotionResult, SupportedEmotion, SupportedLanguage
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
+
+class SupportedLanguage(str, Enum):
+    """지원되는 언어"""
+    KOREAN = "ko"
+    ENGLISH = "en"
+
+class SupportedEmotion(str, Enum):
+    """지원되는 감정 유형"""
+    JOY = "joy"           # 기쁨
+    ANGER = "anger"       # 분노
+    SADNESS = "sadness"   # 슬픔
+    FEAR = "fear"         # 두려움
+    SURPRISE = "surprise" # 놀람
+    DISGUST = "disgust"   # 혐오
+    EXCITED = "excited"   # 흥분
+    NEUTRAL = "neutral"   # 중성
+
+@dataclass
+class EmotionResult:
+    """감정 분석 결과"""
+    emotion: SupportedEmotion
+    confidence: float
+    scores: Dict[str, float]
+    language: SupportedLanguage
+    text_length: int = 0
 
 def preprocess_text(text: str) -> str:
     """텍스트 전처리"""
@@ -87,16 +112,16 @@ def analyze_emotion_basic(text: str) -> EmotionResult:
         
         return EmotionResult(
             emotion=best_emotion,
-            score=score,
             confidence=confidence,
+            scores=emotion_scores,
             language=language
         )
     else:
         # 매칭되는 키워드가 없으면 중립
         return EmotionResult(
             emotion=SupportedEmotion.NEUTRAL,
-            score=0.5,
             confidence=0.6,
+            scores={},
             language=language
         )
 
@@ -120,8 +145,8 @@ class SentimentAnalyzer:
         if not text or not text.strip():
             return EmotionResult(
                 emotion=SupportedEmotion.NEUTRAL,
-                score=0.0,
                 confidence=1.0,
+                scores={},
                 language=SupportedLanguage.KOREAN
             )
         
@@ -144,21 +169,14 @@ class SentimentAnalyzer:
                     
                     # 모델 결과가 dict인 경우 Pydantic 모델로 변환
                     if isinstance(local_result, dict):
-                        # fallback_attempted 설정이 없으면 추가
-                        if 'fallback_attempted' not in local_result:
-                            local_result['fallback_attempted'] = True
                         local_result = EmotionResult(**local_result)
-                    # EmotionResult 객체인 경우 fallback_attempted 직접 설정
-                    elif isinstance(local_result, EmotionResult):
-                        local_result.fallback_attempted = True
                     # 다른 타입인 경우 새 EmotionResult 생성
-                    else:
+                    elif not isinstance(local_result, EmotionResult):
                         return EmotionResult(
                             emotion=SupportedEmotion.NEUTRAL,
-                            score=0.5,
                             confidence=0.6,
-                            language=SupportedLanguage.KOREAN,
-                            fallback_attempted=True
+                            scores={},
+                            language=SupportedLanguage.KOREAN
                         )
                     
                     return local_result
@@ -166,10 +184,9 @@ class SentimentAnalyzer:
                     # No model available, return neutral fallback
                     return EmotionResult(
                         emotion=SupportedEmotion.NEUTRAL,
-                        score=0.5,
                         confidence=0.6,
-                        language=SupportedLanguage.KOREAN,
-                        fallback_attempted=True
+                        scores={},
+                        language=SupportedLanguage.KOREAN
                     )
         
         logger.debug(f"Emotion analysis result: {result}")

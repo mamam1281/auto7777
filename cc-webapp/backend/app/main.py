@@ -181,7 +181,20 @@ app.include_router(tracking.router, prefix="/api/tracking", tags=["Tracking"])
 # ===== Progressive Expansion - Phase 10 =====
 app.include_router(unlock.router, prefix="/api/unlock", tags=["Unlock"])
 
+# ===== New AI & Chat Systems =====
+# AI 추천 시스템
+app.include_router(ai_router.router, prefix="/api/ai", tags=["AI Recommendations"])
+
+# 퀴즈 시스템 (확장)
+from app.routers import quiz_router
+app.include_router(quiz_router.router, prefix="/api/quiz", tags=["Quiz System"])
+
+# 채팅 시스템
+from app.routers import chat_router
+app.include_router(chat_router.router, prefix="/api/chat", tags=["Chat System"])
+
 print("✅ Core API endpoints registered + Progressive Expansion Phase 1-10 Complete")
+print("✅ New AI Recommendation, Quiz & Chat Systems registered")
 
 # ===== Core API Endpoints =====
 

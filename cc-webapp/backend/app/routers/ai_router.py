@@ -1,7 +1,7 @@
 """
-🤖 Casino-Club F2P - AI Recommendation API Router
+?�� Casino-Club F2P - AI Recommendation API Router
 ===============================================
-AI 기반 개인화 추천 시스템 API
+AI 기반 개인??추천 ?�스??API
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -23,9 +23,9 @@ from ..schemas.ai_schemas import (
     PersonalizationRequest, PersonalizationResponse,
     ModelPredictionResponse
 )
-from ..services.auth_service import get_current_user
+from ..dependencies import get_current_user
 from ..services.ai_recommendation_service import AIRecommendationService
-from ..utils.redis_client import get_redis
+from ..utils.redis import get_redis_manager
 
 router = APIRouter(prefix="/api/ai", tags=["AI Recommendation"])
 
@@ -37,7 +37,7 @@ async def get_user_recommendations(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """사용자 추천 목록 조회"""
+    """?�용??추천 목록 조회"""
     try:
         query = db.query(UserRecommendation).filter(
             UserRecommendation.user_id == current_user.id
@@ -64,10 +64,10 @@ async def generate_recommendations(
     recommendation_type: Optional[str] = Query(None),
     max_recommendations: int = Query(5, ge=1, le=20),
     db: Session = Depends(get_db),
-    redis = Depends(get_redis),
+    redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """AI 추천 생성"""
+    """AI 추천 ?�성"""
     try:
         ai_service = AIRecommendationService(db, redis)
         recommendations = await ai_service.generate_recommendations(
@@ -86,10 +86,10 @@ async def record_recommendation_interaction(
     recommendation_id: int,
     interaction_data: RecommendationInteractionCreate,
     db: Session = Depends(get_db),
-    redis = Depends(get_redis),
+    redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """추천 상호작용 기록"""
+    """추천 ?�호?�용 기록"""
     try:
         ai_service = AIRecommendationService(db, redis)
         interaction = await ai_service.record_interaction(
@@ -106,10 +106,10 @@ async def record_recommendation_interaction(
 @router.get("/preferences", response_model=UserPreferenceResponse)
 async def get_user_preferences(
     db: Session = Depends(get_db),
-    redis = Depends(get_redis),
+    redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """사용자 선호도 조회"""
+    """?�용???�호??조회"""
     try:
         ai_service = AIRecommendationService(db, redis)
         preferences = await ai_service.get_user_preferences(current_user.id)
@@ -126,10 +126,10 @@ async def get_user_preferences(
 async def update_user_preferences(
     preference_data: UserPreferenceUpdate,
     db: Session = Depends(get_db),
-    redis = Depends(get_redis),
+    redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """사용자 선호도 업데이트"""
+    """?�용???�호???�데?�트"""
     try:
         ai_service = AIRecommendationService(db, redis)
         preferences = await ai_service.update_user_preferences(
@@ -146,32 +146,32 @@ async def update_user_preferences(
 async def get_personalized_content(
     request: PersonalizationRequest,
     db: Session = Depends(get_db),
-    redis = Depends(get_redis),
+    redis = Depends(get_redis_manager),
     current_user: User = Depends(get_current_user)
 ):
-    """개인화 콘텐츠 요청"""
+    """개인??콘텐�??�청"""
     try:
         ai_service = AIRecommendationService(db, redis)
         
-        # 사용자 ID 설정
+        # ?�용??ID ?�정
         request.user_id = current_user.id
         
-        # 추천 생성
+        # 추천 ?�성
         recommendations = await ai_service.generate_recommendations(
             user_id=current_user.id,
             recommendation_type=request.content_type,
             max_recommendations=request.max_recommendations
         )
         
-        # 개인화 응답 생성
+        # 개인???�답 ?�성
         response = PersonalizationResponse(
             recommendations=recommendations,
             personalization_factors={
-                "user_segment": "Medium",  # 실제 세그먼트 조회 필요
+                "user_segment": "Medium",  # ?�제 ?�그먼트 조회 ?�요
                 "content_type": request.content_type,
                 "context_data": request.context_data or {}
             },
-            confidence_score=0.8,  # 실제 신뢰도 계산 필요
+            confidence_score=0.8,  # ?�제 ?�뢰??계산 ?�요
             algorithm_version="v1.0",
             generated_at=datetime.utcnow()
         )
@@ -188,7 +188,7 @@ async def get_user_predictions(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """사용자 AI 예측 결과 조회"""
+    """?�용??AI ?�측 결과 조회"""
     try:
         query = db.query(ModelPrediction).filter(
             ModelPrediction.user_id == current_user.id
@@ -212,25 +212,25 @@ async def get_recommendation_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """추천 시스템 통계"""
+    """추천 ?�스???�계"""
     try:
         from datetime import timedelta
         start_date = datetime.utcnow() - timedelta(days=days)
         
-        # 전체 추천 수
+        # ?�체 추천 ??
         total_recommendations = db.query(UserRecommendation).filter(
             UserRecommendation.user_id == current_user.id,
             UserRecommendation.created_at >= start_date
         ).count()
         
-        # 클릭된 추천 수
+        # ?�릭??추천 ??
         clicked_recommendations = db.query(UserRecommendation).filter(
             UserRecommendation.user_id == current_user.id,
             UserRecommendation.status == "clicked",
             UserRecommendation.created_at >= start_date
         ).count()
         
-        # 타입별 추천 수
+        # ?�?�별 추천 ??
         type_stats = db.query(
             UserRecommendation.recommendation_type,
             db.func.count(UserRecommendation.id).label('count')
@@ -239,7 +239,7 @@ async def get_recommendation_stats(
             UserRecommendation.created_at >= start_date
         ).group_by(UserRecommendation.recommendation_type).all()
         
-        # 상호작용 수
+        # ?�호?�용 ??
         total_interactions = db.query(RecommendationInteraction).filter(
             RecommendationInteraction.user_id == current_user.id,
             RecommendationInteraction.created_at >= start_date
@@ -267,9 +267,9 @@ async def submit_ai_feedback(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """AI 추천에 대한 피드백 제출"""
+    """AI 추천???�???�드�??�출"""
     try:
-        # 추천 확인
+        # 추천 ?�인
         recommendation = db.query(UserRecommendation).filter(
             UserRecommendation.id == recommendation_id,
             UserRecommendation.user_id == current_user.id
@@ -278,7 +278,7 @@ async def submit_ai_feedback(
         if not recommendation:
             raise HTTPException(status_code=404, detail="Recommendation not found")
         
-        # 상호작용 기록
+        # ?�호?�용 기록
         interaction = RecommendationInteraction(
             recommendation_id=recommendation_id,
             user_id=current_user.id,
@@ -300,9 +300,9 @@ async def get_learning_progress(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """AI 학습 진행 상황"""
+    """AI ?�습 진행 ?�황"""
     try:
-        # 사용자 선호도 조회
+        # ?�용???�호??조회
         preferences = db.query(UserPreference).filter(
             UserPreference.user_id == current_user.id
         ).first()
@@ -316,13 +316,13 @@ async def get_learning_progress(
                 "status": "no_data"
             }
         
-        # 상호작용 데이터 수집
+        # ?�호?�용 ?�이???�집
         total_interactions = db.query(RecommendationInteraction).filter(
             RecommendationInteraction.user_id == current_user.id
         ).count()
         
-        # 학습 진행도 계산
-        learning_progress = min(total_interactions / 50.0, 1.0)  # 50개 상호작용으로 완전 학습
+        # ?�습 진행??계산
+        learning_progress = min(total_interactions / 50.0, 1.0)  # 50�??�호?�용?�로 ?�전 ?�습
         
         return {
             "learning_progress": round(learning_progress * 100, 1),

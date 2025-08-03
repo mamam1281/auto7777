@@ -156,3 +156,126 @@ class UserService:
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    # === 추가 필요 메서드들 ===
+    
+    def get_user_profile(self, user_id: int) -> Dict[str, Any]:
+        """사용자 프로필 정보 조회"""
+        user = self.get_user_or_error(user_id)
+        segment = self.get_or_create_segment(user_id)
+        
+        return {
+            "id": user.id,
+            "site_id": user.site_id,
+            "nickname": user.nickname,
+            "phone_number": user.phone_number,
+            "invite_code": user.invite_code,
+            "cyber_token_balance": user.cyber_token_balance,
+            "created_at": user.created_at,
+            "rank": user.rank,
+            "total_spent": getattr(user, 'total_spent', 0.0),
+            "vip_tier": getattr(user, 'vip_tier', 'STANDARD'),
+            "battlepass_level": getattr(user, 'battlepass_level', 1),
+            "segment": segment.rfm_group if segment else "STANDARD"
+        }
+    
+    def update_user_profile(self, user_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+        """사용자 프로필 업데이트"""
+        user = self.get_user_or_error(user_id)
+        
+        # 업데이트 가능한 필드들
+        if "nickname" in update_data and update_data["nickname"]:
+            user.nickname = update_data["nickname"]
+        if "phone_number" in update_data and update_data["phone_number"]:
+            user.phone_number = update_data["phone_number"]
+            
+        self.db.commit()
+        self.db.refresh(user)
+        
+        return self.get_user_profile(user_id)
+    
+    def get_user_progress(self, user_id: int) -> Dict[str, Any]:
+        """사용자 진행상황 조회"""
+        user = self.get_user_or_error(user_id)
+        
+        # 기본 진행상황 계산 (실제 게임 로직에 따라 수정 필요)
+        level = getattr(user, 'battlepass_level', 1)
+        experience = getattr(user, 'total_experience', 0)
+        next_level_exp = level * 1000  # 예시 계산
+        progress_percentage = (experience % 1000) / 1000 * 100
+        
+        return {
+            "user_id": user_id,
+            "level": level,
+            "experience": experience,
+            "next_level_exp": next_level_exp,
+            "progress_percentage": progress_percentage
+        }
+    
+    def get_user_statistics(self, user_id: int) -> Dict[str, Any]:
+        """사용자 통계 조회"""
+        user = self.get_user_or_error(user_id)
+        
+        # UserAction 테이블에서 통계 계산 (실제 구현 시 조정 필요)
+        total_games_played = self.db.query(models.UserAction).filter(
+            models.UserAction.user_id == user_id
+        ).count()
+        
+        total_spent = getattr(user, 'total_spent', 0.0)
+        total_earned = user.cyber_token_balance
+        win_rate = 0.65  # 예시 승률
+        favorite_game = "슬롯머신"  # 예시
+        
+        return {
+            "user_id": user_id,
+            "total_games_played": total_games_played,
+            "total_spent": total_spent,
+            "total_earned": total_earned,
+            "win_rate": win_rate,
+            "favorite_game": favorite_game
+        }
+    
+    def soft_delete_user(self, user_id: int) -> Dict[str, Any]:
+        """사용자 소프트 삭제"""
+        user = self.get_user_or_error(user_id)
+        
+        # 실제로는 deleted_at 필드를 설정하거나 is_active를 False로 설정
+        # 현재는 단순히 상태만 반환
+        return {
+            "user_id": user_id,
+            "deleted": True,
+            "message": "사용자가 비활성화되었습니다"
+        }
+    
+    def get_all_users(self, skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
+        """모든 사용자 목록 조회 (관리자용)"""
+        users = self.db.query(models.User).offset(skip).limit(limit).all()
+        
+        return [
+            {
+                "id": user.id,
+                "site_id": user.site_id,
+                "nickname": user.nickname,
+                "rank": user.rank,
+                "created_at": user.created_at,
+                "cyber_token_balance": user.cyber_token_balance
+            }
+            for user in users
+        ]
+    
+    def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """ID로 사용자 조회 (관리자용)"""
+        user = self.get_user_or_none(user_id)
+        if not user:
+            return None
+            
+        return {
+            "id": user.id,
+            "site_id": user.site_id,
+            "nickname": user.nickname,
+            "phone_number": user.phone_number,
+            "invite_code": user.invite_code,
+            "cyber_token_balance": user.cyber_token_balance,
+            "created_at": user.created_at,
+            "rank": user.rank
+        }

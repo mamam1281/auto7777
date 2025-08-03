@@ -6,13 +6,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..schemas.auth import UserCreate, UserLogin, AdminLogin, UserResponse, Token
 from ..services.auth_service import AuthService, security
 from ..models.auth_models import User, InviteCode
-from ..config import settings
+from ..config_simple import settings
 
 # 로거 설정
 logger = logging.getLogger(__name__)
@@ -33,7 +32,7 @@ router = APIRouter(tags=["authentication"])
 @router.post("/signup", response_model=Token)
 async def signup(
     data: UserCreate,
-    db: Session = Depends(get_db)
+    db = Depends(get_db)
 ):
     """사용자 회원가입 (필수 5개 입력: 사이트아이디, 닉네임, 전화번호, 초대코드, 비밀번호)"""
     try:
@@ -78,7 +77,7 @@ async def signup(
 @router.post("/login", response_model=Token)
 async def login(
     form_data: UserLogin,
-    db: Session = Depends(get_db)
+    db = Depends(get_db)
 ):
     """사용자 로그인"""
     try:

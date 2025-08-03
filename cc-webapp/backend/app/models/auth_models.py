@@ -40,6 +40,9 @@ class User(Base):
 
     # 세그먼트 관계 추가
     segment = relationship("UserSegment", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    
+    # 알림 관계 추가
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
 class InviteCode(Base):
     """초대코드 모델"""

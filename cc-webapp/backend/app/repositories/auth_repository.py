@@ -13,6 +13,9 @@ from sqlalchemy import and_, or_, func, desc
 from datetime import datetime, timedelta
 import logging
 
+from ..models.auth_models import User, UserSession, InviteCode
+from .base_repository import BaseRepository
+
 from app.repositories.base_repository import BaseRepository
 from app import models
 

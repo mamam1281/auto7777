@@ -27,6 +27,16 @@ class RouletteSpinResult:
     message: str
     daily_spin_count: int
 
+@dataclass
+class PrizeRouletteSpinResult:
+    """경품 룰렛 스핀 결과"""
+    success: bool
+    prize: Optional[Prize]
+    tokens_change: int
+    balance: int
+    message: str
+    daily_spin_count: int
+
 class RouletteService:
     """베팅 기반 경품 룰렛 서비스"""
 

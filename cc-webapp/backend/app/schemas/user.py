@@ -58,3 +58,46 @@ class UserUpdate(BaseModel):
     phone_number: Optional[str] = None
     password: Optional[str] = None
     rank: Optional[str] = None
+
+class UserUpdateRequest(BaseModel):
+    """사용자 프로필 업데이트 요청 모델"""
+    nickname: Optional[str] = None
+    phone_number: Optional[str] = None
+
+class UserProfileResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    site_id: str
+    nickname: str
+    phone_number: str
+    invite_code: str
+    cyber_token_balance: int
+    created_at: datetime
+    rank: str
+    total_spent: Optional[float] = 0.0
+    vip_tier: Optional[str] = "STANDARD"
+    battlepass_level: Optional[int] = 1
+
+class UserProgressResponse(BaseModel):
+    """사용자 진행상황 응답 모델"""
+    user_id: int
+    level: int
+    experience: int
+    next_level_exp: int
+    progress_percentage: float
+
+class UserStatisticsResponse(BaseModel):
+    """사용자 통계 응답 모델"""
+    user_id: int
+    total_games_played: int
+    total_spent: float
+    total_earned: int
+    win_rate: float
+    favorite_game: Optional[str] = None
+
+class UserSegmentResponse(BaseModel):
+    """사용자 세그먼트 응답 모델"""
+    user_id: int
+    segment: str
+    last_updated: datetime

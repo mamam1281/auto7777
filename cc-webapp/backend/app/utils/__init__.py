@@ -11,13 +11,11 @@
 __version__ = "1.0.0"
 
 # 모든 유틸리티 함수들을 중앙 집중식으로 import
-from .probability_utils import *
-from .reward_utils import *
+from .probability import *
 from .emotion_utils import *
 from .segment_utils import *
-from .redis_utils import *
-from .webhook_utils import *
-from .sentiment_utils import *
+from .redis import *
+from .sentiment_analyzer import *
 
 __all__ = [
     # Probability Utils
@@ -25,36 +23,33 @@ __all__ = [
     'calculate_streak_bonus',
     'weighted_random_choice',
     'variable_ratio_reward',
-    
-    # Reward Utils
-    'process_reward',
-    'calculate_battlepass_xp',
-    'check_unlock_eligibility',
-    'award_achievement',
+    'calculate_drop_rates',
+    'simulate_gacha_pull',
     
     # Emotion Utils
     'get_feedback_message',
     'generate_dopamine_trigger',
     'calculate_addiction_score',
+    'get_responsible_gaming_message',
+    'create_achievement_feedback',
     
     # Segment Utils
     'calculate_rfm_score',
     'update_user_segment',
     'get_personalized_offers',
+    'compute_rfm_and_update_segments',
     
     # Redis Utils
+    'init_redis_manager',
+    'get_redis_manager',
     'cache_user_data',
     'get_cached_data',
     'update_streak_counter',
     'manage_session_data',
     
-    # Webhook Utils
-    'send_webhook',
-    'process_external_api',
-    'handle_corporate_api',
-    
     # Sentiment Utils
-    'analyze_sentiment',
-    'extract_emotions',
-    'calculate_satisfaction_score'
+    'preprocess_text',
+    'detect_language',
+    'analyze_emotion_basic',
+    'get_emotion_analysis',
 ]

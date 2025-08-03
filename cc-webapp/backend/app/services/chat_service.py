@@ -13,7 +13,7 @@ from sqlalchemy import and_, desc
 
 from .. import models
 from ..schemas.chat_schemas import ChatMessageCreate, ChatRoomCreate
-from .emotion_engine import EmotionEngine
+from ..utils.emotion_engine import EmotionEngine
 
 logger = logging.getLogger(__name__)
 
@@ -124,9 +124,8 @@ class ChatService:
             
             # 감정 분석 (비동기)
             if message_data.content:
-                emotion_result = await self.emotion_engine.analyze_emotion(
-                    message_data.content, 
-                    user_id
+                emotion_result = await self.emotion_engine.detect_emotion_from_text(
+                    message_data.content
                 )
                 
                 # 감정 결과를 메타데이터에 저장

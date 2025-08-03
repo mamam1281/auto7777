@@ -1,13 +1,13 @@
 # Import individual router modules to make them accessible
 # 핵심 라우터들만 먼저 활성화 (단계적 확장)
 from . import auth  # 완전한 5개 입력 인증 시스템 사용
-from . import users  # 사용자 API
-from . import admin  # 관리자 API (간소화 버전)
-from . import actions  # 게임 액션 API
-from . import gacha  # 가챠 API
-from . import rewards  # 보상 API
-from . import shop  # 상점 API
-from . import missions  # 미션 API
+# from . import users  # 사용자 API (임시 비활성화)
+# from . import admin  # 관리자 API (간소화 버전)
+# from . import actions  # 게임 액션 API
+# from . import gacha  # 가챠 API
+# from . import rewards  # 보상 API
+# from . import shop  # 상점 API
+# from . import missions  # 미션 API
 from . import quiz_router as quiz  # 퀴즈 API - 새로 추가
 from . import dashboard  # 대시보드 API
 from . import rps  # 가위바위보 API

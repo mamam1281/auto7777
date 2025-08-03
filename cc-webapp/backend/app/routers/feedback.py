@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field
 
-from ..emotion_models import EmotionResult, SupportedEmotion, SupportedLanguage
+from ..utils.sentiment_analyzer import EmotionResult, SupportedEmotion, SupportedLanguage
 from ..schemas import FeedbackResponse
 from ..services.emotion_feedback_service import EmotionFeedbackService 
-from ..routers.auth import get_user_from_token as get_current_user
+from ..dependencies import get_current_user
 import logging
 
 logger = logging.getLogger(__name__)

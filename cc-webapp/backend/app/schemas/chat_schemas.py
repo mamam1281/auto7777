@@ -204,7 +204,7 @@ class AIMessageCreate(BaseModel):
     conversation_id: int
     message_type: MessageType = MessageType.TEXT
     content: str = Field(..., min_length=1, max_length=2000)
-    sender_type: str = Field(..., regex="^(user|ai)$")
+    sender_type: str = Field(..., pattern="^(user|ai)$")
 
 
 class AIMessageResponse(BaseModel):
@@ -253,7 +253,7 @@ class EmotionProfileResponse(BaseModel):
 
 
 class ChatModerationAction(BaseModel):
-    action_type: str = Field(..., regex="^(warning|mute|ban|delete)$")
+    action_type: str = Field(..., pattern="^(warning|mute|ban|delete)$")
     reason: Optional[str] = Field(None, max_length=200)
     severity_level: int = Field(default=1, ge=1, le=5)
     expires_at: Optional[datetime] = None

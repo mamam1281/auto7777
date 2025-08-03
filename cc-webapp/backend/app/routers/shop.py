@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -26,7 +25,7 @@ class ShopPurchaseResponse(BaseModel):
 
 from ..services.shop_service import ShopService
 
-def get_shop_service(db: Session = Depends(get_db)) -> ShopService:
+def get_shop_service(db = Depends(get_db)) -> ShopService:
     """Dependency provider for ShopService."""
     return ShopService(db)
 

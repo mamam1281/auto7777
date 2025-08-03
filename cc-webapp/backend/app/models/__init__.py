@@ -36,6 +36,9 @@ from .game_models import (
 # User Segment 모델 추가
 from .user_models import UserSegment
 
+# 알림 모델 추가
+from .notification_models import Notification
+
 # Quiz 모델들 추가
 from .quiz_models import (
     QuizCategory,
@@ -95,7 +98,11 @@ __all__ = [
     "UserProgress",
 
     # User
+        # User Segments
     "UserSegment",
+    
+    # Notifications
+    "Notification",
     
     # Quiz
     "QuizCategory",

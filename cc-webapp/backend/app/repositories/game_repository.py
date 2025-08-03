@@ -4,10 +4,9 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
-import redis
 
 from .. import models
-from ..config import get_settings
+from ..config_simple import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -15,21 +14,12 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 class GameRepository:
-    """Data access layer for game state using DB and Redis."""
+    """Data access layer for game state using DB."""
 
-    def __init__(self):
-        try:
-            self.redis_client = redis.Redis(
-                host=settings.REDIS_HOST,
-                port=settings.REDIS_PORT,
-                db=0,
-                decode_responses=True
-            )
-            self.redis_client.ping()
-            logger.info("Successfully connected to Redis.")
-        except redis.exceptions.ConnectionError as e:
-            logger.error(f"Could not connect to Redis: {e}")
-            self.redis_client = None
+    def __init__(self, db_session: Session):
+        self.db = db_session
+        # Redis는 선택적으로 사용
+        self.redis_client = None
 
     def _get_redis_key(self, user_id: int, key_type: str) -> str:
         return f"user:{user_id}:{key_type}"
