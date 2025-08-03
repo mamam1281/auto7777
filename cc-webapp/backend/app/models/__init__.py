@@ -48,6 +48,7 @@ from .quiz_models import (
     UserQuizAttempt,
     UserQuizAnswer,
     QuizLeaderboard,
+    QuizResult,
 )
 
 # AI 추천 시스템 모델들 추가

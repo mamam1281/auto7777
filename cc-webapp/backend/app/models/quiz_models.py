@@ -12,6 +12,22 @@ from datetime import datetime
 from ..database import Base
 
 
+class QuizResult(Base):
+    """사용자 위험 평가 결과"""
+    __tablename__ = "quiz_results"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    quiz_type = Column(String(50), default="risk_assessment")
+    answers = Column(JSON)  # 사용자 답변 데이터
+    risk_score = Column(Integer)  # 위험 점수
+    risk_level = Column(String(50))  # 위험 수준 (high-risk, moderate-risk, low-risk)
+    completed_at = Column(DateTime, default=datetime.utcnow)
+    
+    # 관계
+    user = relationship("User")
+
+
 class QuizCategory(Base):
     """퀴즈 카테고리"""
     __tablename__ = "quiz_categories"
